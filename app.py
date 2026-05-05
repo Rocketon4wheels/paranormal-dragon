@@ -20,6 +20,7 @@ from datetime import datetime, timezone, timedelta
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from pathlib import Path
+import urllib.parse
 
 from flask import Flask, request, jsonify
 from flask_cors import CORS
@@ -72,6 +73,7 @@ ANALYTICS_FILE    = DATA_DIR / 'analytics.json'
 PINS_FILE         = DATA_DIR / 'map_pins.json'
 ORACLE_INTEL_FILE = DATA_DIR / 'oracle_intel.json'   # NEW — Oracle investigator database
 AUDIT_LOG_FILE    = DATA_DIR / 'audit_log.json'       # NEW — Admin action log
+SIGNAL_INTEL_FILE = DATA_DIR / 'signal_intel.json'     # Mainstream headline anomaly scores
 
 DATA_DIR.mkdir(parents=True, exist_ok=True)
 
@@ -355,9 +357,14 @@ def get_analytics():  return load_json(ANALYTICS_FILE, {'page_views': {}, 'event
 def get_pins():       return load_json(PINS_FILE, [])
 
 def audit_log(action: str, details: dict = None):
-    """Log admin actions for audit trail."""
+    """Log admin actions for audit trail. Recovers from JSON corruption automatically."""
     try:
-        log = load_json(AUDIT_LOG_FILE, [])
+        try:
+            log = load_json(AUDIT_LOG_FILE, [])
+            if not isinstance(log, list):
+                log = []
+        except Exception:
+            log = []  # Corruption recovery — start fresh
         log.insert(0, {
             'timestamp': datetime.now(timezone.utc).isoformat(),
             'action':    action,
@@ -494,23 +501,6 @@ def fetch_rss_headlines(url: str, source_name: str, max_items: int = 8) -> list:
         app.logger.debug(f'{source_name} RSS failed: {ex}')
         return []
 
-def fetch_nuforc_headlines() -> list:
-    try:
-        resp = requests.get('https://nuforc.org/webreports/ndxevent.html', timeout=10,
-                            headers={'User-Agent': 'StrangenessIS/2.0'})
-        if resp.ok:
-            rows = re.findall(r'<tr[^>]*>.*?</tr>', resp.text, re.DOTALL)[:5]
-            headlines = []
-            for row in rows:
-                cells = re.findall(r'<td[^>]*>(.*?)</td>', row, re.DOTALL)
-                if len(cells) >= 3:
-                    clean = re.sub(r'<[^>]+>', '', cells[2]).strip()
-                    if clean:
-                        headlines.append(clean[:100])
-            return headlines[:3]
-    except Exception as e:
-        app.logger.warning(f'NUFORC fetch failed: {e}')
-    return []
 
 def fetch_reddit_posts() -> list:
     try:
@@ -531,7 +521,6 @@ def fetch_reddit_posts() -> list:
 
 def fetch_google_news() -> list:
     try:
-        import urllib.parse
         query = urllib.parse.quote('UFO sighting OR paranormal OR Bigfoot OR alien disclosure')
         resp = requests.get(
             f'https://news.google.com/rss/search?q={query}&hl=en-US&gl=US&ceid=US:en',
@@ -588,27 +577,12 @@ def generate_report() -> dict | None:
     # Gather sources
     source_data, sources_used = [], []
 
-    nuforc = fetch_nuforc_headlines()
-    if nuforc:
-        source_data.append('NUFORC FIELD REPORTS:\n' + '\n'.join(nuforc))
-        sources_used.append('NUFORC')
-
     reddit = fetch_reddit_posts()
     if reddit:
         source_data.append('REDDIT COMMUNITY INTELLIGENCE:\n' + '\n'.join(reddit))
         sources_used.append('Reddit')
 
-    news = fetch_google_news()
-    if news:
-        source_data.append('NEWS INTELLIGENCE:\n' + '\n'.join(news))
-        sources_used.append('Google News')
-
-    # RSS database headlines
-    try:
-        scan_all_news_sources()
-    except Exception as e:
-        app.logger.warning(f'RSS fetch error: {e}')
-
+    # RSS database headlines (already scanned above before generation)
     db_headlines = load_json(HEADLINES_FILE, [])
     db_headlines.sort(key=lambda h: h.get('fetched_at', ''), reverse=True)
     if db_headlines:
@@ -766,6 +740,65 @@ def send_report_notification(report: dict):
 # ═════════════════════════════════════════════════════════════
 # SCHEDULER
 # ═════════════════════════════════════════════════════════════
+
+
+# ── Signal Intelligence — mainstream headline anomaly scoring ─────────────────
+MAINSTREAM_SIGNAL_SOURCES = {
+    'CNN', 'Fox News', 'ABC News', 'NBC News', 'CBS News', 'BBC News',
+    'New York Times', 'Washington Post', 'USA Today', 'The Guardian',
+    'NPR', 'Time', 'The Atlantic', 'Politico', 'Axios', 'Reuters',
+    'Daily Mail', 'New York Post', 'NY Daily News', 'The Independent',
+}
+
+SIGNAL_KEYWORDS = [
+    'military', 'classified', 'pentagon', 'nasa', 'radiation', 'explosion',
+    'missing', 'disappeared', 'unexplained', 'mysterious', 'unusual',
+    'government', 'secret', 'leaked', 'whistleblower', 'cover', 'denied',
+    'strange', 'unknown', 'unidentified', 'phenomenon', 'anomaly',
+    'emergency', 'shutdown', 'evacuation', 'lockdown', 'quarantine',
+    'space', 'satellite', 'telescope', 'discovery', 'breakthrough',
+    'dead', 'death', 'died suddenly', 'found dead', 'suicide',
+    'earthquake', 'volcano', 'tsunami', 'solar', 'aurora', 'magnetic',
+    'frequency', 'signal', 'transmission', 'interference', 'blackout',
+]
+
+def score_signal_headline(title: str, source: str) -> int:
+    """Score a mainstream headline 0-10 for hidden strangeness potential."""
+    title_lower = title.lower()
+    score = 0
+    matched = []
+    for kw in SIGNAL_KEYWORDS:
+        if kw in title_lower:
+            score += 1
+            matched.append(kw)
+    # Boost if multiple keywords
+    if len(matched) >= 3:
+        score += 2
+    elif len(matched) >= 2:
+        score += 1
+    return min(10, score), matched
+
+def save_signal_intel(title: str, source: str, score: int, keywords: list):
+    """Save a scored headline to signal_intel.json if score >= 4."""
+    if score < 4:
+        return
+    db  = load_json(SIGNAL_INTEL_FILE, [])
+    key = title.lower()[:60]
+    if any(r.get('key') == key for r in db):
+        return  # Already stored
+    db.insert(0, {
+        'id':        f'sig_{int(datetime.now().timestamp() * 1000)}',
+        'title':     title,
+        'source':    source,
+        'score':     score,
+        'keywords':  keywords,
+        'timestamp': datetime.now(timezone.utc).isoformat(),
+        'key':       key,
+        'reviewed':  False,
+        'notes':     '',
+    })
+    db = db[:500]  # Keep last 500 signals
+    save_json(SIGNAL_INTEL_FILE, db)
 
 def scan_all_news_sources() -> int:
     """Fetch all configured news sources and store new headlines. Called every 15 min."""
@@ -2105,6 +2138,79 @@ def admin_delete_comment(comment_id):
     audit_log('comment_deleted', {'id': comment_id})
     return jsonify({'status': 'deleted'})
 
+
+@app.route('/admin/signal-intel', methods=['GET'])
+def admin_get_signal_intel():
+    """Signal Intelligence panel — mainstream headlines scored for hidden patterns."""
+    err = require_admin()
+    if err: return err
+    db       = load_json(SIGNAL_INTEL_FILE, [])
+    min_score = request.args.get('min_score', 4, type=int)
+    source    = request.args.get('source', '')
+    reviewed  = request.args.get('reviewed', '')
+    filtered  = [r for r in db if r.get('score', 0) >= min_score]
+    if source:
+        filtered = [r for r in filtered if r.get('source') == source]
+    if reviewed == 'false':
+        filtered = [r for r in filtered if not r.get('reviewed')]
+    elif reviewed == 'true':
+        filtered = [r for r in filtered if r.get('reviewed')]
+    return jsonify({
+        'total':   len(db),
+        'signals': filtered[:100],
+        'sources': sorted(set(r.get('source','') for r in db)),
+    })
+
+@app.route('/admin/signal-intel/<signal_id>', methods=['PATCH', 'DELETE'])
+def admin_update_signal(signal_id):
+    """Update notes/reviewed status or delete a signal."""
+    err = require_admin()
+    if err: return err
+    db = load_json(SIGNAL_INTEL_FILE, [])
+    for i, r in enumerate(db):
+        if r.get('id') == signal_id:
+            if request.method == 'DELETE':
+                db.pop(i)
+                save_json(SIGNAL_INTEL_FILE, db)
+                return jsonify({'status': 'deleted'})
+            data = request.get_json(silent=True) or {}
+            if 'notes'    in data: db[i]['notes']    = data['notes'][:500]
+            if 'reviewed' in data: db[i]['reviewed'] = bool(data['reviewed'])
+            save_json(SIGNAL_INTEL_FILE, db)
+            return jsonify({'status': 'updated', 'signal': db[i]})
+    return jsonify({'error': 'Not found'}), 404
+
+@app.route('/admin/signal-intel/analyze', methods=['POST'])
+def admin_analyze_signals():
+    """Use GPT to find cross-signal patterns across recent high-score headlines."""
+    err = require_admin()
+    if err: return err
+    if not os.getenv('OPENAI_API_KEY'):
+        return jsonify({'error': 'OpenAI not configured'}), 400
+    db      = load_json(SIGNAL_INTEL_FILE, [])
+    top     = [r for r in db if r.get('score', 0) >= 6][:20]
+    if len(top) < 3:
+        return jsonify({'error': 'Need at least 3 high-score signals to analyze'}), 400
+    lines   = [f"[{r['source']}] {r['title']} (score:{r['score']}, keywords:{','.join(r['keywords'])})"
+               for r in top]
+    prompt  = (
+        "You are a pattern analyst for a paranormal intelligence network. "
+        "Study these mainstream news headlines that have been flagged as potentially significant. "
+        "Find hidden connections, recurring themes, and what they might collectively suggest. "
+        "Be specific. Reference actual headlines. Speak as an investigator, not a journalist.\n\n"
+        + "\n".join(lines)
+    )
+    try:
+        response = client.chat.completions.create(
+            model='gpt-4o-mini',
+            messages=[{'role': 'user', 'content': prompt}],
+            max_tokens=600, temperature=0.7,
+        )
+        analysis = response.choices[0].message.content.strip()
+        return jsonify({'analysis': analysis, 'signals_analyzed': len(top)})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
 @app.route('/admin/pipeline/status', methods=['GET'])
 def admin_pipeline_status():
     err = require_admin()
@@ -2198,8 +2304,7 @@ NEWS_SOURCES = [
     ('https://www.theguardian.com/us/rss',                     'The Guardian'),
     ('https://www.npr.org/rss/rss.php?id=1001',                'NPR'),
     ('https://www.usatoday.com/rss/news/',                     'USA Today'),
-    ('https://nypost.com/feed/',                               'New York Post'),
-    ('https://time.com/feed/',                                 'Time'),
+    ('https://time.com/feed()/',                                 'Time'),
     ('https://slate.com/feeds/all.rss',                        'Slate'),
     ('https://www.vox.com/rss/index.xml',                      'Vox'),
     ('https://www.thedailybeast.com/rss',                      'Daily Beast'),
@@ -2214,7 +2319,6 @@ NEWS_SOURCES = [
     ('https://www.washingtontimes.com/rss/headlines/',          'Washington Times'),
     ('https://www.breitbart.com/feed/',                        'Breitbart'),
     ('https://www.zerohedge.com/fullrss2.xml',                 'Zero Hedge'),
-    ('https://nypost.com/feed/',                               'NY Post'),
     ('https://www.independent.co.uk/rss',                      'The Independent'),
     ('https://www.telegraph.co.uk/rss.xml',                    'The Telegraph'),
     ('https://www.mirror.co.uk/news/rss.xml',                  'Mirror Online'),

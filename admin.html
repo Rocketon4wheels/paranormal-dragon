@@ -307,6 +307,7 @@
         
         
         <button class="sidebar-item" onclick="showPanel('members',this)"><span class="dot"></span>Members</button>
+        <button class="sidebar-item" onclick="showPanel('signal-intel',this)"><span class="dot"></span>Signal Intelligence</button>
         <button class="sidebar-item" onclick="showPanel('stripe',this)"><span class="dot"></span>Stripe Setup</button>
         <button class="sidebar-item" onclick="showPanel('tawk',this)"><span class="dot"></span>Live Chat</button>
                 <button class="sidebar-item" onclick="showPanel('seo',this)"><span class="dot"></span>SEO &amp; Meta</button>
@@ -976,6 +977,33 @@ SMTP_PASS=abcdabcdabcdabcd</div>
       </div>
 
       <!-- STRIPE -->
+
+      <!-- Signal Intelligence Panel -->
+      <div class="panel" id="panel-signal-intel">
+        <div class="panel-header">
+          <div class="panel-title">Signal Intelligence</div>
+          <div class="panel-sub">Mainstream headlines scored for hidden patterns · Truth in plain sight</div>
+        </div>
+        <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:1rem;align-items:center">
+          <select id="sig-min-score" class="field-input" style="width:auto;font-size:.8rem" onchange="loadSignalIntel()">
+            <option value="4">Score 4+</option>
+            <option value="5">Score 5+</option>
+            <option value="6">Score 6+</option>
+            <option value="7">Score 7+</option>
+          </select>
+          <select id="sig-reviewed" class="field-input" style="width:auto;font-size:.8rem" onchange="loadSignalIntel()">
+            <option value="">All signals</option>
+            <option value="false">Unreviewed</option>
+            <option value="true">Reviewed</option>
+          </select>
+          <button class="btn-sm btn-purple" onclick="analyzeSignals()">🧠 Find Patterns</button>
+          <button class="btn-sm btn-outline" onclick="loadSignalIntel()">↻ Refresh</button>
+          <span id="sig-count" style="font-family:var(--mono);font-size:.7rem;color:var(--muted);margin-left:auto"></span>
+        </div>
+        <div id="sig-analysis" style="display:none;background:rgba(124,58,237,.1);border:1px solid rgba(124,58,237,.3);border-radius:8px;padding:1rem;margin-bottom:1rem;font-family:'Crimson Pro',Georgia,serif;font-size:.95rem;line-height:1.6;color:var(--text)"></div>
+        <div id="signal-intel-list" style="display:flex;flex-direction:column;gap:.5rem"></div>
+      </div>
+
       <div class="panel" id="panel-stripe">
         <div class="panel-header">
           <div class="panel-title">Stripe Payments</div>
@@ -1424,16 +1452,13 @@ function showPanel(id, btn) {
     categories:           loadCategories,
     gmail:                checkEmailStatus,
     'report-schedule':    loadScheduleConfig,
-    'audit-log':          loadAuditLog,
-    'comments-mod':       loadAllComments,
-    analytics:            loadAnalytics,
+            analytics:            loadAnalytics,
     members:              loadMembers,
+    'signal-intel':       loadSignalIntel,
     'admin-team':         loadTeam,
     'weekly-schedule':    loadWeeklySchedule,
     headlines:            loadHeadlines,
-    'pipeline-status':    loadPipelineStatus,
-    'oracle-conversations': loadOracleConversations,
-    'oracle-config':      loadOracleConfig,
+            'oracle-config':      loadOracleConfig,
     'oracle-limits':      loadOracleLimits,
     'oracle-test':        () => {},
     'portal-config':      loadPortalConfig,
@@ -2825,6 +2850,81 @@ document.addEventListener('DOMContentLoaded', function() {
     setTimeout(checkAllPanelStatuses, 800);
   }
 });
+
+// ── Signal Intelligence ───────────────────────────────────────────────────────
+async function loadSignalIntel() {
+  const minScore = document.getElementById('sig-min-score')?.value || 4;
+  const reviewed = document.getElementById('sig-reviewed')?.value || '';
+  const listEl   = document.getElementById('signal-intel-list');
+  const countEl  = document.getElementById('sig-count');
+  if (!listEl) return;
+  listEl.innerHTML = '<p style="color:var(--muted);font-size:.85rem">Loading signals...</p>';
+  try {
+    let url = `/admin/signal-intel?min_score=${minScore}`;
+    if (reviewed) url += `&reviewed=${reviewed}`;
+    const d = await api(url);
+    if (countEl) countEl.textContent = `${d.signals.length} of ${d.total} signals`;
+    if (!d.signals.length) {
+      listEl.innerHTML = '<p style="color:var(--muted);font-size:.85rem;font-style:italic">No signals yet. Run a news scan to start collecting headlines.</p>';
+      return;
+    }
+    const scoreColor = s => s >= 8 ? '#f87171' : s >= 6 ? '#fb923c' : s >= 5 ? '#facc15' : '#a3e635';
+    listEl.innerHTML = d.signals.map(r => `
+      <div id="sig-${r.id}" style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:.75rem;${r.reviewed ? 'opacity:.6' : ''}">
+        <div style="display:flex;gap:.5rem;align-items:flex-start;margin-bottom:.4rem">
+          <span style="font-family:var(--mono);font-size:.75rem;font-weight:700;color:${scoreColor(r.score)};min-width:28px">${r.score}/10</span>
+          <div style="flex:1">
+            <div style="font-size:.88rem;font-weight:500;margin-bottom:.2rem">${r.title}</div>
+            <div style="font-family:var(--mono);font-size:.65rem;color:var(--muted)">${r.source} · ${(r.timestamp||'').slice(0,10)} · <span style="color:var(--purple3)">${(r.keywords||[]).join(', ')}</span></div>
+          </div>
+          <div style="display:flex;gap:.25rem;flex-shrink:0">
+            <button class="btn-sm ${r.reviewed ? 'btn-outline' : 'btn-green'}" onclick="markSignal('${r.id}',${!r.reviewed})" style="font-size:.65rem;padding:.15rem .4rem">${r.reviewed ? '✓ Done' : 'Mark reviewed'}</button>
+            <button class="btn-sm btn-red" onclick="deleteSignal('${r.id}')" style="font-size:.65rem;padding:.15rem .4rem">✕</button>
+          </div>
+        </div>
+        ${r.notes ? `<div style="font-size:.8rem;color:var(--muted);font-style:italic;margin-top:.3rem;padding-top:.3rem;border-top:1px solid var(--border)">📝 ${r.notes}</div>` : ''}
+        <div style="margin-top:.4rem">
+          <input class="field-input" id="sig-note-${r.id}" placeholder="Add investigator notes..." value="${(r.notes||'').replace(/"/g,'&quot;')}" style="font-size:.75rem;padding:.25rem .5rem"
+            onkeydown="if(event.key==='Enter')saveSignalNote('${r.id}')"/>
+        </div>
+      </div>
+    `).join('');
+  } catch(e) {
+    listEl.innerHTML = `<p style="color:var(--error)">Failed: ${e.message}</p>`;
+  }
+}
+
+async function markSignal(id, reviewed) {
+  await api('/admin/signal-intel/' + id, 'PATCH', {reviewed});
+  loadSignalIntel();
+}
+
+async function saveSignalNote(id) {
+  const notes = document.getElementById('sig-note-' + id)?.value || '';
+  await api('/admin/signal-intel/' + id, 'PATCH', {notes});
+  toast('Note saved');
+  loadSignalIntel();
+}
+
+async function deleteSignal(id) {
+  if (!confirm('Remove this signal?')) return;
+  await api('/admin/signal-intel/' + id, 'DELETE');
+  loadSignalIntel();
+}
+
+async function analyzeSignals() {
+  const analysisEl = document.getElementById('sig-analysis');
+  if (!analysisEl) return;
+  analysisEl.style.display = 'block';
+  analysisEl.textContent = 'The Oracle is searching for patterns...';
+  try {
+    const d = await api('/admin/signal-intel/analyze', 'POST');
+    analysisEl.textContent = d.analysis;
+  } catch(e) {
+    analysisEl.textContent = 'Analysis failed: ' + e.message;
+  }
+}
+
 </script>
 </body>
 </html>
