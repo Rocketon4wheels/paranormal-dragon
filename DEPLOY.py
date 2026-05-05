@@ -4,6 +4,10 @@ from pathlib import Path
 ROOT   = Path(__file__).parent
 CONFIG = ROOT / ".deploy-config"
 REMOTE = "/home/ubuntu/strangeness-is"
+
+# These files are NEVER overwritten — they contain local credentials/config
+PROTECTED = {".deploy-config", ".deploy-config.txt", "DEPLOY.bat", 
+             "DEPLOY.py", "SETUP_GIT.bat", "CHECK.bat", "CHECK.py"}
 VENV   = f"{REMOTE}/venv/bin/pip"
 
 def load_config():

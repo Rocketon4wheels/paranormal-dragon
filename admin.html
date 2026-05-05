@@ -1523,7 +1523,7 @@ async function loadDashboard() {
       if (el) {
         el.innerHTML = reps.length ? reps.map(function(r) {
           return '<li class="report-item">' +
-            '<div class="ri-meta"><span class="ri-date">' + (r.date_label||'').slice(0,10) + '</span>' +
+            '<div class="ri-meta"><span class="ri-date">' + (r.date_label || new Date(r.created_at).toLocaleString('en-US',{month:'short',day:'numeric',year:'numeric',hour:'numeric',minute:'2-digit'})) + '</span>' +
             '<span class="ri-index">SI: ' + (r.strangeness_index||'-') + '/10</span></div>' +
             '<div class="ri-title">' + (r.headline||'Untitled') + '</div>' +
             '<span class="ri-status ' + (r.status||'draft') + '">' + (r.status||'draft') + '</span></li>';
@@ -1544,7 +1544,7 @@ function reportItem(r) {
   var cls = st === 'live' ? 'live' : 'draft';
   return '<li class="report-item">' +
     '<div class="ri-meta">' +
-      '<span class="ri-date">' + (r.date_label||'').toString().slice(0,10) + '</span>' +
+      '<span class="ri-date">' + (r.date_label || new Date(r.created_at).toLocaleString('en-US',{month:'short',day:'numeric',year:'numeric',hour:'numeric',minute:'2-digit'})) + '</span>' +
       '<span class="ri-index">SI: ' + (r.strangeness_index||'-') + '/10</span>' +
     '</div>' +
     '<div class="ri-title">' + (r.headline||'Untitled') + '</div>' +

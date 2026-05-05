@@ -652,8 +652,11 @@ def generate_report() -> dict | None:
             + '\nChoose a DIFFERENT specific angle, location, or incident.'
         )
 
-    today = datetime.now(timezone.utc).strftime('%B %d, %Y')
+    today = datetime.now(timezone.utc).strftime('%B %d, %Y — %I:%M %p UTC')
     writer_prompt = config.get('report_writer_prompt') or REPORT_WRITER_PROMPT
+
+    # Load categories from admin config (falls back to MASTER_CATEGORIES constant)
+    live_categories = get_config().get('master_categories') or MASTER_CATEGORIES
 
     user_prompt = f"""Today is {today}. Assigned category: {chosen_category}
 
@@ -1544,7 +1547,7 @@ def admin_create_report():
         'status':            data.get('status', 'draft'),
         'created_at':        datetime.now(timezone.utc).isoformat(),
         'published_at':      datetime.now(timezone.utc).isoformat() if data.get('status') == 'live' else None,
-        'date_label':        datetime.now(timezone.utc).strftime('%B %d, %Y'),
+        'date_label':        datetime.now(timezone.utc).strftime('%B %d, %Y — %I:%M %p UTC'),
     }
     reports = get_reports()
     reports.insert(0, report)

@@ -80,7 +80,7 @@
     }
 
     /* Leaflet dark override */
-    .leaflet-tile { filter: brightness(0.6) saturate(0.3) hue-rotate(220deg); }
+    .leaflet-tile { filter: brightness(0.85) saturate(0.5) hue-rotate(200deg); }
     .leaflet-container { background: #07070f; font-family: 'Crimson Pro', Georgia, serif; }
     .leaflet-popup-content-wrapper {
       background: #0a0018;
@@ -323,7 +323,7 @@
       });
 
       // Dark tile layer
-      L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+      L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_matter_no_labels/{z}/{x}/{y}{r}.png', {
         subdomains: 'abcd',
         maxZoom: 19,
       }).addTo(map);
