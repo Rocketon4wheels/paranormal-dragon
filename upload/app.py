@@ -652,8 +652,11 @@ def generate_report() -> dict | None:
             + '\nChoose a DIFFERENT specific angle, location, or incident.'
         )
 
-    today = datetime.now(timezone.utc).strftime('%B %d, %Y')
+    today = datetime.now(timezone.utc).strftime('%B %d, %Y — %I:%M %p UTC')
     writer_prompt = config.get('report_writer_prompt') or REPORT_WRITER_PROMPT
+
+    # Load categories from admin config (falls back to MASTER_CATEGORIES constant)
+    live_categories = get_config().get('master_categories') or MASTER_CATEGORIES
 
     user_prompt = f"""Today is {today}. Assigned category: {chosen_category}
 
@@ -1544,7 +1547,7 @@ def admin_create_report():
         'status':            data.get('status', 'draft'),
         'created_at':        datetime.now(timezone.utc).isoformat(),
         'published_at':      datetime.now(timezone.utc).isoformat() if data.get('status') == 'live' else None,
-        'date_label':        datetime.now(timezone.utc).strftime('%B %d, %Y'),
+        'date_label':        datetime.now(timezone.utc).strftime('%B %d, %Y — %I:%M %p UTC'),
     }
     reports = get_reports()
     reports.insert(0, report)
@@ -1994,7 +1997,7 @@ def admin_team_login():
         return jsonify({'error': 'Email and password required'}), 400
     # Master admin key check (no email required for master key)
     if password == ADMIN_KEY:
-        return jsonify({'status': 'ok', 'role': 'superadmin', 'name': 'Admin', 'password_set': True})
+        return jsonify({'status': 'ok', 'role': 'superadmin', 'name': 'Admin', 'password_set': True, 'admin_key': ADMIN_KEY})
     config = get_config()
     team   = config.get('admin_team', [])
     member = next((m for m in team if m.get('email', '').lower() == email), None)
@@ -2004,7 +2007,8 @@ def admin_team_login():
     if pw_hash != member.get('password_hash', ''):
         return jsonify({'error': 'Incorrect password'}), 401
     return jsonify({'status': 'ok', 'role': member.get('role', 'admin'),
-                    'name': member.get('name', ''), 'password_set': member.get('password_set', True)})
+                    'name': member.get('name', ''), 'password_set': member.get('password_set', True),
+                    'admin_key': ADMIN_KEY})
 
 @app.route('/admin/team/set-password', methods=['POST'])
 def admin_team_set_password():
