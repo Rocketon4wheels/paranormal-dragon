@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+Disallow: /admin.html
+Disallow: /crm.html
+Disallow: /member.html
+
+Sitemap: https://strangenessis.com/sitemap.xml

@@ -1,0 +1,7 @@
+.deploy-config
+upload/archive/
+__pycache__/
+*.pyc
+.env
+.DS_Store
+Thumbs.db
