@@ -1997,7 +1997,7 @@ def admin_team_login():
         return jsonify({'error': 'Email and password required'}), 400
     # Master admin key check (no email required for master key)
     if password == ADMIN_KEY:
-        return jsonify({'status': 'ok', 'role': 'superadmin', 'name': 'Admin', 'password_set': True})
+        return jsonify({'status': 'ok', 'role': 'superadmin', 'name': 'Admin', 'password_set': True, 'admin_key': ADMIN_KEY})
     config = get_config()
     team   = config.get('admin_team', [])
     member = next((m for m in team if m.get('email', '').lower() == email), None)
@@ -2007,7 +2007,8 @@ def admin_team_login():
     if pw_hash != member.get('password_hash', ''):
         return jsonify({'error': 'Incorrect password'}), 401
     return jsonify({'status': 'ok', 'role': member.get('role', 'admin'),
-                    'name': member.get('name', ''), 'password_set': member.get('password_set', True)})
+                    'name': member.get('name', ''), 'password_set': member.get('password_set', True),
+                    'admin_key': ADMIN_KEY})
 
 @app.route('/admin/team/set-password', methods=['POST'])
 def admin_team_set_password():

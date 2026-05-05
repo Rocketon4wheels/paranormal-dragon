@@ -301,11 +301,11 @@
         
         <button class="sidebar-item" onclick="showPanel('portal-config',this)"><span class="dot"></span>Agent Settings</button>
         <button class="sidebar-item" onclick="showPanel('analytics',this)"><span class="dot"></span>Analytics</button>
-        <button class="sidebar-item" onclick="showPanel('headlines',this)"><span class="dot"></span>Headline Database</button>
-        <button class="sidebar-item" onclick="showPanel('oracle-conversations',this)"><span class="dot"></span>Oracle Intelligence</button>
-        <button class="sidebar-item" onclick="showPanel('pipeline-status',this)"><span class="dot"></span>Pipeline Status ✓</button>
-        <button class="sidebar-item" onclick="showPanel('audit-log',this)"><span class="dot"></span>Audit Log</button>
-        <button class="sidebar-item" onclick="showPanel('comments-mod',this)"><span class="dot"></span>Comments</button>
+        
+        
+        
+        
+        
         <button class="sidebar-item" onclick="showPanel('members',this)"><span class="dot"></span>Members</button>
         <button class="sidebar-item" onclick="showPanel('stripe',this)"><span class="dot"></span>Stripe Setup</button>
         <button class="sidebar-item" onclick="showPanel('tawk',this)"><span class="dot"></span>Live Chat</button>
@@ -1340,6 +1340,8 @@ async function loginTeam() {
     sessionStorage.setItem('si_admin_role',  data.role || 'editor');
     sessionStorage.setItem('si_admin_email', email);
     sessionStorage.setItem('si_admin_name',  data.name || '');
+    // Set the admin key from server response so all API calls authenticate correctly
+    if (data.admin_key) sessionStorage.setItem('si_admin_key', data.admin_key);
     document.getElementById('login-screen').style.display = 'none';
     document.getElementById('admin-screen').style.display = 'block';
     initAdmin();
@@ -2010,6 +2012,7 @@ function renderSubmissions(subs) {
             <button class="btn-sm btn-red"    onclick="rejectSubmission('${s.id}')">Reject</button>
           ` : '<span style="font-family:var(--mono);font-size:.75rem;color:var(--green)">✓ ' + s.status + '</span>'}
           ${s.reporter_email && !s.anonymous ? '<a href="mailto:' + s.reporter_email + '?subject=Re: Your sighting (Case #' + s.case_number + ')" class="btn-sm btn-outline" style="text-decoration:none">Reply</a>' : ''}
+          <button class="btn-sm btn-red" onclick="deleteSubmission('${s.id}')" style="margin-left:auto">🗑 Delete</button>
         </div>
       </div>
 
