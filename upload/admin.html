@@ -1259,8 +1259,6 @@ sudo systemctl restart strangeness</div></div>
     if (panel) panel.innerHTML = `<div style="color:var(--error);padding:1rem">Failed to load: ${e.message}</div>`;
   }
 }
-const API = 'https://api.strangenessis.com';
-
 function getAdminKey() {
   return sessionStorage.getItem('si_admin_key') || '';
 }
@@ -1268,40 +1266,30 @@ function getAdminKey() {
 // ── Login ─────────────────────────────────────────────────────
 async function login() {
   const val = document.getElementById('pwd-input').value.trim();
-  const errEl = document.getElementById('login-error');
-  errEl.style.display = 'none';
   if (!val) return;
-
-  const btn = document.querySelector('.login-btn');
-  if (btn) btn.textContent = 'Connecting...';
-
+  // Verify against the server — server is the only source of truth
   try {
-    const res = await fetch(API + '/admin/stats', {
-      method: 'GET',
-      headers: { 'Content-Type': 'application/json', 'X-Admin-Key': val }
+    const res = await fetch(`${API}/admin/stats`, {
+      headers: { 'X-Admin-Key': val }
     });
-
-    if (res.status === 200) {
+    if (res.ok) {
       sessionStorage.setItem('si_admin_key', val);
       sessionStorage.setItem('si_auth', Date.now().toString());
       document.getElementById('login-screen').style.display = 'none';
       document.getElementById('admin-screen').style.display = 'block';
       initAdmin();
       setTimeout(checkAllPanelStatuses, 1200);
-    } else if (res.status === 401) {
+    } else {
+      const errEl = document.getElementById('login-error');
       errEl.textContent = 'Incorrect password.';
       errEl.style.display = 'block';
       document.getElementById('pwd-input').value = '';
       document.getElementById('pwd-input').focus();
-    } else {
-      errEl.textContent = 'Server error: ' + res.status + '. Try again.';
-      errEl.style.display = 'block';
     }
   } catch(e) {
-    errEl.textContent = 'Network error: ' + e.message + ' — API: ' + API;
+    const errEl = document.getElementById('login-error');
+    errEl.textContent = 'Cannot reach API — check server is running.';
     errEl.style.display = 'block';
-  } finally {
-    if (btn) btn.textContent = 'Enter the Control Room';
   }
 }
 
