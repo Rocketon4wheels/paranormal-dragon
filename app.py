@@ -923,9 +923,15 @@ def chat():
     # ── Server-side free message enforcement ──────────────────────────────
     # Check if the request carries a valid member token → unlimited access
     member_token = request.headers.get('X-Member-Token', '')
-    is_member = bool(member_token and find_member_by_token(member_token))
+    member_obj   = find_member_by_token(member_token) if member_token else None
+    is_member    = bool(member_obj)
+    member_plan  = member_obj.get('plan', 'free') if member_obj else 'free'
+    limits       = PLAN_LIMITS.get(member_plan, PLAN_LIMITS['free'])
+    msg_limit    = limits['oracle_messages']  # -1 = unlimited
 
-    if not is_member:
+    if msg_limit == -1:
+        pass  # unlimited — skip all counting
+    elif not is_member:
         config       = get_config()
         free_limit   = int(config.get('free_messages', 3))
         sessions     = get_sessions()
@@ -1120,10 +1126,19 @@ def reports_latest():
 def reports_archive():
     reports  = get_reports()
     live     = [r for r in reports if r.get('status') == 'live']
+    # Gate report access by member plan
+    token  = request.headers.get('X-Member-Token', '')
+    member = find_member_by_token(token) if token else None
+    plan   = member.get('plan', 'free') if member else 'free'
+    limits = PLAN_LIMITS.get(plan, PLAN_LIMITS['free'])
+    total_live = len(live)
+    if limits['report_access'] != -1:
+        live = live[:limits['report_access']]
     page     = max(1, int(request.args.get('page', 1)))
     per_page = min(50, int(request.args.get('per', 10)))
     start    = (page - 1) * per_page
-    return jsonify({'reports': live[start:start + per_page], 'total': len(live), 'page': page})
+    return jsonify({'reports': live[start:start + per_page], 'total': len(live),
+                    'total_live': total_live, 'plan': plan, 'page': page})
 
 @app.route('/submissions', methods=['POST'])
 def create_submission():
@@ -1276,12 +1291,26 @@ def member_profile():
     if err: return err, code
     reports = get_reports()
     live    = [r for r in reports if r.get('status') == 'live']
+    plan   = member.get('plan', 'free')
+    limits = PLAN_LIMITS.get(plan, PLAN_LIMITS['free'])
+    if limits['report_access'] != -1:
+        live = live[:limits['report_access']]
     return jsonify({
-        'member':       {'id': member['id'], 'name': member['name'],
-                         'email': member['email'], 'plan': member['plan']},
+        'member':        {'id': member['id'], 'name': member['name'],
+                          'email': member['email'], 'plan': plan},
         'reports_count': len(live),
         'latest_report': live[0] if live else None,
+        'plan_limits':   limits,
     })
+
+
+@app.route('/member/plan-limits', methods=['GET'])
+def member_plan_limits():
+    member, err, code = require_member(request)
+    if err: return err, code
+    plan   = member.get('plan', 'free')
+    limits = PLAN_LIMITS.get(plan, PLAN_LIMITS['free'])
+    return jsonify({'plan': plan, 'limits': limits})
 
 @app.route('/member/logout', methods=['POST'])
 def member_logout():
@@ -1384,7 +1413,46 @@ def member_forgot_password():
 PLANS = {
     'oracle':       {'name': 'The Oracle',       'price': 9,  'interval': 'month'},
     'investigator': {'name': 'The Investigator', 'price': 19, 'interval': 'month'},
-    'chronicler':   {'name': 'The Chronicler',   'price': 49, 'interval': 'year'},
+    'chronicler':   {'name': 'The Chronicler',   'price': 89, 'interval': 'year'},
+}
+
+PLAN_LIMITS = {
+    'free': {
+        'oracle_messages':  3,
+        'report_access':    3,
+        'signal_intel':     False,
+        'live_sessions':    0,
+        'digest_emails':    False,
+        'early_access':     False,
+        'download_reports': False,
+    },
+    'oracle': {
+        'oracle_messages':  -1,
+        'report_access':    -1,
+        'signal_intel':     False,
+        'live_sessions':    0,
+        'digest_emails':    True,
+        'early_access':     False,
+        'download_reports': True,
+    },
+    'investigator': {
+        'oracle_messages':  -1,
+        'report_access':    -1,
+        'signal_intel':     True,
+        'live_sessions':    2,
+        'digest_emails':    True,
+        'early_access':     False,
+        'download_reports': True,
+    },
+    'chronicler': {
+        'oracle_messages':  -1,
+        'report_access':    -1,
+        'signal_intel':     True,
+        'live_sessions':    -1,
+        'digest_emails':    True,
+        'early_access':     True,
+        'download_reports': True,
+    },
 }
 
 @app.route('/subscribe', methods=['POST'])

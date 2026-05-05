@@ -396,13 +396,31 @@
       document.getElementById('dash-email').textContent  = m.email;
       const planNames = { oracle:'The Oracle', investigator:'The Investigator', chronicler:'The Chronicler', free:'Free' };
       document.getElementById('dash-plan').textContent = planNames[m.plan] || m.plan;
-      // Stats
+      // Plan limits and stats
       const limits   = data.plan_limits || {};
-      const sessions = limits.live_sessions === -1 ? 'Unlimited' : limits.live_sessions === 0 ? 'None' : limits.live_sessions + '/mo';
+      const fmt      = v => v === -1 ? 'Unlimited' : v === 0 ? 'None' : v;
+      const oracle   = limits.oracle_messages === -1 ? 'Unlimited' : limits.oracle_messages + ' free';
+      const sessions = fmt(limits.live_sessions) + (limits.live_sessions > 0 ? '/mo' : '');
+      const reports  = limits.report_access === -1 ? 'All' : limits.report_access;
+
       document.getElementById('dash-stats').innerHTML = `
-        <div class="dash-stat"><div class="dash-stat-num">${data.reports_count||'—'}</div><div class="dash-stat-lbl">Reports available</div></div>
-        <div class="dash-stat"><div class="dash-stat-num">${m.message_count||0}</div><div class="dash-stat-lbl">Oracle sessions</div></div>
+        <div class="dash-stat"><div class="dash-stat-num">${reports}</div><div class="dash-stat-lbl">Reports available</div></div>
+        <div class="dash-stat"><div class="dash-stat-num">${oracle}</div><div class="dash-stat-lbl">Oracle messages</div></div>
         <div class="dash-stat"><div class="dash-stat-num">${sessions}</div><div class="dash-stat-lbl">Live sessions</div></div>`;
+
+      // Plan benefits badge
+      const benefits = [];
+      if (limits.digest_emails)    benefits.push('Daily digest emails');
+      if (limits.signal_intel)     benefits.push('Signal Intelligence access');
+      if (limits.download_reports) benefits.push('Download reports');
+      if (limits.early_access)     benefits.push('Early feature access');
+      if (benefits.length) {
+        const el = document.getElementById('plan-benefits');
+        if (el) el.innerHTML = benefits.map(b =>
+          `<span style="display:inline-block;background:rgba(124,58,237,.12);color:var(--purple3);font-family:'Cinzel',serif;font-size:.55rem;letter-spacing:.08em;padding:3px 8px;border-radius:10px;margin:2px">${b}</span>`
+        ).join('');
+      }
+
       // Latest report
       if (data.latest_report) {
         const r = data.latest_report;
@@ -413,9 +431,21 @@
             <a href="report.html" style="font-family:'Cinzel',serif;font-size:.6rem;letter-spacing:.12em;color:var(--purple3);text-decoration:none;display:inline-block;margin-top:.5rem">Read briefing →</a>
           </div>`;
       }
-      // Show investigator section if applicable
+
+      // Show investigator/chronicler section
       if (['investigator','chronicler'].includes(m.plan)) {
         document.getElementById('investigator-section').style.display = 'block';
+      }
+      // Show upgrade prompt for free and oracle members
+      const upgradeEl = document.getElementById('upgrade-prompt');
+      if (upgradeEl) {
+        if (m.plan === 'free') {
+          upgradeEl.style.display = 'block';
+          upgradeEl.innerHTML = '<p style="font-family:'Crimson Pro',Georgia,serif;font-size:.9rem;color:var(--muted);margin-bottom:.75rem">Upgrade to unlock unlimited Oracle access, all reports, and more.</p><a href="member.html?tab=upgrade" style="font-family:'Cinzel',serif;font-size:.65rem;letter-spacing:.1em;background:var(--purple3);color:#fff;padding:.5rem 1.25rem;border-radius:4px;text-decoration:none">View plans →</a>';
+        } else if (m.plan === 'oracle') {
+          upgradeEl.style.display = 'block';
+          upgradeEl.innerHTML = '<p style="font-family:'Crimson Pro',Georgia,serif;font-size:.9rem;color:var(--muted);margin-bottom:.75rem">Upgrade to Investigator for Signal Intelligence access and live sessions.</p><a href="member.html?tab=upgrade" style="font-family:'Cinzel',serif;font-size:.65rem;letter-spacing:.1em;background:var(--purple3);color:#fff;padding:.5rem 1.25rem;border-radius:4px;text-decoration:none">Upgrade →</a>';
+        }
       }
     }
 
