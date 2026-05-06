@@ -1053,7 +1053,7 @@ SMTP_PASS=abcdabcdabcdabcd</div>
             <div class="gmail-step-text">Go to dashboard.stripe.com/register — verify your business details to enable live payments.</div></div>
           <div class="gmail-step"><div class="gmail-step-num">STEP 2 — Create three subscription products</div>
             <div class="gmail-step-text">Products then Add product. Create:<br/>
-            The Oracle — $9/month | The Investigator — $19/month | The Chronicler — $49/year<br/>
+            The Oracle — $9/month | The Investigator — $19/month | The Chronicler — $89/year<br/>
             Copy each Price ID (starts with price_)</div></div>
           <div class="gmail-step"><div class="gmail-step-num">STEP 3 — Add to server .env</div>
             <div class="env-code">STRIPE_SECRET_KEY=sk_live_xxxx
@@ -2479,7 +2479,7 @@ async function loadMembers() {
     const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
     set('mem-total',  members.length);
     set('mem-active', members.filter(m=>m.active).length);
-    const mrr = members.filter(m=>m.active).reduce((s,m)=>s+({oracle:9,investigator:19,chronicler:Math.round(49/12)}[m.plan]||0),0);
+    const mrr = members.filter(m=>m.active).reduce((s,m)=>s+({oracle:9,investigator:19,chronicler:Math.round(89/12)}[m.plan]||0),0);
     set('mem-mrr',   '$' + mrr + '/mo');
     set('mem-count', '(' + members.length + ')');
     const listEl = document.getElementById('members-list');

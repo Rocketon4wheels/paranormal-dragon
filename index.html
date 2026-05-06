@@ -322,7 +322,9 @@
 
     
   /* ── Strange Diagnosis FAB ─────────────────────────────────── */
-  40%     { box-shadow: 0 0 0 10px rgba(124,58,237,.0), 0 0 0 6px rgba(212,168,67,.3), 0 4px 20px rgba(0,0,0,.5); }
+  @keyframes diagFabPulse {
+    0%,100% { box-shadow: 0 0 0 0 rgba(124,58,237,.4), 0 0 0 0 rgba(212,168,67,.2), 0 4px 20px rgba(0,0,0,.5); }
+    40%     { box-shadow: 0 0 0 10px rgba(124,58,237,.0), 0 0 0 6px rgba(212,168,67,.3), 0 4px 20px rgba(0,0,0,.5); }
     70%     { box-shadow: 0 0 0 14px rgba(124,58,237,.0), 0 0 0 10px rgba(212,168,67,.0), 0 4px 20px rgba(0,0,0,.5); }
   }
   @keyframes diagFabShimmer {
@@ -573,7 +575,7 @@
             <div class="topic-desc">MK Ultra. Operation Paperclip. DUMBS. The Secret Space Program. What runs beneath the surface?</div>
           </a>
           <a href="chatbot.html" class="topic-card">
-            <span class="topic-icon">🌀</span>
+            <span class="topic-icon">🌫️</span>
             <div class="topic-name">Unexplained Phenomena</div>
             <div class="topic-desc">Missing time. Time slips. Crop circles. Animal mutilation. Men in Black. The events that defy all explanation.</div>
           </a>
@@ -656,13 +658,12 @@
           <div class="price-feature">Early access to new features</div>
           <div class="price-feature">Verified pin on Strangeness Map</div>
           <div class="price-feature">Monthly exclusive deep-dive report</div>
-          <div class="price-feature dim">No live investigator sessions</div>
           <button class="price-btn" onclick="openPricingModal('chronicler')">Become a Chronicler</button>
         </div>
 
       </div>
 
-      <p class="pricing-note">>Payments via Stripe. No contracts. Cancel or pause anytime.</p>
+      <p class="pricing-note">Payments via Stripe. No contracts. Cancel or pause anytime.</p>
     </div>
   </div>
 
@@ -810,8 +811,8 @@
     var _currentPlan = 'oracle';
     var PLAN_INFO = {
       oracle:       {name:'The Oracle',       price:'$9 / month', features:['Unlimited Oracle conversations','Daily Strangeness Report and full archive','Submit your own sightings','Strange Diagnosis unlimited','Cancel anytime']},
-      investigator: {name:'The Investigator', price:'$19 / month', features:['Everything in The Oracle','4 live investigator sessions per month','Priority Believer Portal access','Vote on next report topic','Conversation summaries archived']},
-      chronicler:   {name:'The Chronicler',   price:'$49 / year',  features:['Everything in The Oracle, full year','Full historical report archive','Monthly exclusive deep-dive report','Verified pin on Strangeness Map','Save $60 vs monthly']},
+      investigator: {name:'The Investigator', price:'$19 / month', features:['Everything in The Oracle','2 live investigator sessions per month','Priority Believer Portal access','Vote on next report topic','Conversation summaries archived']},
+      chronicler:   {name:'The Chronicler',   price:'$89 / year',  features:['Everything in The Oracle, full year','Full historical report archive','Monthly exclusive deep-dive report','Verified pin on Strangeness Map','Save $139 vs monthly']},
     };
 
     function openPricingModal(plan) {

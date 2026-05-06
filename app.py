@@ -1604,7 +1604,7 @@ def admin_stats():
     intel_count = len(load_json(ORACLE_INTEL_FILE, []))
     mrr = (9  * len([m for m in active if m.get('plan') == 'oracle']) +
            19 * len([m for m in active if m.get('plan') == 'investigator']) +
-           round(49/12) * len([m for m in active if m.get('plan') == 'chronicler']))
+           round(89/12) * len([m for m in active if m.get('plan') == 'chronicler']))
     config = get_config()
     return jsonify({
         'reports_total':       len(reports),
