@@ -2692,13 +2692,17 @@ function setHlFilter(source) { _hlSourceFilter = source; loadHeadlines(); }
 
 async function fetchHeadlinesNow() {
   var el = document.getElementById('hl-fetch-result');
-  if (el) el.textContent = 'Scanning all RSS feeds — this may take 20-30 seconds...';
+  if (el) el.textContent = 'Scan started — refreshing in 45 seconds...';
   try {
     const data = await api('/admin/headlines/fetch', 'POST');
-    const msg = data.message || (data.new_headlines + ' new headlines added. ' + data.total + ' total stored.');
+    const msg = data.message || 'Scan running in background.';
     if (el) el.textContent = msg;
     toast(msg, 'info');
-    loadHeadlines();
+    // Poll after 45 seconds for results
+    setTimeout(function() {
+      loadHeadlines();
+      if (el) el.textContent = 'Scan complete — list refreshed.';
+    }, 45000);
   } catch(err) {
     if (el) el.textContent = 'Scan failed: ' + err.message;
     toast('Scan failed: ' + err.message, 'error');

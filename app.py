@@ -14,7 +14,6 @@ import schedule
 import time
 import requests
 import random
-import pytz
 import stripe
 from datetime import datetime, timezone, timedelta
 from email.mime.text import MIMEText
@@ -730,13 +729,9 @@ Write the complete Strangeness Report now. Follow all system prompt instructions
             'trigger':           'scheduled',  # overridden to 'manual' when admin triggers
         }
 
-        if config.get('report_auto_publish', False) or config.get('slot_autopublish', False):
+        if config.get('report_auto_publish', False):
             report['status']       = 'live'
             report['published_at'] = datetime.now(timezone.utc).isoformat()
-            # Clear slot override
-            stored_config2 = load_json(CONFIG_FILE, {})
-            stored_config2['slot_autopublish'] = False
-            save_json(CONFIG_FILE, stored_config2)
 
         reports = get_reports()
         reports.insert(0, report)
@@ -865,57 +860,24 @@ def scan_all_news_sources() -> int:
 
 
 def run_scheduler():
-    config       = get_config()
-    run_time     = config.get('report_time', '07:00')
-    _last_time   = run_time
-    schedule.every().day.at(run_time).do(generate_report)
-    schedule.every(15).minutes.do(scan_all_news_sources)  # 15-min news scanner
-    app.logger.info(f'Scheduler started — reports daily at {run_time}')
-
-    mst = pytz.timezone('America/Denver')
+    config     = get_config()
+    run_time   = config.get('report_time', '07:00')
+    _last_time = run_time
+    schedule.every().day.at(run_time).do(generate_report).tag('daily_report')
+    schedule.every(15).minutes.do(scan_all_news_sources)
+    app.logger.info(f'Scheduler started — reports daily at {run_time}, news scan every 15 min')
 
     while True:
-        # Detect admin changes to report_time and reschedule automatically
+        # Hot-reload report_time if admin changes it
         current_cfg  = get_config()
         new_run_time = current_cfg.get('report_time', '07:00')
         if new_run_time != _last_time:
-            app.logger.info(f'Scheduler: report_time changed {_last_time} → {new_run_time}, rescheduling')
+            app.logger.info(f'Scheduler: report_time changed {_last_time} → {new_run_time}')
             schedule.clear('daily_report')
             schedule.every().day.at(new_run_time).do(generate_report).tag('daily_report')
             _last_time = new_run_time
 
         schedule.run_pending()
-
-        # Weekly schedule slot checker
-        try:
-            now_utc      = datetime.now(timezone.utc)
-            now_mst      = now_utc.astimezone(mst)
-            slot_day_now = (now_mst.weekday() + 1) % 7
-            current_time = now_mst.strftime('%H:%M')
-
-            cfg = get_config()
-            for slot in cfg.get('weekly_schedule', []):
-                if (str(slot.get('day', '')) == str(slot_day_now) and
-                        slot.get('time', '') == current_time and
-                        slot.get('enabled', True)):
-                    slot_key = f"ran_{slot['id']}_{now_mst.strftime('%Y-%m-%d')}"
-                    ran_slots = cfg.get('ran_slots', {})
-                    if slot_key not in ran_slots:
-                        app.logger.info(f'Weekly slot: {slot.get("category")} at {current_time}')
-                        stored = load_json(CONFIG_FILE, {})
-                        if slot.get('category') and slot['category'] != 'auto':
-                            stored['forced_category'] = slot['category']
-                        stored['slot_autopublish'] = slot.get('autopublish', False)
-                        ran_slots[slot_key] = now_mst.isoformat()
-                        if len(ran_slots) > 100:
-                            for k in sorted(ran_slots.keys())[:50]:
-                                del ran_slots[k]
-                        stored['ran_slots'] = ran_slots
-                        save_json(CONFIG_FILE, stored)
-                        threading.Thread(target=generate_report, daemon=True).start()
-        except Exception as slot_err:
-            app.logger.warning(f'Slot check error: {slot_err}')
-
         time.sleep(60)
 
 scheduler_thread = threading.Thread(target=run_scheduler, daemon=True)
@@ -941,8 +903,22 @@ def health():
         'oracle_intel':    len(load_json(ORACLE_INTEL_FILE, [])),
     })
 
-@app.route('/chat', methods=['POST'])
-def chat():
+@app.route('/stats', methods=['GET'])
+def public_stats():
+    """Public network stats — reports, pins, sightings. No auth required."""
+    reports     = get_reports()
+    live        = [r for r in reports if r.get('status') == 'live']
+    submissions = get_submissions()
+    visible_subs = [s for s in submissions if s.get('status') in ('published', 'verified', 'reviewed', 'pending')]
+    pins        = get_pins()
+    verified_pins = [p for p in pins if p.get('verified', False)]
+    return jsonify({
+        'reports':    len(live),
+        'sightings':  len(visible_subs),
+        'map_pins':   len(verified_pins),
+    })
+
+@app.route('/chat', methods=['POST'])def chat():
     data       = request.get_json(silent=True) or {}
     message    = data.get('message', '').strip()
     history    = data.get('history', [])
@@ -2100,13 +2076,17 @@ def admin_get_headlines():
 def admin_fetch_headlines():
     err = require_admin()
     if err: return err
-    try:
-        count = scan_all_news_sources()  # synchronous — waits for completion
-        total = len(load_json(HEADLINES_FILE, []))
-        return jsonify({'status': 'fetched', 'new_headlines': count, 'total': total,
-                        'message': f'Scan complete. {count} new headlines added. {total} total stored.'})
-    except Exception as e:
-        return jsonify({'status': 'error', 'message': str(e)}), 500
+    def _run():
+        try:
+            count = scan_all_news_sources()
+            app.logger.info(f'Manual headline scan complete: {count} new headlines')
+        except Exception as e:
+            app.logger.error(f'Manual headline scan failed: {e}')
+    threading.Thread(target=_run, daemon=True).start()
+    return jsonify({
+        'status':  'scanning',
+        'message': 'Scan started. Refresh the headline list in 30-60 seconds to see results.',
+    })
 
 @app.route('/admin/headlines/<headline_id>', methods=['DELETE'])
 def admin_delete_headline(headline_id):
@@ -2383,7 +2363,6 @@ def admin_pipeline_status():
         'latest_report':        latest_rep.get('headline','—') if latest_rep else '—',
         'latest_report_time':   latest_rep.get('created_at','—') if latest_rep else '—',
         'report_schedule':      config.get('report_time','07:00'),
-        'weekly_slots':         len(config.get('weekly_schedule',[])),
         'scan_interval':        '15 minutes',
     })
 
@@ -2544,13 +2523,18 @@ def admin_delete_news_source(idx):
 def admin_scan_news_now():
     err = require_admin()
     if err: return err
-    try:
-        count = scan_all_news_sources()  # synchronous
-        total = len(load_json(HEADLINES_FILE, []))
-        return jsonify({'status': 'complete', 'new_headlines': count,
-                        'total': total, 'sources': len(get_all_news_sources())})
-    except Exception as e:
-        return jsonify({'status': 'error', 'message': str(e)}), 500
+    def _run():
+        try:
+            count = scan_all_news_sources()
+            app.logger.info(f'Admin news scan complete: {count} new headlines')
+        except Exception as e:
+            app.logger.error(f'Admin news scan failed: {e}')
+    threading.Thread(target=_run, daemon=True).start()
+    return jsonify({
+        'status':  'scanning',
+        'sources': len(get_all_news_sources()),
+        'message': 'Scan started. Refresh in 30-60 seconds to see results.',
+    })
 
 if __name__ == '__main__':
     port = int(os.getenv('PORT', 5000))
