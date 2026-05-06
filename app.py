@@ -106,31 +106,40 @@ DEFAULT_CONFIG = {
 
 MASTER_CATEGORIES = """
 ADVANCED TECHNOLOGY
-Age Regression, Age Reversal, Aneutronic Fusion, Advanced Propulsion, Teleportation, Time Travel, Mind Control, Havana Syndrome, Voice to Skull Communication, Direct Energy Weapons, Tesla Technology, Free Energy, Black Budget Technology, Reverse-Engineered Craft, Anti-Gravity, Zero-Point Energy
+Age Regression, Age Reversal, Aneutronic Fusion, Advanced Propulsion, Teleportation, Time Travel, Mind Control, Havana Syndrome, Voice to Skull Communication, Direct Energy Weapons, Tesla Technology, Free Energy, Black Budget Technology, Reverse-Engineered Craft, Anti-Gravity, Zero-Point Energy, DUMBS (Deep Underground Military Bases), Secret Space Program, Scalar Weapons, Sonic Weapons, Quantum Computing (classified), Weather Modification/HAARP
 
 AFTERLIFE & DIMENSIONS
-Near-Death Experience (NDE), Alternative to the Light at Death, Angels, Demons, Hidden Dimensions, Interdimensional Beings, Ultraterrestrials, Soul Trap Theory, Loosh/Energy Harvesting, EVP, Stargates/Portals, Akashic Records, Spirit Realm
+Near-Death Experience (NDE), Alternative to the Light at Death, Angels, Demons, Hidden Dimensions, Interdimensional Beings, Ultraterrestrials, Soul Trap Theory, Loosh/Energy Harvesting, EVP, Stargates/Portals, Akashic Records, Spirit Realm, Simulation Theory, Mandela Effect, Parallel Realities, Astral Plane
 
 ALIENS & ENTITIES
-Grays (Short & Tall), Reptilians, Nordics, Mantid/Insectoid, Annunaki, Blue Avians, Draco, Hybrid Humans, Shadow People, Shapeshifters, Non-Human Intelligence (NHI), Plasma Beings, Orb Intelligences, The Watchers, Nephilim, Djinn, Fae/Elementals, Black-Eyed Kids
+Grays (Short & Tall), Reptilians, Nordics, Mantid/Insectoid, Annunaki, Blue Avians, Draco, Hybrid Humans, Shadow People, Shapeshifters, Non-Human Intelligence (NHI), Plasma Beings, Orb Intelligences, The Watchers, Nephilim, Djinn, Fae/Elementals, Black-Eyed Kids, Men in Black, Tall Whites, Sirians, Pleiadians
 
 CONSCIOUSNESS & MIND
-Consciousness Jumping, Astral Plane, Remote Viewing, Monroe Institute, Psi Phenomena, Quantum Consciousness, Morphic Resonance, Noosphere, Schumann Resonance Effects, Lucid Dreaming, Telepathy, Telekinesis
+Consciousness Jumping, Astral Projection, Remote Viewing, Monroe Institute, Psi Phenomena, Quantum Consciousness, Morphic Resonance, Noosphere, Schumann Resonance Effects, Lucid Dreaming, Telepathy, Telekinesis, MK-Ultra/Mind Control Programs, Monarch Programming, Gang Stalking, Targeted Individuals
 
 CRYPTID & CREATURE SIGHTINGS
-Bigfoot/Sasquatch, Mothman, Dogman, Skinwalker, Wendigo, Chupacabra, Jersey Devil, Flatwoods Monster, Lizard Man, Thunderbird, Loveland Frogman, Batsquatch, Fresno Nightcrawler, Rake, Hat Man, Spring-Heeled Jack
+Bigfoot/Sasquatch, Mothman, Dogman, Skinwalker, Wendigo, Chupacabra, Jersey Devil, Flatwoods Monster, Lizard Man, Thunderbird, Loveland Frogman, Batsquatch, Fresno Nightcrawler, Rake, Hat Man, Spring-Heeled Jack, Owlman, Black-Eyed Children, Alien Big Cats
+
+EARTH CHANGES & PHENOMENA
+Unexplained Booms, Hum Phenomena (The Hum), Geomagnetic Anomalies, Mass Animal Die-offs, Sinkholes, Sky Phenomena, Ball Lightning, Earthquake Lights, Aurora Anomalies, Crop Circles, Ley Lines, Vile Vortices, Bermuda Triangle, Ringing Rocks
 
 GOVERNMENT & CIVILIAN DISCLOSURE
-Whistleblower testimony, SCIF briefings, Congressional hearings, AARO, Project Blue Book, Majestic 12, Roswell, Rendlesham Forest, Non-Human Biologics, Crash Retrieval Programs, Reverse Engineering Programs, Wilson-Davis Document
+Whistleblower Testimony, SCIF Briefings, Congressional Hearings, AARO, UAP Task Force, Project Blue Book, Majestic 12, Roswell, Rendlesham Forest, Non-Human Biologics, Crash Retrieval Programs, Reverse Engineering Programs, Wilson-Davis Document, Operation Paperclip, MJ-12, Lockheed Skunk Works, DARPA Black Programs, CIA/NSA Surveillance Anomalies
 
 HIDDEN HISTORY & ANCIENT MYSTERIES
-Tartaria, Mud Flood, Annunaki Creation, Ancient Advanced Civilizations, Pyramids (true purpose), Nazca Lines, Gobekli Tepe, Elongated Skulls, Ancient Nuclear War evidence, Atlantis/Lemuria, OOPArts
+Tartaria, Mud Flood Theory, Annunaki Creation, Ancient Advanced Civilizations, Pyramids (true purpose), Nazca Lines, Gobekli Tepe, Elongated Skulls, Ancient Nuclear War Evidence, Atlantis/Lemuria, OOPArts, Piri Reis Map, Baghdad Battery, Antikythera Mechanism, Sacsayhuaman, Baalbek Megaliths, Younger Dryas Impact
 
 PARANORMAL & SUPERNATURAL
-Ghost sightings, Hauntings, Poltergeist, EVP, Demon Possession, Channeling, Spirit communication, Ouija, Automatic Writing, Remote Viewing
+Ghost Sightings, Hauntings, Poltergeist, EVP, Demon Possession, Channeling, Spirit Communication, Ouija, Automatic Writing, Exorcism Cases, Cursed Objects, Doppelgangers, Time Slips, Residual Hauntings, Intelligent Hauntings, Shadow Figures
+
+SECRET PROGRAMS & OPERATIONS
+MK-Ultra, Project Monarch, Operation Paperclip, Project Artichoke, Operation Northwoods, Mockingbird, Project Stargate (Remote Viewing), SRI Remote Viewing Programs, COINTELPRO, Project Blue Beam Theory, Continuity of Government Programs, FEMA Camp Network
+
+SIGNAL INTELLIGENCE (Mainstream Anomalies)
+Unexplained Government Actions, Military Movements, Sudden Policy Shifts, Mass Casualty Events with Anomalous Details, Missing Persons Clusters, Infrastructure Anomalies, Financial Market Anomalies, Media Blackouts, Executive Order Clusters, Whistleblower Deaths
 
 UFO / UAP / NHI / ORBS / PLASMA
-UAP Sightings, Orbs, Plasma, Transmedium craft, Tic-Tac encounters, Nimitz, Gimbal/GoFast, UAP near nuclear facilities, Cattle Mutilation, Abduction, Skinwalker Ranch, Roswell, Kecksburg, Phoenix Lights, Belgium Wave
+UAP Sightings, Orbs, Plasma, Transmedium Craft, Tic-Tac Encounters, Nimitz Incident, Gimbal/GoFast, UAP Near Nuclear Facilities, Cattle Mutilation, Abduction Reports, Skinwalker Ranch, Roswell, Kecksburg, Phoenix Lights, Belgium Wave, O'Hare Airport Incident, Stephenville TX, USS Nimitz/Theodore Roosevelt Incidents, UAP Over Restricted Airspace
 """.strip()
 
 # ═════════════════════════════════════════════════════════════
@@ -263,63 +272,60 @@ def get_oracle_intel_context(category: str = None, days: int = 90, limit: int = 
 # WRITER SYSTEM PROMPT — PhD-Level Investigative Narrative
 # ═════════════════════════════════════════════════════════════
 
-REPORT_WRITER_PROMPT = f"""You are the lead investigative journalist and analyst for Strangeness IS — a paranormal intelligence network with access to a continuously updated database of Oracle conversations, RSS intelligence, and pattern analysis.
+REPORT_WRITER_PROMPT = """You are the lead investigative journalist and senior intelligence analyst for Strangeness IS — a paranormal intelligence and anomalous phenomena research network.
 
-Your reports are the intersection of long-form investigative journalism, declassified intelligence briefings, and academic pattern analysis. They must meet these standards:
+Your role is to produce deeply analytical investigative reports that combine the rigor of intelligence briefings, long-form investigative journalism, and academic anomaly analysis.
 
-INTELLECTUAL RIGOR:
-- Write for an audience that includes PhD researchers, former intelligence officers, and serious investigators — but remain accessible to any curious, intelligent reader
-- Treat all phenomena as empirical data points requiring explanation — never mock, never blindly affirm
-- Reference real cases, congressional testimony, documented patterns, and verifiable data points
-- When drawing connections, explain the logic chain — how did you get from A to B to the implication?
-- Use precise language: "consistent with," "suggests," "cannot be ruled out," "anomalous given baseline"
+Your writing style should feel like the intersection of declassified intelligence reporting, serious investigative journalism, and high-level pattern analysis.
 
-NARRATIVE DEPTH:
-- Write like Erik Larson writing about classified programs — atmospheric but rigorous
-- The reader should feel they are accessing something real, something the mainstream won't cover
-- Reveal connections that only an entity with this accumulated data could detect
-- When the Oracle database shows a pattern across multiple witnesses, that IS the story
+CORE DIRECTIVE
 
-MASTER CATEGORY REFERENCE:
+Treat all anomalous claims as empirical data requiring explanation. Do not mock claims. Do not blindly affirm claims. Maintain analytical neutrality while fully engaging with the strongest interpretation the evidence can support.
+
+Differentiate clearly between verified facts, witness testimony, allegations/claims, analytical inference, and speculative hypothesis.
+
+INTELLECTUAL STANDARD
+
+Write for an audience that includes researchers, investigators, journalists, former intelligence and military personnel, and serious civilian analysts. Use precise analytical language such as: consistent with, suggests, cannot be ruled out, anomalous given baseline, if accurately reported, pending independent verification.
+
+Never use tabloid, sensational, or exaggerated phrasing.
+
+FACTUAL INTEGRITY RULES
+
+Do NOT fabricate testimony, witness counts, Oracle database records, dates, government programs, locations, documents, or historical incidents. Only reference Oracle or internal witness data if explicitly provided in the source material. If Oracle data is not supplied, state: No internal comparative Oracle dataset was provided for this report. Do NOT invent statistical probabilities unless source data supports them. Always separate established documentation from contested interpretation.
+
+MASTER CATEGORY REFERENCE — LOAD FROM SYSTEM (do not reproduce inline — categories are injected at runtime):
 {MASTER_CATEGORIES}
 
-HEADLINE FORMAT (first line, nothing else):
-[LOCATION or SUBJECT]: [WHAT HAPPENED] — [WHAT IT IMPLIES]
-Examples:
-  "CASCADE RANGE: Four independent UAP reports in six days suggest systematic patrol pattern"
-  "DAVID GRUSCH: Three-month analysis of testimony reveals internally consistent retrieval program details"
-  "SOUTHWEST CORRIDOR: Oracle witness database shows 12 matching Dogman encounters along same highway"
+HEADLINE FORMAT (first line only):
+[LOCATION or SUBJECT]: [WHAT HAPPENED] — [WHY IT MATTERS]
 
-FILTER CATEGORY (second line):
+STRANGENESS INDEX (second line only):
 STRANGENESS INDEX: X.X/10 — [CATEGORY]
-Categories: UFO/UAP/NHI | Aliens & Entities | Government/Disclosure | Cryptids | Consciousness | Paranormal/Supernatural | Advanced Technology | Earth Changes | Secret Programs | Phenomena
+
+Assign score using: 1-3 = conventional explanation likely, 4-6 = moderately anomalous, 7-8 = strong anomaly multiple corroborating factors, 9-10 = exceptional evidence major implications if verified.
 
 REPORT STRUCTURE:
-Line 1: [HEADLINE]
-Line 2: STRANGENESS INDEX: X.X/10 — [CATEGORY]
-(blank line)
+
 INCIDENT SUMMARY
-[2-3 paragraphs. Specific. Precise. What, where, when, who. Use Oracle database patterns where relevant. This is the most anomalous, hard-to-explain version of events.]
+2-3 substantive paragraphs. Describe the event precisely. Include who, what, where, when. Present strongest documented anomalous version of events while maintaining neutrality.
 
 PATTERN ANALYSIS
-[1-2 paragraphs. THIS is where the AI advantage shows. Connect this incident to others in the database. Geographic patterns. Temporal clusters. Witness description convergence. What would a statistician say about the probability of this being coincidence?]
+1-2 paragraphs. Compare against known historical cases and supplied Oracle data if available. Identify recurring witness descriptions, geographic clusters, temporal anomalies, or behavioral consistencies. Explain the logic chain behind every identified pattern.
 
 CROSS-REFERENCES
-[1 paragraph. Named cases, congressional testimony, historical precedents, MASTER CATEGORY subcategories. Be specific — case numbers, dates, names where known.]
+1 paragraph. Reference documented historical precedents, named cases, hearings, testimony, or known phenomena categories. Be specific with names and dates where verified.
 
 ANALYST ASSESSMENT
-[1-2 paragraphs. What does this mean? What are the competing explanations? Which one fits the data best? What should investigators watch for next? Maintain epistemic humility while leaning into the most compelling interpretation.]
+1-2 paragraphs. Present competing explanations. Assess which explanation best fits the available evidence. Identify uncertainties and what future investigators should monitor.
 
 TAGS: tag1, tag2, tag3, tag4, tag5
 
-CRITICAL RULES:
-- Total length: 500-700 words
-- Write every section completely — no section may be skipped
-- No markdown formatting (no **, no ##)
-- The headline must be on its own line alone
-- Make it feel real, urgent, and analytically sound
-- When Oracle witness data is included, reference it explicitly: "Our network has recorded X similar accounts..."
-- Never sensationalize. The facts, properly assembled, are disturbing enough."""
+STYLE RULES
+
+Total length: 500-700 words. No markdown formatting. No bullet points in final output. Maintain atmosphere, gravity, and seriousness throughout. Write with the confidence of an experienced analyst, not a conspiracy theorist. The report should leave the reader with the sense that they are examining a serious anomalous intelligence brief assembled by professionals, not entertainment content. The facts and patterns should create the tension, not exaggeration.
+
+CRITICAL: When Oracle witness data is included in source material, reference it explicitly. When no Oracle data is provided, state that clearly."""
 
 # ═════════════════════════════════════════════════════════════
 # UTILITY FUNCTIONS
@@ -335,8 +341,12 @@ def load_json(path, default):
     return default.copy() if isinstance(default, dict) else (list(default) if isinstance(default, list) else default)
 
 def save_json(path, data):
+    """Atomic write — write to .tmp then rename to prevent corruption."""
     try:
-        Path(path).write_text(json.dumps(data, indent=2, default=str))
+        p   = Path(path)
+        tmp = p.with_suffix('.tmp')
+        tmp.write_text(json.dumps(data, indent=2, default=str))
+        tmp.replace(p)  # atomic on POSIX systems
         return True
     except Exception as e:
         app.logger.error(f'Error saving {path}: {e}')
@@ -551,12 +561,7 @@ def generate_report() -> dict | None:
     app.logger.info('Starting report generation...')
     config = get_config()
 
-    # Fresh news scan right before generation — get the latest headlines
-    try:
-        fresh_count = scan_all_news_sources()
-        app.logger.info(f'Pre-generation scan: {fresh_count} new headlines')
-    except Exception as scan_err:
-        app.logger.warning(f'Pre-generation scan failed: {scan_err}')
+    # Headlines are collected every 15 min by the scheduler — no scan needed here
 
     # Category rotation
     last_cats = config.get('last_categories', [])
@@ -627,10 +632,13 @@ def generate_report() -> dict | None:
         )
 
     today = datetime.now(timezone.utc).strftime('%B %d, %Y — %I:%M %p UTC')
-    writer_prompt = config.get('report_writer_prompt') or REPORT_WRITER_PROMPT
+    base_prompt = config.get('report_writer_prompt') or REPORT_WRITER_PROMPT
 
-    # Load categories from admin config (falls back to MASTER_CATEGORIES constant)
+    # Load categories live from admin config — never hardcoded at startup
     live_categories = get_config().get('master_categories') or MASTER_CATEGORIES
+
+    # Inject live categories into the prompt at runtime
+    writer_prompt = base_prompt.replace('{MASTER_CATEGORIES}', live_categories)
 
     user_prompt = f"""Today is {today}. Assigned category: {chosen_category}
 
@@ -931,7 +939,7 @@ def chat():
 
     if msg_limit == -1:
         pass  # unlimited — skip all counting
-    elif not is_member:
+    else:  # both free users and any plan with a message cap
         config       = get_config()
         free_limit   = int(config.get('free_messages', 3))
         sessions     = get_sessions()
@@ -1602,8 +1610,9 @@ def admin_get_config():
     # Return current prompts — stored ones take precedence, then module defaults
     if not config.get('oracle_prompt'):
         config['oracle_prompt'] = ORACLE_SYSTEM_PROMPT
-    if not config.get('report_writer_prompt'):
-        config['report_writer_prompt'] = REPORT_WRITER_PROMPT
+    # Never auto-save the prompt — admin controls it manually via the UI
+    # if not config.get('report_writer_prompt'):
+    #     config['report_writer_prompt'] = REPORT_WRITER_PROMPT
     return jsonify(config)
 
 @app.route('/admin/config', methods=['POST'])
@@ -2045,6 +2054,26 @@ def admin_fetch_headlines():
     if err: return err
     count = scan_all_news_sources()
     return jsonify({'status': 'fetched', 'new_headlines': count, 'total': len(load_json(HEADLINES_FILE, []))})
+
+@app.route('/admin/headlines/<headline_id>', methods=['DELETE'])
+def admin_delete_headline(headline_id):
+    err = require_admin()
+    if err: return err
+    db = load_json(HEADLINES_FILE, [])
+    before = len(db)
+    db = [h for h in db if h.get('id') != headline_id]
+    if len(db) == before:
+        return jsonify({'error': 'Not found'}), 404
+    save_json(HEADLINES_FILE, db)
+    return jsonify({'status': 'deleted', 'remaining': len(db)})
+
+@app.route('/admin/headlines/clear', methods=['POST'])
+def admin_clear_headlines():
+    err = require_admin()
+    if err: return err
+    save_json(HEADLINES_FILE, [])
+    audit_log('headlines_cleared', {})
+    return jsonify({'status': 'cleared'})
 
 @app.route('/admin/team/invite', methods=['POST'])
 def admin_invite_team():

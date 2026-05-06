@@ -307,6 +307,7 @@
         
         
         <button class="sidebar-item" onclick="showPanel('members',this)"><span class="dot"></span>Members</button>
+        <button class="sidebar-item" onclick="showPanel('headlines',this)"><span class="dot"></span>Headline Database</button>
         <button class="sidebar-item" onclick="showPanel('signal-intel',this)"><span class="dot"></span>Signal Intelligence</button>
         <button class="sidebar-item" onclick="showPanel('stripe',this)"><span class="dot"></span>Stripe Setup</button>
         <button class="sidebar-item" onclick="showPanel('tawk',this)"><span class="dot"></span>Live Chat</button>
@@ -1454,6 +1455,7 @@ function showPanel(id, btn) {
     'report-schedule':    loadScheduleConfig,
             analytics:            loadAnalytics,
     members:              loadMembers,
+    headlines:            loadHeadlines,
     'signal-intel':       loadSignalIntel,
     'admin-team':         loadTeam,
     'weekly-schedule':    loadWeeklySchedule,
