@@ -260,7 +260,10 @@
     .section-body { color: var(--muted); font-size: 1.05rem; line-height: 1.8; max-width: 600px; }
 
     /* Topic grid */
-    .topic-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1px; background: rgba(124,58,237,0.12); border: 1px solid rgba(124,58,237,0.12); border-radius: 4px; overflow: hidden; margin-top: 2.5rem; }
+    .topic-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 1px; background: rgba(124,58,237,0.12); border: 1px solid rgba(124,58,237,0.12); border-radius: 4px; overflow: hidden; margin-top: 2.5rem; }
+    @media (min-width: 900px) { .topic-grid { grid-template-columns: repeat(5, 1fr); } }
+    @media (max-width: 899px) and (min-width: 600px) { .topic-grid { grid-template-columns: repeat(3, 1fr); } }
+    @media (max-width: 599px) { .topic-grid { grid-template-columns: repeat(2, 1fr); } }
     .topic-card { background: var(--dark2); padding: 1.75rem 1.5rem; transition: background 0.3s; cursor: pointer; text-decoration: none; display: block; }
     .topic-card:hover { background: #130028; }
     .topic-icon { font-size: 1.6rem; margin-bottom: 0.6rem; display: block; }
@@ -488,6 +491,14 @@
         <!-- Small detail tendrils -->
         <path class="tendril tendril-a" d="M935,260 L970,280 L960,310 L990,330"/>
         <path class="tendril tendril-c" d="M900,310 L860,340 L875,370 L845,395"/>
+        <!-- Bottom-left corner lightning -->
+        <path class="tendril tendril-a" d="M0,900 L40,820 L20,760 L60,700 L35,650 L75,600 L50,560" style="animation-delay:.3s"/>
+        <path class="tendril tendril-b" d="M40,820 L90,800 L80,770 L120,750" filter="url(#tendril-glow-gold)" style="animation-delay:.45s"/>
+        <path class="tendril tendril-c" d="M60,700 L100,680 L90,660 L130,640" style="animation-delay:.35s"/>
+        <!-- Bottom-right corner lightning -->
+        <path class="tendril tendril-a" d="M1440,900 L1400,810 L1420,750 L1385,690 L1410,640 L1375,590 L1400,545" style="animation-delay:.12s"/>
+        <path class="tendril tendril-b" d="M1400,810 L1355,790 L1365,760 L1320,740" filter="url(#tendril-glow-gold)" style="animation-delay:.28s"/>
+        <path class="tendril tendril-c" d="M1385,690 L1345,670 L1355,645 L1315,625" style="animation-delay:.18s"/>
       </svg>
     </div>
 
@@ -518,9 +529,46 @@
 
   <!-- Report banner -->
   <div class="report-banner">
-    <span class="report-label"><span class="live-dot"></span>Latest -- Strangeness Report</span>
-    <span class="report-teaser">"Three UAP incidents flagged over the Pacific this week -- pattern analysis suggests coordinated movement"</span>
+    <span class="report-label"><span class="live-dot"></span>Latest — Strangeness Report</span>
+    <span class="report-teaser" id="banner-teaser">Connecting to intelligence network...</span>
     <a href="report.html" class="report-link">Read full report</a>
+  </div>
+
+  <!-- Latest report strip -->
+  <div id="latest-report-strip" style="background:linear-gradient(to bottom,#06000f,#07070f);border-bottom:1px solid rgba(212,168,67,.12);padding:2rem 2rem 2.5rem;display:none">
+    <div style="max-width:860px;margin:0 auto">
+      <div style="display:flex;align-items:center;gap:.75rem;margin-bottom:1rem;flex-wrap:wrap">
+        <span style="font-family:'Cinzel',serif;font-size:.52rem;letter-spacing:.22em;color:var(--gold)">LATEST TRANSMISSION</span>
+        <span class="live-dot"></span>
+        <span id="latest-timestamp" style="font-family:'Share Tech Mono',monospace;font-size:.6rem;color:var(--muted)"></span>
+        <span id="latest-index" style="font-family:'Share Tech Mono',monospace;font-size:.6rem;color:var(--purple3);margin-left:auto"></span>
+      </div>
+      <h3 id="latest-headline" style="font-family:'Cinzel Decorative',serif;font-size:clamp(1rem,2.5vw,1.4rem);font-weight:400;color:var(--text);line-height:1.3;margin-bottom:.85rem"></h3>
+      <p id="latest-summary" style="font-size:.92rem;color:var(--muted);line-height:1.85;border-left:2px solid rgba(212,168,67,.3);padding-left:1.1rem;font-style:italic;margin-bottom:1rem"></p>
+      <div id="latest-tags" style="display:flex;gap:.4rem;flex-wrap:wrap;margin-bottom:1rem"></div>
+      <a href="report.html" style="font-family:'Cinzel',serif;font-size:.56rem;letter-spacing:.14em;color:var(--gold2);text-decoration:none;border:1px solid rgba(212,168,67,.35);padding:.4rem 1rem;border-radius:2px;transition:all .2s;display:inline-block" onmouseover="this.style.background='rgba(212,168,67,.08)'" onmouseout="this.style.background='transparent'">Read full report + archive →</a>
+    </div>
+  </div>
+
+  <!-- Live Network Stats -->
+  <div id="network-stats" style="background:#07070f;border-top:1px solid rgba(124,58,237,.1);border-bottom:1px solid rgba(124,58,237,.1);padding:2rem;">
+    <div style="max-width:900px;margin:0 auto;display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:rgba(124,58,237,.12);border:1px solid rgba(124,58,237,.12);border-radius:6px;overflow:hidden">
+      <div style="background:#0d0015;padding:1.5rem;text-align:center">
+        <div id="stat-reports" style="font-family:'Share Tech Mono',monospace;font-size:2.2rem;font-weight:700;color:#c084fc;line-height:1">—</div>
+        <div style="font-family:'Cinzel',serif;font-size:.52rem;letter-spacing:.2em;color:#9080b0;margin-top:.4rem">Intelligence Reports</div>
+        <div style="font-size:.78rem;color:#4a4060;margin-top:.25rem;font-style:italic">Published to the network</div>
+      </div>
+      <div style="background:#0d0015;padding:1.5rem;text-align:center;border-left:1px solid rgba(124,58,237,.12);border-right:1px solid rgba(124,58,237,.12)">
+        <div id="stat-sightings" style="font-family:'Share Tech Mono',monospace;font-size:2.2rem;font-weight:700;color:#d4a843;line-height:1">—</div>
+        <div style="font-family:'Cinzel',serif;font-size:.52rem;letter-spacing:.2em;color:#9080b0;margin-top:.4rem">Sightings Filed</div>
+        <div style="font-size:.78rem;color:#4a4060;margin-top:.25rem;font-style:italic">By investigators worldwide</div>
+      </div>
+      <div style="background:#0d0015;padding:1.5rem;text-align:center">
+        <div id="stat-pins" style="font-family:'Share Tech Mono',monospace;font-size:2.2rem;font-weight:700;color:#a855f7;line-height:1">—</div>
+        <div style="font-family:'Cinzel',serif;font-size:.52rem;letter-spacing:.2em;color:#9080b0;margin-top:.4rem">Verified Map Pins</div>
+        <div style="font-size:.78rem;color:#4a4060;margin-top:.25rem;font-style:italic">Confirmed incident locations</div>
+      </div>
+    </div>
   </div>
 
   <!-- Topics -->
@@ -868,13 +916,17 @@
       });
     });
 
-    // ── Live report preview — fetch latest published report ──────────────────
+    // ── Live report preview + banner teaser ────────────────────────────────
     (function loadReportPreview() {
       fetch('https://api.strangenessis.com/reports/latest')
         .then(function(res) { return res.ok ? res.json() : null; })
         .then(function(data) {
-          if (!data || !data.report) return;  // no live report yet — keep placeholder
+          if (!data || !data.report) return;
           var r = data.report;
+
+          // Update banner teaser with live headline
+          var bannerEl = document.getElementById('banner-teaser');
+          if (bannerEl && r.headline) bannerEl.textContent = r.headline;
 
           var dateEl  = document.getElementById('rp-date');
           var titleEl = document.getElementById('rp-title');
@@ -889,8 +941,56 @@
               return '<span class="rtag">' + t.charAt(0).toUpperCase() + t.slice(1) + '</span>';
             }).join('');
           }
+
+          // Populate latest report strip
+          var strip = document.getElementById('latest-report-strip');
+          if (strip) {
+            strip.style.display = 'block';
+            var ts = r.published_at || r.date_label || '';
+            var tsFormatted = '';
+            if (ts && ts.includes('T')) {
+              try { tsFormatted = new Date(ts).toLocaleString('en-US',{month:'short',day:'numeric',year:'numeric',hour:'numeric',minute:'2-digit',timeZone:'America/Denver'}) + ' MST'; }
+              catch(e) { tsFormatted = ts.slice(0,10); }
+            } else { tsFormatted = ts; }
+            var tsEl = document.getElementById('latest-timestamp');
+            if (tsEl) tsEl.textContent = tsFormatted;
+            var idxEl = document.getElementById('latest-index');
+            if (idxEl && r.strangeness_index) idxEl.textContent = 'Strangeness Index: ' + r.strangeness_index + '/10';
+            var hlEl = document.getElementById('latest-headline');
+            if (hlEl && r.headline) hlEl.textContent = r.headline;
+            var sumEl = document.getElementById('latest-summary');
+            if (sumEl && r.summary) sumEl.textContent = r.summary;
+            var tagsStripEl = document.getElementById('latest-tags');
+            if (tagsStripEl && r.tags && r.tags.length) {
+              tagsStripEl.innerHTML = r.tags.slice(0,5).map(function(t) {
+                return '<span style="font-family:'Cinzel',serif;font-size:.48rem;letter-spacing:.1em;color:var(--gold);border:1px solid rgba(212,168,67,.25);padding:2px 9px;border-radius:2px">' + t + '</span>';
+              }).join('');
+            }
+          }
         })
-        .catch(function() { /* network error — placeholder remains */ });
+        .catch(function() {});
+    })();
+
+    // ── Live network stats ───────────────────────────────────────────────────
+    (function loadStats() {
+      fetch('https://api.strangenessis.com/stats')
+        .then(function(res) { return res.ok ? res.json() : null; })
+        .then(function(data) {
+          if (!data) return;
+          function animCount(el, target) {
+            if (!el || !target) { if (el) el.textContent = target || '0'; return; }
+            var start = 0, duration = 1600, step = 16;
+            var timer = setInterval(function() {
+              start += Math.max(1, Math.ceil(target / (duration / step)));
+              if (start >= target) { start = target; clearInterval(timer); }
+              el.textContent = start.toLocaleString();
+            }, step);
+          }
+          animCount(document.getElementById('stat-reports'),  data.reports  || 0);
+          animCount(document.getElementById('stat-sightings'), data.sightings || 0);
+          animCount(document.getElementById('stat-pins'),      data.map_pins  || 0);
+        })
+        .catch(function() {});
     })();
   </script>
 

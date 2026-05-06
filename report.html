@@ -108,7 +108,9 @@
     }
   
   /* ── Strange Diagnosis FAB ─────────────────────────────────── */
-  40%     { box-shadow: 0 0 0 10px rgba(124,58,237,.0), 0 0 0 6px rgba(212,168,67,.3), 0 4px 20px rgba(0,0,0,.5); }
+  @keyframes diagFabPulse {
+    0%,100% { box-shadow: 0 0 0 0 rgba(124,58,237,.4), 0 0 0 0 rgba(212,168,67,.2), 0 4px 20px rgba(0,0,0,.5); }
+    40%     { box-shadow: 0 0 0 10px rgba(124,58,237,.0), 0 0 0 6px rgba(212,168,67,.3), 0 4px 20px rgba(0,0,0,.5); }
     70%     { box-shadow: 0 0 0 14px rgba(124,58,237,.0), 0 0 0 10px rgba(212,168,67,.0), 0 4px 20px rgba(0,0,0,.5); }
   }
   @keyframes diagFabShimmer {
@@ -341,235 +343,6 @@
     </aside>
   </div>
 
-  <!-- Diagnosis FAB -->
-
-  <script>
-    const API = 'https://api.strangenessis.com';
-    let allReports   = [];
-    let activeFilter = 'all';
-    let fullVisible  = false;
-    let activeCard   = null;
-
-    // ── Category filter map ────────────────────────────────────
-    const FILTER_MAP = {
-      ufo:         ['ufo','uap','nhi','orb','plasma','spacecraft','saucer','tic-tac','nimitz','omaha','aerial','flight','radar'],
-      aliens:      ['alien','entity','extraterrestrial','ultraterrestrial','gray','grey','nordic','reptilian','draco','annunaki','mantid','hybrid','non-human','biologics','blond'],
-      government:  ['government','disclosure','congress','whistleblower','classified','scif','legislation','cia','fbi','nsa','dod','pentagon','senator','hearing','political','coverup','cover-up','mainstream','media'],
-      cryptids:    ['bigfoot','sasquatch','cryptid','mothman','chupacabra','dogman','skinwalker','wendigo','jersey devil','loch ness','ufo','creature','monster','sighting','beast','serpent','mermaid','thunderbird'],
-      consciousness:['consciousness','remote viewing','astral','lucid','telepathy','psychic','dimensional','Monroe','clairvoyance','reincarnation','past life','out-of-body','meditation'],
-      paranormal:  ['paranormal','ghost','spirit','haunting','demon','possession','ouija','tarot','channeling','apparition','supernatural','poltergeist','evp','resurrection','stigmata'],
-      technology:  ['technology','fusion','aneutronic','teleportation','propulsion','tesla','free energy','direct energy','havana','voice to skull','hologram','cloaking','plasma weapon'],
-      earth:       ['earthquake','haarp','chemtrail','geo-engineering','weather','climate','earth change','volcano','flood','tsunami','solar'],
-      secret:      ['secret','underground','dumbs','mk ultra','paperclip','black project','tr-3b','aurora','above top secret','men in black','implant','drone','mind wipe'],
-      phenomena:   ['crop circle','missing time','time slip','deja vu','bi-location','animal mutilation','missing','mysterious','phantom','unexplained','mandela','simulation'],
-      humans:      ['enhanced','ability','remote view','telekinesis','gate','monroe','hybrid','genetic','superior','photographic','lucid','switching realities'],
-      endtimes:    ['end times','antichrist','collapse','economic','judgement','jesus','rapture','apocalypse','eotwawki'],
-    };
-
-    function getReportCategories(report) {
-      // Returns ALL matching categories for a report (multi-tag support)
-      const text = ((report.headline || '') + ' ' + (report.content || '') + ' ' + (report.tags || []).join(' ')).toLowerCase();
-      const matches = [];
-      for (const [cat, keywords] of Object.entries(FILTER_MAP)) {
-        if (keywords.some(kw => text.includes(kw))) matches.push(cat);
-      }
-      return matches.length > 0 ? matches : ['paranormal'];
-    }
-    function getReportCategory(report) {
-      // For display purposes, return the primary (first) category
-      return getReportCategories(report)[0];
-    }
-
-    function tagToFilter(tag) {
-      const t = tag.toLowerCase();
-      for (const [cat, keywords] of Object.entries(FILTER_MAP)) {
-        if (keywords.some(kw => t.includes(kw))) return cat;
-      }
-      return null;
-    }
-
-    // ── Init ───────────────────────────────────────────────────
-    document.addEventListener('DOMContentLoaded', () => {
-      document.getElementById('feat-date').textContent = new Date().toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
-      document.getElementById('meter-date').textContent = new Date().toLocaleDateString('en-US',{month:'short',day:'numeric'});
-      window.addEventListener('scroll', () => {
-        document.getElementById('navbar').classList.toggle('scrolled', window.scrollY > 60);
-      });
-      loadReports();
-    });
-
-    // ── Load all reports ───────────────────────────────────────
-    async function loadReports() {
-      try {
-        const res  = await fetch(`${API}/reports/archive?per=100`);
-        const data = await res.json();
-        // Sort newest first
-        allReports = (data.reports || []).sort((a,b) => new Date(b.published_at||b.created_at) - new Date(a.published_at||a.created_at));
-
-        if (allReports.length === 0) {
-          document.getElementById('feat-loading').textContent = 'No reports published yet — check back tomorrow morning.';
-          document.getElementById('archive-list').innerHTML = '<div class="no-results">Reports will appear here after the first pipeline run at midnight.</div>';
-          return;
-        }
-
-        // Show newest as featured
-        showFeatured(allReports[0]);
-        // Update meter
-        updateMeter(allReports[0].strangeness_index || 6.6);
-        // Render archive
-        renderArchive(allReports);
-
-      } catch (err) {
-        document.getElementById('feat-loading').textContent = 'Connection error — please refresh.';
-        document.getElementById('archive-list').innerHTML = `<div class="no-results">Could not load reports: ${err.message}</div>`;
-      }
-    }
-
-    // ── Show a report as featured ──────────────────────────────
-    function showFeatured(r) {
-      document.getElementById('feat-loading').style.display = 'none';
-      document.getElementById('feat-content').style.display = 'block';
-      document.getElementById('feat-stamp').textContent    = r.date_label || 'Latest transmission';
-      document.getElementById('feat-class').textContent    = `Strangeness Index: ${r.strangeness_index}/10`;
-      document.getElementById('feat-headline').textContent = r.headline;
-      document.getElementById('feat-summary').textContent  = r.summary || r.content?.slice(0,280) + '...';
-      document.getElementById('feat-full').textContent     = r.content || '';
-      // Reset expand state
-      fullVisible = false;
-      document.getElementById('feat-full').style.display       = 'none';
-      document.getElementById('feat-summary').style.display    = 'block';
-      document.getElementById('toggle-full-btn').textContent   = 'Read full report ↓';
-      // Tags
-      const tagsEl = document.getElementById('feat-tags');
-      tagsEl.innerHTML = (r.tags||[]).map(t =>
-        `<span class="rtag" onclick="setFilterFromTag('${t}')">${t}</span>`
-      ).join('');
-    }
-
-    function toggleFull() {
-      fullVisible = !fullVisible;
-      document.getElementById('feat-full').style.display    = fullVisible ? 'block' : 'none';
-      document.getElementById('feat-summary').style.display = fullVisible ? 'none' : 'block';
-      document.getElementById('toggle-full-btn').textContent = fullVisible ? 'Show summary ↑' : 'Read full report ↓';
-    }
-
-    // ── Render archive list ────────────────────────────────────
-    function renderArchive(reports) {
-      const filtered = activeFilter === 'all'
-        ? reports
-        : reports.filter(r => getReportCategories(r).includes(activeFilter));
-
-      document.getElementById('archive-count').textContent = `(${reports.length} total)`;
-      document.getElementById('filter-label').textContent  = activeFilter === 'all'
-        ? `Showing all ${reports.length}`
-        : `Showing ${filtered.length} of ${reports.length}`;
-
-      const listEl = document.getElementById('archive-list');
-
-      if (filtered.length === 0) {
-        listEl.innerHTML = `<div class="no-results">No ${activeFilter} reports yet — the pipeline will categorize new reports automatically.</div>`;
-        return;
-      }
-
-      listEl.innerHTML = filtered.map((r, i) => {
-        const cat   = getReportCategory(r);
-        const emoji = {ufo:'🛸',aliens:'👽',government:'🏛️',cryptids:'🦶',consciousness:'🧠',paranormal:'👻',technology:'⚡',earth:'🌍',secret:'🔒',phenomena:'🌀',humans:'🧬',endtimes:'⚠️'}[cat] || '🌀';
-        const date  = r.date_label || new Date(r.published_at||r.created_at).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
-        const tags  = (r.tags||[]).slice(0,4).map(t=>`<span class="ac-tag">${t}</span>`).join('');
-        return `<div class="archive-card${i===0&&activeFilter==='all'?' active':''}" onclick="selectReport(${allReports.indexOf(r)},this)">
-          <div class="ac-meta">
-            <span class="ac-date">${emoji} ${date}</span>
-            <span class="ac-index">${r.strangeness_index}/10</span>
-          </div>
-          <div class="ac-headline">${r.headline}</div>
-          <div class="ac-tags">${tags}</div>
-        </div>`;
-      }).join('');
-    }
-
-    // ── Select a report from the archive ──────────────────────
-    function selectReport(idx, el) {
-      document.querySelectorAll('.archive-card').forEach(c => c.classList.remove('active'));
-      if (el) el.classList.add('active');
-      const r = allReports[idx];
-      showFeatured(r);
-      updateMeter(r.strangeness_index || 6.6);
-      window.scrollTo({top:0, behavior:'smooth'});
-    }
-
-    // ── Filter ─────────────────────────────────────────────────
-    function setFilter(filter, btn) {
-      activeFilter = filter;
-      document.querySelectorAll('.filter-tag').forEach(t => t.classList.remove('active'));
-      if (btn) btn.classList.add('active');
-      else {
-        const match = document.querySelector(`[data-filter="${filter}"]`);
-        if (match) match.classList.add('active');
-      }
-      renderArchive(allReports);
-      // Show first filtered report as featured
-      const filtered = filter === 'all' ? allReports : allReports.filter(r => getReportCategory(r) === filter);
-      if (filtered.length > 0) { showFeatured(filtered[0]); updateMeter(filtered[0].strangeness_index||6.6); }
-    }
-
-    function setFilterFromTag(tag) {
-      const cat = tagToFilter(tag);
-      if (cat) setFilter(cat, document.querySelector(`[data-filter="${cat}"]`));
-    }
-    function getTagsForReport(report) {
-      // Generate filter tags from all matching categories
-      const cats = getReportCategories(report);
-      return cats.map(c => {
-        const emojiMap = {ufo:'🛸',aliens:'👽',government:'🏛️',cryptids:'🦶',consciousness:'🧠',paranormal:'👻',technology:'⚡',earth:'🌍',secret:'🔒',phenomena:'🌀',humans:'🧬',endtimes:'⚠️'};
-        return emojiMap[c] ? `${emojiMap[c]} ${c}` : c;
-      });
-    }
-
-    function scrollToTop() { window.scrollTo({top:0,behavior:'smooth'}); }
-
-    // ── Strange Meter mini ─────────────────────────────────────
-    function updateMeter(val) {
-      const pct  = (val / 10) * 100;
-      const bar  = document.getElementById('meter-bar');
-      const valEl = document.getElementById('meter-val');
-      const lblEl = document.getElementById('meter-lbl');
-      if (bar)  bar.style.width = pct + '%';
-      if (valEl) valEl.innerHTML = `${parseFloat(val).toFixed(1)}<span style="font-size:.7rem;color:var(--muted)">/10</span>`;
-      if (lblEl) {
-        const labels = [[9,'MAXIMUM STRANGENESS'],[8,'Critical — veil is thinning'],[6,'High strangeness'],[4,'Elevated — stay alert'],[2,'Slightly strange'],[0,'Mundane']];
-        const lbl = labels.find(([min]) => val >= min);
-        lblEl.textContent = lbl ? lbl[1] : 'Calibrating...';
-      }
-    }
-      if (window._diagOpen) window._diagOpen();
-    }
-  </script>
-
-
-  <!-- Strange Diagnosis Modal -->
-  <div class="diagnosis-overlay" id="diagnosis-overlay">
-    <div class="diagnosis-modal">
-      <button class="diag-close" onclick="closeDiagnosis()" aria-label="Close">✕</button>
-      <div class="diag-header">
-        <div class="diag-eyebrow">Strangeness IS — Field Intake</div>
-        <div class="diag-title">Strange Diagnosis</div>
-        <div class="diag-sub">A classified assessment of your anomalous experience</div>
-      </div>
-      <div id="diag-questions">
-        <div class="diag-progress">
-          <div class="diag-progress-bar-wrap">
-            <div class="diag-progress-bar" id="diag-progress-bar" style="width:0%"></div>
-          </div>
-          <div class="diag-progress-text" id="diag-progress-text">Step 1 of 5</div>
-        </div>
-        <div class="diag-question" id="diag-question-text"></div>
-        <div class="diag-question-sub" id="diag-question-sub"></div>
-        <div class="diag-options" id="diag-options"></div>
-      </div>
-      <div id="diag-result" style="display:none"></div>
-    </div>
-  </div>
-
   <!-- Strange Diagnosis FAB -->
   <button class="diag-fab" onclick="openDiagnosis()" aria-label="Get your Strange Diagnosis">
     &#9672; Strange Diagnosis
@@ -598,6 +371,159 @@
       <div id="diag-result" style="display:none"></div>
     </div>
   </div>
+
+  <script>
+    const API = 'https://api.strangenessis.com';
+    let allReports   = [];
+    let activeFilter = 'all';
+    let fullVisible  = false;
+
+    const FILTER_MAP = {
+      ufo:         ['ufo','uap','nhi','orb','plasma','spacecraft','saucer','tic-tac','nimitz','aerial','radar'],
+      aliens:      ['alien','entity','extraterrestrial','gray','grey','nordic','reptilian','annunaki','mantid','hybrid','non-human','biologics'],
+      government:  ['government','disclosure','congress','whistleblower','classified','scif','cia','fbi','pentagon','senator','hearing','coverup'],
+      cryptids:    ['bigfoot','sasquatch','cryptid','mothman','chupacabra','dogman','skinwalker','wendigo','creature','monster','thunderbird'],
+      consciousness:['consciousness','remote viewing','astral','lucid','telepathy','psychic','Monroe','clairvoyance','out-of-body'],
+      paranormal:  ['paranormal','ghost','spirit','haunting','demon','possession','apparition','supernatural','poltergeist','evp'],
+      technology:  ['technology','fusion','teleportation','propulsion','tesla','free energy','directed energy','havana','voice to skull'],
+      earth:       ['earthquake','haarp','chemtrail','weather','volcano','flood','tsunami','solar','geomagnetic'],
+      secret:      ['secret','underground','dumbs','mk ultra','paperclip','black project','above top secret','men in black'],
+      phenomena:   ['crop circle','missing time','time slip','animal mutilation','missing','mysterious','mandela','simulation'],
+      humans:      ['enhanced','telekinesis','remote view','hybrid','genetic','lucid','switching realities'],
+      endtimes:    ['end times','antichrist','collapse','judgement','rapture','apocalypse'],
+    };
+
+    function getReportCategories(r) {
+      const text = ((r.headline||'') + ' ' + (r.content||'') + ' ' + (r.tags||[]).join(' ')).toLowerCase();
+      const matches = [];
+      for (const [cat, kws] of Object.entries(FILTER_MAP)) {
+        if (kws.some(kw => text.includes(kw))) matches.push(cat);
+      }
+      return matches.length > 0 ? matches : ['paranormal'];
+    }
+    function getReportCategory(r) { return getReportCategories(r)[0]; }
+
+    function tagToFilter(tag) {
+      const t = tag.toLowerCase();
+      for (const [cat, kws] of Object.entries(FILTER_MAP)) {
+        if (kws.some(kw => t.includes(kw))) return cat;
+      }
+      return null;
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      document.getElementById('feat-date').textContent = new Date().toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+      document.getElementById('meter-date').textContent = new Date().toLocaleDateString('en-US',{month:'short',day:'numeric'});
+      window.addEventListener('scroll', () => {
+        document.getElementById('navbar').classList.toggle('scrolled', window.scrollY > 60);
+      });
+      loadReports();
+    });
+
+    async function loadReports() {
+      try {
+        const res  = await fetch(`${API}/reports/archive?per=100`);
+        const data = await res.json();
+        allReports = (data.reports || []).sort((a,b) => new Date(b.published_at||b.created_at) - new Date(a.published_at||a.created_at));
+        if (allReports.length === 0) {
+          document.getElementById('feat-loading').textContent = 'No reports published yet — check back tomorrow morning.';
+          document.getElementById('archive-list').innerHTML = '<div class="no-results">Reports will appear here after the first pipeline run.</div>';
+          return;
+        }
+        showFeatured(allReports[0]);
+        updateMeter(allReports[0].strangeness_index || 6.6);
+        renderArchive(allReports);
+      } catch(err) {
+        document.getElementById('feat-loading').textContent = 'Connection error — please refresh.';
+        document.getElementById('archive-list').innerHTML = `<div class="no-results">Could not load reports: ${err.message}</div>`;
+      }
+    }
+
+    function showFeatured(r) {
+      document.getElementById('feat-loading').style.display = 'none';
+      document.getElementById('feat-content').style.display = 'block';
+      document.getElementById('feat-stamp').textContent    = r.date_label || 'Latest transmission';
+      document.getElementById('feat-class').textContent    = `Strangeness Index: ${r.strangeness_index}/10`;
+      document.getElementById('feat-headline').textContent = r.headline;
+      document.getElementById('feat-summary').textContent  = r.summary || (r.content||'').slice(0,280) + '...';
+      document.getElementById('feat-full').textContent     = r.content || '';
+      fullVisible = false;
+      document.getElementById('feat-full').style.display     = 'none';
+      document.getElementById('feat-summary').style.display  = 'block';
+      document.getElementById('toggle-full-btn').textContent = 'Read full report ↓';
+      const tagsEl = document.getElementById('feat-tags');
+      tagsEl.innerHTML = (r.tags||[]).map(t => `<span class="rtag" onclick="setFilterFromTag('${t}')">${t}</span>`).join('');
+    }
+
+    function toggleFull() {
+      fullVisible = !fullVisible;
+      document.getElementById('feat-full').style.display    = fullVisible ? 'block' : 'none';
+      document.getElementById('feat-summary').style.display = fullVisible ? 'none'  : 'block';
+      document.getElementById('toggle-full-btn').textContent = fullVisible ? 'Show summary ↑' : 'Read full report ↓';
+    }
+
+    function renderArchive(reports) {
+      const filtered = activeFilter === 'all' ? reports : reports.filter(r => getReportCategories(r).includes(activeFilter));
+      document.getElementById('archive-count').textContent = `(${reports.length} total)`;
+      document.getElementById('filter-label').textContent  = activeFilter === 'all' ? `Showing all ${reports.length}` : `Showing ${filtered.length} of ${reports.length}`;
+      const listEl = document.getElementById('archive-list');
+      if (filtered.length === 0) {
+        listEl.innerHTML = `<div class="no-results">No ${activeFilter} reports yet.</div>`;
+        return;
+      }
+      const emojiMap = {ufo:'🛸',aliens:'👽',government:'🏛️',cryptids:'🦶',consciousness:'🧠',paranormal:'👻',technology:'⚡',earth:'🌍',secret:'🔒',phenomena:'🌀',humans:'🧬',endtimes:'⚠️'};
+      listEl.innerHTML = filtered.map((r,i) => {
+        const cat  = getReportCategory(r);
+        const emoji = emojiMap[cat] || '🌀';
+        const date  = r.date_label || new Date(r.published_at||r.created_at).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+        const tags  = (r.tags||[]).slice(0,4).map(t=>`<span class="ac-tag">${t}</span>`).join('');
+        return `<div class="archive-card${i===0&&activeFilter==='all'?' active':''}" onclick="selectReport(${allReports.indexOf(r)},this)">
+          <div class="ac-meta"><span class="ac-date">${emoji} ${date}</span><span class="ac-index">${r.strangeness_index}/10</span></div>
+          <div class="ac-headline">${r.headline}</div>
+          <div class="ac-tags">${tags}</div>
+        </div>`;
+      }).join('');
+    }
+
+    function selectReport(idx, el) {
+      document.querySelectorAll('.archive-card').forEach(c => c.classList.remove('active'));
+      if (el) el.classList.add('active');
+      showFeatured(allReports[idx]);
+      updateMeter(allReports[idx].strangeness_index || 6.6);
+      window.scrollTo({top:0,behavior:'smooth'});
+    }
+
+    function setFilter(filter, btn) {
+      activeFilter = filter;
+      document.querySelectorAll('.filter-tag').forEach(t => t.classList.remove('active'));
+      if (btn) btn.classList.add('active');
+      else { const m = document.querySelector(`[data-filter="${filter}"]`); if (m) m.classList.add('active'); }
+      renderArchive(allReports);
+      const filtered = filter === 'all' ? allReports : allReports.filter(r => getReportCategories(r).includes(filter));
+      if (filtered.length > 0) { showFeatured(filtered[0]); updateMeter(filtered[0].strangeness_index||6.6); }
+    }
+
+    function setFilterFromTag(tag) {
+      const cat = tagToFilter(tag);
+      if (cat) setFilter(cat, document.querySelector(`[data-filter="${cat}"]`));
+    }
+
+    function scrollToTop() { window.scrollTo({top:0,behavior:'smooth'}); }
+
+    function updateMeter(val) {
+      const pct = (val/10)*100;
+      const bar = document.getElementById('meter-bar');
+      const valEl = document.getElementById('meter-val');
+      const lblEl = document.getElementById('meter-lbl');
+      if (bar) bar.style.width = pct+'%';
+      if (valEl) valEl.innerHTML = `${parseFloat(val).toFixed(1)}<span style="font-size:.7rem;color:var(--muted)">/10</span>`;
+      if (lblEl) {
+        const labels = [[9,'MAXIMUM STRANGENESS'],[8,'Critical — veil is thinning'],[6,'High strangeness'],[4,'Elevated — stay alert'],[2,'Slightly strange'],[0,'Mundane']];
+        const lbl = labels.find(([min]) => val >= min);
+        lblEl.textContent = lbl ? lbl[1] : 'Calibrating...';
+      }
+    }
+  </script>
 
   <script src="js/strange-meter.js"></script>
 
