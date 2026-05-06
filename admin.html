@@ -2612,45 +2612,80 @@ async function loadHeadlines() {
     var headlines = data.headlines || [];
     var sources   = data.sources   || [];
     var set = function(id, v) { var el = document.getElementById(id); if (el) el.textContent = v; };
+
+    // Always update stat cards regardless of whether headlines are empty
     set('hl-total',   data.total || 0);
-    set('hl-sources', sources.length);
-    set('hl-count',   '(' + headlines.length + ' shown)');
+    set('hl-sources', sources.length || 0);
+    set('hl-count',   '(' + (data.filtered !== undefined ? data.filtered : headlines.length) + ' shown)');
+
+    // Last fetched — use first result if available, else show never
     if (headlines.length) {
       var latest = headlines[0].fetched_at || '';
       set('hl-last', latest ? new Date(latest).toLocaleString('en-US',{timeZone:'America/Denver',month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}) : '—');
+    } else {
+      set('hl-last', data.total > 0 ? 'Filtered out' : 'Never — run a scan');
     }
+
+    // Source filter buttons
     var filtersEl = document.getElementById('hl-source-filters');
     if (filtersEl) {
-      var btns = '<button class="btn-sm ' + (!_hlSourceFilter ? 'btn-purple' : 'btn-outline') + '" onclick="setHlFilter(\'\')">All</button>';
-      sources.forEach(function(src) {
-        var enc = src.replace(/&/g,'&amp;').replace(/"/g,'&quot;');
-        btns += '<button class="btn-sm ' + (_hlSourceFilter===src?'btn-purple':'btn-outline') + '" onclick="setHlFilter(\'' + enc + '\')">' + enc + '</button>';
-      });
-      filtersEl.innerHTML = btns;
+      if (sources.length) {
+        var btns = '<button class="btn-sm ' + (!_hlSourceFilter ? 'btn-purple' : 'btn-outline') + '" onclick="setHlFilter(\'\')">All (' + data.total + ')</button>';
+        sources.forEach(function(src) {
+          var enc = src.replace(/&/g,'&amp;').replace(/"/g,'&quot;');
+          btns += '<button class="btn-sm ' + (_hlSourceFilter===src?'btn-purple':'btn-outline') + '" onclick="setHlFilter(\'' + enc + '\')">' + enc + '</button>';
+        });
+        filtersEl.innerHTML = btns;
+      } else {
+        filtersEl.innerHTML = '<span style="font-size:.8rem;color:var(--muted)">No sources yet — run a scan to populate.</span>';
+      }
     }
+
     var listEl = document.getElementById('headlines-list');
     if (!listEl) return;
+
     if (!headlines.length) {
-      listEl.innerHTML = '<div style="background:rgba(212,168,67,.08);border:1px solid rgba(212,168,67,.2);border-radius:8px;padding:1rem;text-align:center">' +
-        '<div style="font-family:var(--mono);font-size:.7rem;color:#d4a843;margin-bottom:.4rem">NO HEADLINES IN DATABASE</div>' +
-        '<div style="font-size:.85rem;color:var(--muted);margin-bottom:.75rem">The headline database is empty. Click the button below to run a full RSS scan now.</div>' +
-        '<button class="btn-sm btn-purple" onclick="fetchHeadlinesNow()">Run RSS scan now</button>' +
+      var emptyMsg = _hlSourceFilter
+        ? 'No headlines from <strong>' + _hlSourceFilter + '</strong> in the database.'
+        : 'The headline database is empty. Click the button below to run a full RSS scan now.';
+      listEl.innerHTML = '<div style="background:rgba(212,168,67,.08);border:1px solid rgba(212,168,67,.2);border-radius:8px;padding:1.25rem;text-align:center">' +
+        '<div style="font-family:var(--mono);font-size:.7rem;color:#d4a843;margin-bottom:.5rem">NO HEADLINES' + (_hlSourceFilter ? ' FOR THIS SOURCE' : ' IN DATABASE') + '</div>' +
+        '<div style="font-size:.85rem;color:var(--muted);margin-bottom:.75rem">' + emptyMsg + '</div>' +
+        (!_hlSourceFilter ? '<button class="btn-sm btn-purple" onclick="fetchHeadlinesNow()">Run RSS scan now</button>' : '') +
         '</div>';
       return;
     }
+
+    // Strip "SourceName: " prefix from title if it duplicates the source field
+    function cleanTitle(h) {
+      var t = h.title || '';
+      var src = (h.source || '') + ': ';
+      if (t.startsWith(src)) t = t.slice(src.length);
+      return t;
+    }
+
     listEl.innerHTML = headlines.map(function(h) {
+      var date = (h.fetched_at || '').slice(0, 10);
+      var time = h.fetched_at ? new Date(h.fetched_at).toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',timeZone:'America/Denver'}) : '';
       return '<div style="padding:.5rem 0;border-bottom:1px solid rgba(124,58,237,.07);display:flex;gap:.75rem;align-items:flex-start">' +
-        '<span style="font-family:var(--mono);font-size:.65rem;color:var(--muted);white-space:nowrap">' + (h.fetched_at||'').slice(0,10) + '</span>' +
-        '<div style="flex:1"><div style="font-size:.88rem;color:var(--text);line-height:1.45">' + h.title + '</div>' +
-        '<div style="font-family:var(--mono);font-size:.62rem;color:var(--purple3)">' + (h.source||'') + '</div></div>' +
+        '<div style="font-family:var(--mono);font-size:.62rem;color:var(--muted);white-space:nowrap;min-width:70px">' + date + '<br>' + time + '</div>' +
+        '<div style="flex:1">' +
+          '<div style="font-size:.88rem;color:var(--text);line-height:1.45">' + cleanTitle(h) + '</div>' +
+          '<div style="font-family:var(--mono);font-size:.62rem;color:var(--purple3);margin-top:.15rem">' + (h.source||'Unknown source') + '</div>' +
+        '</div>' +
         '<button class="btn-sm btn-red" data-id="' + h.id + '" data-action="delete-hl" style="flex-shrink:0;padding:.2rem .5rem;font-size:.6rem">✕</button>' +
       '</div>';
     }).join('');
+
     listEl.onclick = function(ev) {
       var btn = ev.target.closest('button[data-action="delete-hl"]');
       if (btn) deleteHeadline(btn.dataset.id);
     };
-  } catch(err) { toast('Headlines load failed: ' + err.message, 'error'); }
+  } catch(err) {
+    var listEl = document.getElementById('headlines-list');
+    if (listEl) listEl.innerHTML = '<div style="color:#ef4444;font-size:.88rem;padding:1rem">Failed to load headlines: ' + err.message + '<br><br>Check that the API is reachable and your admin key is correct.</div>';
+    toast('Headlines load failed: ' + err.message, 'error');
+  }
 }
 
 function setHlFilter(source) { _hlSourceFilter = source; loadHeadlines(); }

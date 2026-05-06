@@ -2080,7 +2080,21 @@ def admin_get_headlines():
     if err: return err
     db = load_json(HEADLINES_FILE, [])
     db.sort(key=lambda h: h.get('fetched_at', ''), reverse=True)
-    return jsonify({'headlines': db[:200], 'total': len(db)})
+    # Extract unique sources from stored records
+    all_sources = sorted(set(h.get('source', '') for h in db if h.get('source')))
+    # Apply source filter if provided
+    source_filter = request.args.get('source', '').strip()
+    if source_filter:
+        db = [h for h in db if h.get('source', '') == source_filter]
+    # Apply limit (default 200, max 500)
+    limit = min(500, int(request.args.get('limit', 200)))
+    total_unfiltered = len(load_json(HEADLINES_FILE, []))
+    return jsonify({
+        'headlines': db[:limit],
+        'total':     total_unfiltered,
+        'filtered':  len(db),
+        'sources':   all_sources,
+    })
 
 @app.route('/admin/headlines/fetch', methods=['POST'])
 def admin_fetch_headlines():
