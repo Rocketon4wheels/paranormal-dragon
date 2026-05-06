@@ -281,12 +281,11 @@
         <button class="sidebar-item" onclick="showPanel('report-prompt',this)"><span class="dot"></span>Report Writer Prompt</button>
         <button class="sidebar-item" onclick="showPanel('categories',this)"><span class="dot"></span>Master Categories</button>
         <button class="sidebar-item" onclick="showPanel('oracle-config',this)"><span class="dot"></span>Oracle Settings</button>
-        <button class="sidebar-item" onclick="showPanel('oracle-limits',this)"><span class="dot"></span>Limits &amp; Guardrails</button>
       </div>
       <div class="sidebar-section">
         <span class="sidebar-label">Strangeness Report</span>
         <button class="sidebar-item" id="nav-reports" onclick="showPanel('reports',this)"><span class="dot"></span>All Reports</button>
-        <button class="sidebar-item" onclick="showPanel('report-schedule',this)"><span class="dot"></span>Pipeline &amp; Schedule</button>
+        <button class="sidebar-item" onclick="showPanel('report-schedule',this)"><span class="dot"></span>Pipeline</button>
       </div>
       <div class="sidebar-section">
         <span class="sidebar-label">Community</span>
@@ -364,6 +363,12 @@
           </div>
         </div>
 
+        <div class="admin-section">
+          <div class="admin-section-title">Free visitor questions</div>
+          <div style="font-size:.88rem;color:var(--muted);line-height:1.6;margin-bottom:.75rem">Number of free Oracle questions a visitor gets before being prompted to join the network.</div>
+          <div class="field-row"><label class="field-label">Free questions per session</label><input class="field-input" type="number" id="free-messages" value="3" min="1" max="20" style="max-width:120px"/></div>
+          <button class="btn-sm btn-purple" style="margin-top:.5rem" onclick="saveLimits()">Save</button>
+        </div>
         <div class="admin-section">
           <div class="admin-section-title">Guardrails &amp; Restrictions</div>
           <div style="font-size:.9rem;color:var(--muted);line-height:1.65;margin-bottom:.75rem">
@@ -510,25 +515,57 @@
 
       <!-- PIPELINE & SCHEDULE -->
       <div class="panel" id="panel-report-schedule">
-        <div class="panel-header"><div class="panel-title">Pipeline &amp; Schedule</div><div class="panel-sub">Configure automated daily report generation.</div></div>
+        <div class="panel-header"><div class="panel-title">Pipeline</div><div class="panel-sub">Configure automated report generation and all intelligence sources.</div></div>
         <div class="admin-section">
           <div class="admin-section-title">Schedule</div>
           <div class="field-row"><label class="field-label">Daily generation time (Mountain Time)</label><input class="field-input" type="time" id="report-time" value="00:00" style="max-width:150px"/></div>
-          <div class="toggle-row"><div><div class="toggle-label">Auto-publish (skip review)</div><div class="toggle-desc">Reports go live immediately without admin approval</div></div><label class="toggle"><input type="checkbox" id="auto-publish"/><span class="toggle-slider"></span></label></div>
           <div class="btn-row" style="margin-top:1rem">
             <button class="btn-sm btn-purple" onclick="saveSchedule()">Save schedule</button>
             <button class="btn-sm btn-gold" onclick="generateReportNow()">Run pipeline now</button>
           </div>
         </div>
         <div class="admin-section">
-          <div class="admin-section-title">Source feeds</div>
-          <div class="toggle-row"><div><div class="toggle-label">NUFORC</div><div class="toggle-desc">nuforc.org public case reports</div></div><label class="toggle"><input type="checkbox" id="src-nuforc" checked/><span class="toggle-slider"></span></label></div>
-          <div class="toggle-row"><div><div class="toggle-label">MUFON</div><div class="toggle-desc">mufon.com — Mutual UFO Network</div></div><label class="toggle"><input type="checkbox" id="src-mufon" checked/><span class="toggle-slider"></span></label></div>
-          <div class="toggle-row"><div><div class="toggle-label">Reddit</div><div class="toggle-desc">r/UFOs, r/Paranormal, r/aliens</div></div><label class="toggle"><input type="checkbox" id="src-reddit" checked/><span class="toggle-slider"></span></label></div>
-          <div class="toggle-row"><div><div class="toggle-label">Twitter/X Whistleblowers</div><div class="toggle-desc">Burchett, Heinrich, Mellon, Elizondo</div></div><label class="toggle"><input type="checkbox" id="src-twitter" checked/><span class="toggle-slider"></span></label></div>
-          <div class="toggle-row"><div><div class="toggle-label">Google News</div></div><label class="toggle"><input type="checkbox" id="src-google" checked/><span class="toggle-slider"></span></label></div>
-          <div class="toggle-row"><div><div class="toggle-label">Paranormal news sites</div><div class="toggle-desc">OpenMinds.tv, Black Vault, UFO Chronicles</div></div><label class="toggle"><input type="checkbox" id="src-paranormal" checked/><span class="toggle-slider"></span></label></div>
-          <button class="btn-sm btn-purple" style="margin-top:1rem" onclick="saveSources()">Save sources</button>
+          <div class="admin-section-title">Pipeline Sources</div>
+          <p style="font-size:.85rem;color:var(--muted);margin-bottom:1rem;line-height:1.6">Toggle sources on or off. Changes take effect on the next scan. The scanner runs every 15 minutes.</p>
+
+          <div style="font-family:var(--mono);font-size:.65rem;letter-spacing:.1em;color:var(--muted);margin:.75rem 0 .4rem;text-transform:uppercase">Reddit Communities</div>
+          <div class="toggle-row"><div><div class="toggle-label">r/UFOs</div><div class="toggle-desc">reddit.com/r/UFOs</div></div><label class="toggle"><input type="checkbox" id="src-reddit-ufos" checked/><span class="toggle-slider"></span></label></div>
+          <div class="toggle-row"><div><div class="toggle-label">r/Paranormal</div><div class="toggle-desc">reddit.com/r/Paranormal</div></div><label class="toggle"><input type="checkbox" id="src-reddit-paranormal" checked/><span class="toggle-slider"></span></label></div>
+          <div class="toggle-row"><div><div class="toggle-label">r/aliens</div><div class="toggle-desc">reddit.com/r/aliens</div></div><label class="toggle"><input type="checkbox" id="src-reddit-aliens" checked/><span class="toggle-slider"></span></label></div>
+          <div class="toggle-row"><div><div class="toggle-label">r/conspiracy</div><div class="toggle-desc">reddit.com/r/conspiracy</div></div><label class="toggle"><input type="checkbox" id="src-reddit-conspiracy" checked/><span class="toggle-slider"></span></label></div>
+          <div class="toggle-row"><div><div class="toggle-label">r/cryptids</div><div class="toggle-desc">reddit.com/r/cryptids</div></div><label class="toggle"><input type="checkbox" id="src-reddit-cryptids" checked/><span class="toggle-slider"></span></label></div>
+          <div class="toggle-row"><div><div class="toggle-label">r/bigfoot</div><div class="toggle-desc">reddit.com/r/bigfoot</div></div><label class="toggle"><input type="checkbox" id="src-reddit-bigfoot" checked/><span class="toggle-slider"></span></label></div>
+          <div class="toggle-row"><div><div class="toggle-label">r/NHI</div><div class="toggle-desc">reddit.com/r/NHI</div></div><label class="toggle"><input type="checkbox" id="src-reddit-nhi" checked/><span class="toggle-slider"></span></label></div>
+          <div class="toggle-row"><div><div class="toggle-label">r/disclosure</div><div class="toggle-desc">reddit.com/r/UFOscience + disclosure</div></div><label class="toggle"><input type="checkbox" id="src-reddit-disclosure" checked/><span class="toggle-slider"></span></label></div>
+
+          <div style="font-family:var(--mono);font-size:.65rem;letter-spacing:.1em;color:var(--muted);margin:.75rem 0 .4rem;text-transform:uppercase">Twitter / X Accounts</div>
+          <div class="toggle-row"><div><div class="toggle-label">Tim Burchett</div><div class="toggle-desc">@timburchett — Congressional UAP investigator</div></div><label class="toggle"><input type="checkbox" id="src-x-burchett" checked/><span class="toggle-slider"></span></label></div>
+          <div class="toggle-row"><div><div class="toggle-label">Luis Elizondo</div><div class="toggle-desc">@LueElizondo — Former AATIP director</div></div><label class="toggle"><input type="checkbox" id="src-x-elizondo" checked/><span class="toggle-slider"></span></label></div>
+          <div class="toggle-row"><div><div class="toggle-label">Christopher Mellon</div><div class="toggle-desc">@ChristopherKMe1 — Former Dep. Sec. of Defense</div></div><label class="toggle"><input type="checkbox" id="src-x-mellon" checked/><span class="toggle-slider"></span></label></div>
+          <div class="toggle-row"><div><div class="toggle-label">Ross Coulthart</div><div class="toggle-desc">@rosscoulthart — Investigative journalist</div></div><label class="toggle"><input type="checkbox" id="src-x-coulthart" checked/><span class="toggle-slider"></span></label></div>
+          <div class="toggle-row"><div><div class="toggle-label">Jeremy Corbell</div><div class="toggle-desc">@JeremyCorbell — UAP filmmaker</div></div><label class="toggle"><input type="checkbox" id="src-x-corbell" checked/><span class="toggle-slider"></span></label></div>
+          <div class="toggle-row"><div><div class="toggle-label">Dr. Garry Nolan</div><div class="toggle-desc">@GarryPNolan — Stanford professor, UAP researcher</div></div><label class="toggle"><input type="checkbox" id="src-x-nolan"/><span class="toggle-slider"></span></label></div>
+          <div class="toggle-row"><div><div class="toggle-label">David Grusch</div><div class="toggle-desc">@DavidCharlesGrusch — NRO whistleblower</div></div><label class="toggle"><input type="checkbox" id="src-x-grusch" checked/><span class="toggle-slider"></span></label></div>
+
+          <div style="font-family:var(--mono);font-size:.65rem;letter-spacing:.1em;color:var(--muted);margin:.75rem 0 .4rem;text-transform:uppercase">Paranormal & UAP News</div>
+          <div class="toggle-row"><div><div class="toggle-label">The Black Vault</div><div class="toggle-desc">theblackvault.com</div></div><label class="toggle"><input type="checkbox" id="src-blackvault" checked/><span class="toggle-slider"></span></label></div>
+          <div class="toggle-row"><div><div class="toggle-label">Open Minds TV</div><div class="toggle-desc">openminds.tv</div></div><label class="toggle"><input type="checkbox" id="src-openminds" checked/><span class="toggle-slider"></span></label></div>
+          <div class="toggle-row"><div><div class="toggle-label">Mysterious Universe</div><div class="toggle-desc">mysteriousuniverse.org</div></div><label class="toggle"><input type="checkbox" id="src-mu" checked/><span class="toggle-slider"></span></label></div>
+          <div class="toggle-row"><div><div class="toggle-label">The Debrief</div><div class="toggle-desc">thedebrief.org</div></div><label class="toggle"><input type="checkbox" id="src-debrief" checked/><span class="toggle-slider"></span></label></div>
+          <div class="toggle-row"><div><div class="toggle-label">Coast to Coast AM</div><div class="toggle-desc">coasttocoastam.com</div></div><label class="toggle"><input type="checkbox" id="src-c2c" checked/><span class="toggle-slider"></span></label></div>
+          <div class="toggle-row"><div><div class="toggle-label">UFO Stalker / NUFORC</div><div class="toggle-desc">nuforc.org public sighting reports</div></div><label class="toggle"><input type="checkbox" id="src-nuforc" checked/><span class="toggle-slider"></span></label></div>
+
+          <div style="font-family:var(--mono);font-size:.65rem;letter-spacing:.1em;color:var(--muted);margin:.75rem 0 .4rem;text-transform:uppercase">Mainstream Signal Intelligence</div>
+          <div class="toggle-row"><div><div class="toggle-label">CNN</div><div class="toggle-desc">Signal scoring: mainstream anomalies</div></div><label class="toggle"><input type="checkbox" id="src-cnn" checked/><span class="toggle-slider"></span></label></div>
+          <div class="toggle-row"><div><div class="toggle-label">Fox News</div><div class="toggle-desc">Signal scoring: mainstream anomalies</div></div><label class="toggle"><input type="checkbox" id="src-fox" checked/><span class="toggle-slider"></span></label></div>
+          <div class="toggle-row"><div><div class="toggle-label">BBC News</div><div class="toggle-desc">Signal scoring: international anomalies</div></div><label class="toggle"><input type="checkbox" id="src-bbc" checked/><span class="toggle-slider"></span></label></div>
+          <div class="toggle-row"><div><div class="toggle-label">Associated Press</div><div class="toggle-desc">Signal scoring: breaking news anomalies</div></div><label class="toggle"><input type="checkbox" id="src-ap" checked/><span class="toggle-slider"></span></label></div>
+          <div class="toggle-row"><div><div class="toggle-label">Google News UAP</div><div class="toggle-desc">Targeted UAP + disclosure searches</div></div><label class="toggle"><input type="checkbox" id="src-google" checked/><span class="toggle-slider"></span></label></div>
+
+          <div class="btn-row" style="margin-top:1rem">
+            <button class="btn-sm btn-purple" onclick="saveSources()">Save source config</button>
+            <button class="btn-sm btn-gold" onclick="triggerScanNow()">Scan now</button>
+          </div>
         </div>
       </div>
 
@@ -1637,6 +1674,16 @@ function editReport(id) {
       if (el) el.value = val;
     });
     _editingReportId = id;
+    const srcDisplayEl = document.getElementById('edit-report-sources');
+    if (srcDisplayEl) srcDisplayEl.style.display = 'block';
+    // Show sources and pipeline info
+    const srcEl = document.getElementById('edit-report-sources');
+    if (srcEl) {
+      const srcs  = (r.sources || []).join(', ') || 'Unknown';
+      const trig  = r.trigger || 'scheduled';
+      const oracle = r.oracle_intel_used ? ' · Oracle intel used' : '';
+      srcEl.textContent = trig.toUpperCase() + ' · Sources: ' + srcs + oracle;
+    }
     toast('Report loaded — edit and click Publish', 'info');
   }, 150);
 }
