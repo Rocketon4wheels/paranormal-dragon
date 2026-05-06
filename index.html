@@ -534,22 +534,6 @@
     <a href="report.html" class="report-link">Read full report</a>
   </div>
 
-  <!-- Latest report strip -->
-  <div id="latest-report-strip" style="background:linear-gradient(to bottom,#06000f,#07070f);border-bottom:1px solid rgba(212,168,67,.12);padding:2rem 2rem 2.5rem;display:none">
-    <div style="max-width:860px;margin:0 auto">
-      <div style="display:flex;align-items:center;gap:.75rem;margin-bottom:1rem;flex-wrap:wrap">
-        <span style="font-family:'Cinzel',serif;font-size:.52rem;letter-spacing:.22em;color:var(--gold)">LATEST TRANSMISSION</span>
-        <span class="live-dot"></span>
-        <span id="latest-timestamp" style="font-family:'Share Tech Mono',monospace;font-size:.6rem;color:var(--muted)"></span>
-        <span id="latest-index" style="font-family:'Share Tech Mono',monospace;font-size:.6rem;color:var(--purple3);margin-left:auto"></span>
-      </div>
-      <h3 id="latest-headline" style="font-family:'Cinzel Decorative',serif;font-size:clamp(1rem,2.5vw,1.4rem);font-weight:400;color:var(--text);line-height:1.3;margin-bottom:.85rem"></h3>
-      <p id="latest-summary" style="font-size:.92rem;color:var(--muted);line-height:1.85;border-left:2px solid rgba(212,168,67,.3);padding-left:1.1rem;font-style:italic;margin-bottom:1rem"></p>
-      <div id="latest-tags" style="display:flex;gap:.4rem;flex-wrap:wrap;margin-bottom:1rem"></div>
-      <a href="report.html" style="font-family:'Cinzel',serif;font-size:.56rem;letter-spacing:.14em;color:var(--gold2);text-decoration:none;border:1px solid rgba(212,168,67,.35);padding:.4rem 1rem;border-radius:2px;transition:all .2s;display:inline-block" onmouseover="this.style.background='rgba(212,168,67,.08)'" onmouseout="this.style.background='transparent'">Read full report + archive →</a>
-    </div>
-  </div>
-
   <!-- Live Network Stats -->
   <div id="network-stats" style="background:#07070f;border-top:1px solid rgba(124,58,237,.1);border-bottom:1px solid rgba(124,58,237,.1);padding:2rem;">
     <div style="max-width:900px;margin:0 auto;display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:rgba(124,58,237,.12);border:1px solid rgba(124,58,237,.12);border-radius:6px;overflow:hidden">
@@ -630,27 +614,24 @@
         </div>
   </section>
 
-  <!-- Report preview -->
-  <div class="report-section">
-    <div class="report-inner">
+  <!-- Latest report strip -->
+  <div class="report-section" style="border-top:1px solid rgba(212,168,67,.12)">
+  <div id="latest-report-strip" style="background:transparent;padding:3rem 2rem 3.5rem;display:none">
+    <div style="max-width:860px;margin:0 auto">
       <p class="section-eyebrow">Daily intelligence briefing</p>
-      <h2 class="section-title">The Strangeness Report</h2>
-      <p class="section-body">Every morning our team delivers a classified-style intelligence briefing on the day's most unusual events from around the world.</p>
-      <div class="report-card" id="report-preview-card">
-        <div class="report-date" id="rp-date">Latest transmission</div>
-        <div class="report-title" id="rp-title">UAP cluster detected over Pacific corridor — three incidents in 72 hours suggest coordinated pattern</div>
-        <div class="report-body" id="rp-body">Analysis of radar data, eyewitness submissions, and flight records reveals three separate incidents along the Pacific corridor. Movement patterns are inconsistent with known flight paths. Witnesses independently described a chevron-shaped object exhibiting rapid altitude changes with no visible propulsion signature. Strangeness Index: 8.4 / 10...</div>
-        <div class="report-tags" id="rp-tags">
-          <span class="rtag">UAP</span>
-          <span class="rtag">Pacific</span>
-          <span class="rtag">Radar anomaly</span>
-          <span class="rtag">Multiple witnesses</span>
-        </div>
+      <h2 class="section-title" style="margin-bottom:1.5rem">The Strangeness Report</h2>
+      <div style="display:flex;align-items:center;gap:.75rem;margin-bottom:1rem;flex-wrap:wrap">
+        <span style="font-family:'Cinzel',serif;font-size:.52rem;letter-spacing:.22em;color:var(--gold)">LATEST TRANSMISSION</span>
+        <span class="live-dot"></span>
+        <span id="latest-timestamp" style="font-family:'Share Tech Mono',monospace;font-size:.6rem;color:var(--muted)"></span>
+        <span id="latest-index" style="font-family:'Share Tech Mono',monospace;font-size:.6rem;color:var(--purple3);margin-left:auto"></span>
       </div>
-      <div style="text-align:center;margin-top:2rem">
-        <a href="report.html" class="btn btn-gold" style="display:inline-block">Read full report + archive</a>
-      </div>
+      <h3 id="latest-headline" style="font-family:'Cinzel Decorative',serif;font-size:clamp(1rem,2.5vw,1.4rem);font-weight:400;color:var(--text);line-height:1.3;margin-bottom:.85rem"></h3>
+      <p id="latest-summary" style="font-size:.92rem;color:var(--muted);line-height:1.85;border-left:2px solid rgba(212,168,67,.3);padding-left:1.1rem;font-style:italic;margin-bottom:1rem"></p>
+      <div id="latest-tags" style="display:flex;gap:.4rem;flex-wrap:wrap;margin-bottom:1rem"></div>
+      <a href="report.html" style="font-family:'Cinzel',serif;font-size:.56rem;letter-spacing:.14em;color:var(--gold2);text-decoration:none;border:1px solid rgba(212,168,67,.35);padding:.4rem 1rem;border-radius:2px;transition:all .2s;display:inline-block" onmouseover="this.style.background='rgba(212,168,67,.08)'" onmouseout="this.style.background='transparent'">Read full report + archive →</a>
     </div>
+  </div>
   </div>
 
   <!-- Pricing -->

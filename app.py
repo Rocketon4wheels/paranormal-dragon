@@ -610,13 +610,43 @@ def generate_report() -> dict | None:
         source_data.append('REDDIT COMMUNITY INTELLIGENCE:\n' + '\n'.join(reddit))
         sources_used.append('Reddit')
 
-    # RSS database headlines (already scanned above before generation)
+    # RSS database headlines — smart selection from entire database
     db_headlines = load_json(HEADLINES_FILE, [])
     db_headlines.sort(key=lambda h: h.get('fetched_at', ''), reverse=True)
     if db_headlines:
-        db_lines = [f"[{h['fetched_at'][:10]}] {h['title']}" for h in db_headlines[:30]]
-        source_data.append('RSS INTELLIGENCE DATABASE (last 30 days):\n' + '\n'.join(db_lines))
-        sources_used.append('RSS Network')
+        # Step 1: category-relevant headlines (keyword match)
+        cat_words = set(chosen_category.lower().replace('/', ' ').replace('&', ' ').split())
+        paranormal_kws = {
+            'ufo', 'uap', 'paranormal', 'alien', 'cryptid', 'disclosure', 'classified',
+            'anomaly', 'unexplained', 'mystery', 'strange', 'phenomenon', 'sighting',
+            'whistleblower', 'bigfoot', 'haunting', 'conspiracy', 'government', 'military',
+            'secret', 'non-human', 'extraterrestrial', 'skinwalker', 'mothman',
+        }
+        keywords = cat_words | paranormal_kws
+        relevant = [h for h in db_headlines
+                    if any(kw in h.get('title', '').lower() for kw in keywords)][:30]
+        # Step 2: one diverse headline per source not already represented
+        seen = {h.get('source') for h in relevant}
+        diverse = []
+        for h in db_headlines:
+            if h.get('source') not in seen:
+                diverse.append(h)
+                seen.add(h.get('source'))
+            if len(diverse) >= 30:
+                break
+        selected = (relevant + diverse)[:60]
+        if selected:
+            db_lines = [
+                f"[{h['fetched_at'][:10]}] [{h.get('source', '')}] {h['title']}"
+                for h in selected
+            ]
+            source_data.append(
+                f'RSS INTELLIGENCE DATABASE ({len(db_headlines):,} total headlines · {len(selected)} selected · '
+                f'{len(relevant)} topic-matched + {len(diverse)} diverse):\n'
+                + '\n'.join(db_lines)
+            )
+            sources_used.append(f'RSS Network ({len(selected)} headlines)')
+
 
     # Oracle intelligence database — THE KEY DIFFERENTIATOR
     oracle_context = get_oracle_intel_context(limit=40)
