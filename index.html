@@ -89,16 +89,83 @@
       z-index: 2; pointer-events: none;
     }
 
-    /* Lightning flicker */
+    /* Lightning flash overlay */
     .hero-lightning {
-      position: absolute; inset: 0; z-index: 3;
-      background: rgba(120,40,220,0.06);
-      animation: lightningFlicker 8s ease-in-out infinite;
-      pointer-events: none;
+      position:absolute; inset:0; z-index:3;
+      background:rgba(120,40,220,0.06);
+      animation:lightningFlash 9s ease-in-out infinite;
+      pointer-events:none;
     }
-    @keyframes lightningFlicker {
-      0%,100%{opacity:0} 2%{opacity:1} 4%{opacity:0} 6%{opacity:.4} 8%{opacity:0}
-      65%{opacity:0} 67%{opacity:.9} 69%{opacity:0}
+    @keyframes lightningFlash {
+      0%,100%{opacity:0}
+      2%{opacity:1} 2.2%{opacity:0} 2.5%{opacity:.6} 2.8%{opacity:0}
+      58%{opacity:0} 58.3%{opacity:.9} 58.6%{opacity:0} 58.9%{opacity:.4} 59.2%{opacity:0}
+    }
+
+    /* Branching lightning tendrils — SVG overlay */
+    .hero-tendrils {
+      position:absolute; inset:0; z-index:4; pointer-events:none;
+      overflow:hidden;
+    }
+    .hero-tendrils svg { width:100%; height:100%; }
+    .tendril {
+      fill:none; stroke-linecap:round; stroke-linejoin:round;
+      animation:tendrilFlash 9s ease-in-out infinite;
+      opacity:0;
+    }
+    .tendril-a { stroke:#b06fff; stroke-width:1.5; animation-delay:0s; }
+    .tendril-b { stroke:#d4a843; stroke-width:1;   animation-delay:.15s; }
+    .tendril-c { stroke:#c084fc; stroke-width:1.2; animation-delay:.08s; }
+    .tendril-d { stroke:#b06fff; stroke-width:.8;  animation-delay:.22s; }
+    @keyframes tendrilFlash {
+      0%,100%{opacity:0}
+      2%{opacity:.9} 2.4%{opacity:0}
+      58.3%{opacity:1} 58.7%{opacity:0} 59%{opacity:.5} 59.3%{opacity:0}
+    }
+
+    /* Dragon glowing eyes */
+    .hero-eyes {
+      position:absolute; z-index:5; pointer-events:none;
+      top:27%; left:50%; transform:translateX(-20%);
+      display:flex; gap:22px;
+    }
+    .dragon-eye {
+      width:7px; height:7px; border-radius:50%;
+      background:#ff6a00;
+      box-shadow: 0 0 8px 3px rgba(255,106,0,.9),
+                  0 0 20px 8px rgba(255,80,0,.5),
+                  0 0 40px 14px rgba(200,50,0,.25);
+      animation:eyePulse 3.5s ease-in-out infinite;
+    }
+    .dragon-eye:nth-child(2){ animation-delay:.4s; }
+    @keyframes eyePulse {
+      0%,100%{transform:scale(1);   opacity:.85;}
+      50%     {transform:scale(1.3); opacity:1;}
+    }
+
+    /* Smoke puffs */
+    .hero-smoke {
+      position:absolute; z-index:4; pointer-events:none;
+      top:33%; left:50%; transform:translateX(-18%);
+    }
+    .smoke-puff {
+      position:absolute; border-radius:50%;
+      background:radial-gradient(circle,rgba(180,120,255,.18) 0%,transparent 70%);
+      animation:smokeDrift linear infinite;
+      transform-origin:center bottom;
+    }
+    @keyframes smokeDrift {
+      0%  {transform:translateY(0)   scale(.4); opacity:.4;}
+      60% {opacity:.25;}
+      100%{transform:translateY(-80px) scale(1.6); opacity:0;}
+    }
+
+    /* Head bob */
+    .hero-bg { animation:headBob 6s ease-in-out infinite; }
+    @keyframes headBob {
+      0%,100%{background-position:center 62%;}
+      40%    {background-position:center 60.5%;}
+      70%    {background-position:center 63%;}
     }
 
     /* Particles */
@@ -402,6 +469,34 @@
     <div class="hero-overlay-top"></div>
     <div class="hero-overlay-bottom"></div>
     <div class="hero-lightning"></div>
+
+    <!-- Branching lightning tendrils -->
+    <div class="hero-tendrils">
+      <svg viewBox="0 0 1440 900" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+        <!-- Main bolt from top-right -->
+        <path class="tendril tendril-a" d="M980,0 L940,80 L960,140 L920,200 L935,260 L900,310 L925,360"/>
+        <!-- Branch A -->
+        <path class="tendril tendril-b" d="M940,80 L990,130 L970,170 L1010,210"/>
+        <!-- Branch B -->
+        <path class="tendril tendril-c" d="M920,200 L870,230 L885,270 L850,300"/>
+        <!-- Left secondary bolt -->
+        <path class="tendril tendril-d" d="M460,0 L480,60 L455,110 L475,165 L445,210 L465,260"/>
+        <!-- Left branch -->
+        <path class="tendril tendril-b" d="M455,110 L415,150 L430,190"/>
+        <!-- Small detail tendrils -->
+        <path class="tendril tendril-a" d="M935,260 L970,280 L960,310 L990,330"/>
+        <path class="tendril tendril-c" d="M900,310 L860,340 L875,370 L845,395"/>
+      </svg>
+    </div>
+
+    <!-- Dragon glowing eyes (positioned relative to dragon image) -->
+    <div class="hero-eyes">
+      <div class="dragon-eye"></div>
+      <div class="dragon-eye"></div>
+    </div>
+
+    <!-- Smoke puffs from nose -->
+    <div class="hero-smoke" id="heroSmoke"></div>
     <canvas id="particles"></canvas>
 
     <!-- Text anchored to bottom -- dragon fully visible above -->
@@ -602,24 +697,53 @@
       navbar.classList.toggle('scrolled', window.scrollY > 60);
     });
 
-    // -- Scroll-driven parallax + wing flap illusion ------------
-    const heroBg   = document.getElementById('heroBg');
+    // -- Dragon hero animations ----------------------------------
     const heroWing = document.getElementById('heroWing');
 
+    // Scroll-driven parallax
     window.addEventListener('scroll', () => {
       const scrollY = window.scrollY;
       const heroH   = document.getElementById('hero').offsetHeight;
-      const progress = Math.min(scrollY / heroH, 1); // 0 to 1
 
-      // Parallax: bg drifts up slowly as you scroll
-      heroBg.style.transform = `translateY(${scrollY * 0.25}px)`;
-
-      // Wing flap illusion: wing layer pulses opacity in a sine wave based on scroll speed
-      // Creates the impression the wings are beating as the page moves
+      // Wing flap: sine wave on scroll speed
       const wingFlap = Math.abs(Math.sin(scrollY * 0.04)) * 0.18;
-      heroWing.style.opacity = wingFlap.toString();
+      heroWing.style.opacity   = wingFlap.toString();
       heroWing.style.transform = `translateY(${scrollY * 0.28}px) scaleY(${1 + wingFlap * 0.04})`;
     }, { passive: true });
+
+    // Autonomous wing beat when idle (no scroll)
+    let wingT = 0;
+    function wingBeat() {
+      wingT += 0.018;
+      const flap = (Math.sin(wingT) * 0.5 + 0.5) * 0.12;
+      if (window.scrollY < 50) {
+        heroWing.style.opacity   = flap.toString();
+        heroWing.style.transform = `scaleY(${1 + flap * 0.03})`;
+      }
+      requestAnimationFrame(wingBeat);
+    }
+    wingBeat();
+
+    // Smoke puffs
+    const smokeEl = document.getElementById('heroSmoke');
+    if (smokeEl) {
+      function spawnSmoke() {
+        const puff  = document.createElement('div');
+        const size  = 20 + Math.random() * 30;
+        const drift = (Math.random() - 0.5) * 20;
+        puff.className = 'smoke-puff';
+        puff.style.cssText = [
+          'width:'  + size + 'px',
+          'height:' + size + 'px',
+          'left:'   + drift + 'px',
+          'animation-duration:' + (2.5 + Math.random() * 2) + 's',
+          'animation-delay:0s',
+        ].join(';');
+        smokeEl.appendChild(puff);
+        setTimeout(() => puff.remove(), 4500);
+      }
+      setInterval(spawnSmoke, 900);
+    }
 
     // -- Particle canvas --------------------------------
     const canvas = document.getElementById('particles');

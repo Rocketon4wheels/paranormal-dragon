@@ -1459,7 +1459,6 @@ function showPanel(id, btn) {
     'signal-intel':       loadSignalIntel,
     'admin-team':         loadTeam,
     'weekly-schedule':    loadWeeklySchedule,
-    headlines:            loadHeadlines,
             'oracle-config':      loadOracleConfig,
     'oracle-limits':      loadOracleLimits,
     'oracle-test':        () => {},
@@ -1574,7 +1573,13 @@ function reportItem(r) {
   return '<li class="report-item">' +
     '<div class="ri-meta">' +
       '<span class="ri-date">' + (r.date_label || new Date(r.created_at).toLocaleString('en-US',{month:'short',day:'numeric',year:'numeric',hour:'numeric',minute:'2-digit'})) + '</span>' +
+          '<span style="font-family:var(--mono);font-size:.6rem;padding:1px 5px;border-radius:3px;margin-left:4px;' + (r.trigger==='manual'?'background:rgba(124,58,237,.15);color:var(--purple3)':'background:rgba(29,158,117,.12);color:#0F6E56') + '">' + (r.trigger==='manual'?'manual':'scheduled') + '</span>' +
       '<span class="ri-index">SI: ' + (r.strangeness_index||'-') + '/10</span>' +
+    '</div>' +
+    '<div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:3px">' +
+      '<span style="font-family:var(--mono);font-size:.58rem;background:rgba(124,58,237,.1);color:var(--purple3);padding:1px 5px;border-radius:3px">' + (r.category || 'Uncategorized') + '</span>' +
+      (r.oracle_intel_used ? '<span style="font-family:var(--mono);font-size:.58rem;background:rgba(212,168,67,.1);color:#d4a843;padding:1px 5px;border-radius:3px">oracle intel</span>' : '') +
+      ((r.sources||[]).includes('Community Field Database') ? '<span style="font-family:var(--mono);font-size:.58rem;background:rgba(29,158,117,.1);color:#1D9E75;padding:1px 5px;border-radius:3px">community data</span>' : '') +
     '</div>' +
     '<div class="ri-title">' + (r.headline||'Untitled') + '</div>' +
     '<span class="ri-status ' + cls + '">' + cls + '</span>' +
@@ -2578,7 +2583,14 @@ async function loadHeadlines() {
     }
     var listEl = document.getElementById('headlines-list');
     if (!listEl) return;
-    if (!headlines.length) { listEl.innerHTML = '<div style="color:var(--muted);font-size:.9rem;font-style:italic">No headlines yet. Click Fetch RSS now.</div>'; return; }
+    if (!headlines.length) {
+      listEl.innerHTML = '<div style="background:rgba(212,168,67,.08);border:1px solid rgba(212,168,67,.2);border-radius:8px;padding:1rem;text-align:center">' +
+        '<div style="font-family:var(--mono);font-size:.7rem;color:#d4a843;margin-bottom:.4rem">NO HEADLINES IN DATABASE</div>' +
+        '<div style="font-size:.85rem;color:var(--muted);margin-bottom:.75rem">The headline database is empty. Click the button below to run a full RSS scan now.</div>' +
+        '<button class="btn-sm btn-purple" onclick="fetchHeadlinesNow()">Run RSS scan now</button>' +
+        '</div>';
+      return;
+    }
     listEl.innerHTML = headlines.map(function(h) {
       return '<div style="padding:.5rem 0;border-bottom:1px solid rgba(124,58,237,.07);display:flex;gap:.75rem;align-items:flex-start">' +
         '<span style="font-family:var(--mono);font-size:.65rem;color:var(--muted);white-space:nowrap">' + (h.fetched_at||'').slice(0,10) + '</span>' +
