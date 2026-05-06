@@ -1615,7 +1615,7 @@ function reportItem(r) {
     '</div>' +
     '<div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:3px">' +
       '<span style="font-family:var(--mono);font-size:.58rem;background:rgba(124,58,237,.1);color:var(--purple3);padding:1px 5px;border-radius:3px">' + (r.category || 'Uncategorized') + '</span>' +
-      (r.oracle_intel_used ? '<span style="font-family:var(--mono);font-size:.58rem;background:rgba(212,168,67,.1);color:#d4a843;padding:1px 5px;border-radius:3px">oracle intel</span>' : '') +
+      ((r.oracle_intel_used || (r.sources||[]).includes('Oracle Witness Network')) ? '<span style="font-family:var(--mono);font-size:.58rem;background:rgba(212,168,67,.1);color:#d4a843;padding:1px 5px;border-radius:3px">oracle intel</span>' : '') +
       ((r.sources||[]).includes('Community Field Database') ? '<span style="font-family:var(--mono);font-size:.58rem;background:rgba(29,158,117,.1);color:#1D9E75;padding:1px 5px;border-radius:3px">community data</span>' : '') +
     '</div>' +
     '<div class="ri-title">' + (r.headline||'Untitled') + '</div>' +
@@ -2657,15 +2657,16 @@ function setHlFilter(source) { _hlSourceFilter = source; loadHeadlines(); }
 
 async function fetchHeadlinesNow() {
   var el = document.getElementById('hl-fetch-result');
-  if (el) el.textContent = 'Fetching all RSS feeds...';
+  if (el) el.textContent = 'Scanning all RSS feeds — this may take 20-30 seconds...';
   try {
-    var data = await api('/admin/headlines/fetch', 'POST');
-    if (el) el.textContent = '✓ ' + (data.new_headlines||0) + ' new headlines · ' + (data.total||0) + ' total';
+    const data = await api('/admin/headlines/fetch', 'POST');
+    const msg = data.message || (data.new_headlines + ' new headlines added. ' + data.total + ' total stored.');
+    if (el) el.textContent = msg;
+    toast(msg, 'info');
     loadHeadlines();
-    toast('RSS fetch complete: ' + (data.new_headlines||0) + ' new headlines');
   } catch(err) {
-    if (el) el.textContent = '✗ ' + err.message;
-    toast('Fetch failed: ' + err.message, 'error');
+    if (el) el.textContent = 'Scan failed: ' + err.message;
+    toast('Scan failed: ' + err.message, 'error');
   }
 }
 
@@ -2884,16 +2885,22 @@ async function loadPipelineStatus() {
 }
 
 async function triggerScanNow() {
-  const el = document.getElementById('ps-scan-result');
-  if (el) el.textContent = 'Scanning all sources...';
+  var btn = event.target;
+  btn.disabled = true;
+  btn.textContent = 'Scanning...';
   try {
     const d = await api('/admin/news-sources/scan', 'POST');
-    if (el) el.textContent = '✓ Scan triggered across ' + d.sources + ' sources. New headlines will appear in Headline Database shortly.';
-    setTimeout(loadPipelineStatus, 5000);
-  } catch(e) {
-    if (el) el.textContent = '✗ ' + e.message;
-    toast('Scan failed: ' + e.message, 'error');
-  }
+    if (d.status === 'complete') {
+      toast('Scan complete — ' + d.new_headlines + ' new headlines added. ' + d.total + ' total stored.', 'info');
+      if (document.getElementById('hl-total')) {
+        document.getElementById('hl-total').textContent = d.total;
+        loadHeadlines();
+      }
+    } else {
+      toast('Scan error: ' + (d.message || 'unknown'), 'error');
+    }
+  } catch(e) { toast('Scan failed: ' + e.message, 'error'); }
+  finally { btn.disabled = false; btn.textContent = 'Scan now'; }
 }
 
 // ── Stub functions (for CRM which opens crm.html) ────────────

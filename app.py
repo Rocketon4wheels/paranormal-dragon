@@ -2086,8 +2086,13 @@ def admin_get_headlines():
 def admin_fetch_headlines():
     err = require_admin()
     if err: return err
-    count = scan_all_news_sources()
-    return jsonify({'status': 'fetched', 'new_headlines': count, 'total': len(load_json(HEADLINES_FILE, []))})
+    try:
+        count = scan_all_news_sources()  # synchronous — waits for completion
+        total = len(load_json(HEADLINES_FILE, []))
+        return jsonify({'status': 'fetched', 'new_headlines': count, 'total': total,
+                        'message': f'Scan complete. {count} new headlines added. {total} total stored.'})
+    except Exception as e:
+        return jsonify({'status': 'error', 'message': str(e)}), 500
 
 @app.route('/admin/headlines/<headline_id>', methods=['DELETE'])
 def admin_delete_headline(headline_id):
@@ -2525,9 +2530,13 @@ def admin_delete_news_source(idx):
 def admin_scan_news_now():
     err = require_admin()
     if err: return err
-    def run(): scan_all_news_sources()
-    threading.Thread(target=run, daemon=True).start()
-    return jsonify({'status': 'scanning', 'sources': len(get_all_news_sources())})
+    try:
+        count = scan_all_news_sources()  # synchronous
+        total = len(load_json(HEADLINES_FILE, []))
+        return jsonify({'status': 'complete', 'new_headlines': count,
+                        'total': total, 'sources': len(get_all_news_sources())})
+    except Exception as e:
+        return jsonify({'status': 'error', 'message': str(e)}), 500
 
 if __name__ == '__main__':
     port = int(os.getenv('PORT', 5000))
