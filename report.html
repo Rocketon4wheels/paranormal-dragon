@@ -420,11 +420,26 @@
       loadReports();
     });
 
+    let currentPage = 1;
+    const PER_PAGE = 10;
+
     async function loadReports() {
       try {
-        const res  = await fetch(`${API}/reports/archive?per=100`);
+        // Fetch up to 200 — no member token so free limit applies per-request
+        // Use the public latest + archive endpoints
+        const res  = await fetch(`${API}/reports/archive?per=200&page=1`);
         const data = await res.json();
-        allReports = (data.reports || []).sort((a,b) => new Date(b.published_at||b.created_at) - new Date(a.published_at||a.created_at));
+        let reports = (data.reports || []).sort((a,b) => new Date(b.published_at||b.created_at) - new Date(a.published_at||a.created_at));
+
+        // If gated to 3, also try fetching without limit awareness
+        // by using the public /reports/archive with a high per value
+        if (reports.length <= 3 && data.total_live && data.total_live > 3) {
+          // Free gate hit — show what we have but note more exist
+          document.getElementById('archive-count').textContent = `(${data.total_live} total — sign in to see all)`;
+        }
+
+        allReports = reports;
+
         if (allReports.length === 0) {
           document.getElementById('feat-loading').textContent = 'No reports published yet — check back tomorrow morning.';
           document.getElementById('archive-list').innerHTML = '<div class="no-results">Reports will appear here after the first pipeline run.</div>';
@@ -432,6 +447,7 @@
         }
         showFeatured(allReports[0]);
         updateMeter(allReports[0].strangeness_index || 6.6);
+        currentPage = 1;
         renderArchive(allReports);
       } catch(err) {
         document.getElementById('feat-loading').textContent = 'Connection error — please refresh.';
@@ -462,27 +478,65 @@
       document.getElementById('toggle-full-btn').textContent = fullVisible ? 'Show summary ↑' : 'Read full report ↓';
     }
 
-    function renderArchive(reports) {
+    function renderArchive(reports, resetPage) {
+      if (resetPage) currentPage = 1;
       const filtered = activeFilter === 'all' ? reports : reports.filter(r => getReportCategories(r).includes(activeFilter));
+      const totalFiltered = filtered.length;
+      const totalPages = Math.ceil(totalFiltered / PER_PAGE);
+      const start = (currentPage - 1) * PER_PAGE;
+      const pageItems = filtered.slice(start, start + PER_PAGE);
+
       document.getElementById('archive-count').textContent = `(${reports.length} total)`;
-      document.getElementById('filter-label').textContent  = activeFilter === 'all' ? `Showing all ${reports.length}` : `Showing ${filtered.length} of ${reports.length}`;
+      document.getElementById('filter-label').textContent  = activeFilter === 'all'
+        ? `Showing ${start+1}–${Math.min(start+PER_PAGE, totalFiltered)} of ${totalFiltered}`
+        : `${totalFiltered} ${activeFilter} reports`;
+
       const listEl = document.getElementById('archive-list');
       if (filtered.length === 0) {
         listEl.innerHTML = `<div class="no-results">No ${activeFilter} reports yet.</div>`;
         return;
       }
+
       const emojiMap = {ufo:'🛸',aliens:'👽',government:'🏛️',cryptids:'🦶',consciousness:'🧠',paranormal:'👻',technology:'⚡',earth:'🌍',secret:'🔒',phenomena:'🌀',humans:'🧬',endtimes:'⚠️'};
-      listEl.innerHTML = filtered.map((r,i) => {
-        const cat  = getReportCategory(r);
+      let html = pageItems.map((r,i) => {
+        const cat   = getReportCategory(r);
         const emoji = emojiMap[cat] || '🌀';
         const date  = r.date_label || new Date(r.published_at||r.created_at).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
         const tags  = (r.tags||[]).slice(0,4).map(t=>`<span class="ac-tag">${t}</span>`).join('');
-        return `<div class="archive-card${i===0&&activeFilter==='all'?' active':''}" onclick="selectReport(${allReports.indexOf(r)},this)">
+        const isFirst = i===0 && currentPage===1 && activeFilter==='all';
+        return `<div class="archive-card${isFirst?' active':''}" onclick="selectReport(${allReports.indexOf(r)},this)">
           <div class="ac-meta"><span class="ac-date">${emoji} ${date}</span><span class="ac-index">${r.strangeness_index}/10</span></div>
           <div class="ac-headline">${r.headline}</div>
           <div class="ac-tags">${tags}</div>
         </div>`;
       }).join('');
+
+      // Pagination controls
+      if (totalPages > 1) {
+        html += `<div style="display:flex;align-items:center;justify-content:center;gap:.5rem;margin-top:1.25rem;padding-top:1rem;border-top:1px solid rgba(124,58,237,.12)">
+          <button onclick="goPage(${currentPage-1})" ${currentPage<=1?'disabled':''} style="font-family:'Cinzel',serif;font-size:.55rem;letter-spacing:.1em;padding:.45rem .9rem;background:transparent;border:1px solid rgba(124,58,237,${currentPage<=1?'.15':'.35'});color:${currentPage<=1?'#3a2860':'#c084fc'};border-radius:3px;cursor:${currentPage<=1?'default':'pointer'};transition:all .2s">← Prev</button>`;
+        for (let p = 1; p <= totalPages; p++) {
+          if (p === 1 || p === totalPages || Math.abs(p - currentPage) <= 1) {
+            html += `<button onclick="goPage(${p})" style="font-family:'Cinzel',serif;font-size:.55rem;letter-spacing:.1em;padding:.45rem .75rem;background:${p===currentPage?'rgba(124,58,237,.25)':'transparent'};border:1px solid rgba(124,58,237,${p===currentPage?'.5':'.25'});color:${p===currentPage?'#e8e0ff':'#9080b0'};border-radius:3px;cursor:pointer;transition:all .2s">${p}</button>`;
+          } else if (Math.abs(p - currentPage) === 2) {
+            html += `<span style="color:#3a2860;font-size:.7rem">…</span>`;
+          }
+        }
+        html += `<button onclick="goPage(${currentPage+1})" ${currentPage>=totalPages?'disabled':''} style="font-family:'Cinzel',serif;font-size:.55rem;letter-spacing:.1em;padding:.45rem .9rem;background:transparent;border:1px solid rgba(124,58,237,${currentPage>=totalPages?'.15':'.35'});color:${currentPage>=totalPages?'#3a2860':'#c084fc'};border-radius:3px;cursor:${currentPage>=totalPages?'default':'pointer'};transition:all .2s">Next →</button>
+        </div>`;
+      }
+
+      listEl.innerHTML = html;
+    }
+
+    function goPage(p) {
+      const filtered = activeFilter === 'all' ? allReports : allReports.filter(r => getReportCategories(r).includes(activeFilter));
+      const totalPages = Math.ceil(filtered.length / PER_PAGE);
+      if (p < 1 || p > totalPages) return;
+      currentPage = p;
+      renderArchive(allReports);
+      // scroll archive into view
+      document.getElementById('archive-list')?.scrollIntoView({behavior:'smooth', block:'start'});
     }
 
     function selectReport(idx, el) {
@@ -495,10 +549,11 @@
 
     function setFilter(filter, btn) {
       activeFilter = filter;
+      currentPage  = 1;
       document.querySelectorAll('.filter-tag').forEach(t => t.classList.remove('active'));
       if (btn) btn.classList.add('active');
       else { const m = document.querySelector(`[data-filter="${filter}"]`); if (m) m.classList.add('active'); }
-      renderArchive(allReports);
+      renderArchive(allReports, true);
       const filtered = filter === 'all' ? allReports : allReports.filter(r => getReportCategories(r).includes(filter));
       if (filtered.length > 0) { showFeatured(filtered[0]); updateMeter(filtered[0].strangeness_index||6.6); }
     }

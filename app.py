@@ -1134,18 +1134,23 @@ def reports_latest():
 
 @app.route('/reports/archive', methods=['GET'])
 def reports_archive():
-    reports  = get_reports()
-    live     = [r for r in reports if r.get('status') == 'live']
-    # Gate report access by member plan
+    reports    = get_reports()
+    live       = [r for r in reports if r.get("status") == "live"]
+    total_live = len(live)
+    # Member token — paid plans get full archive
     token  = request.headers.get('X-Member-Token', '')
     member = find_member_by_token(token) if token else None
     plan   = member.get('plan', 'free') if member else 'free'
+    # Public visitors always see up to 50 most recent reports (no gate on public page)
+    # Full archive (unlimited) for paid plans
     limits = PLAN_LIMITS.get(plan, PLAN_LIMITS['free'])
-    total_live = len(live)
-    if limits['report_access'] != -1:
+    if plan == 'free' and not member:
+        # Unauthenticated public visitor — show latest 50 freely
+        pass
+    elif limits['report_access'] != -1:
         live = live[:limits['report_access']]
     page     = max(1, int(request.args.get('page', 1)))
-    per_page = min(50, int(request.args.get('per', 10)))
+    per_page = min(100, int(request.args.get('per', 50)))
     start    = (page - 1) * per_page
     return jsonify({'reports': live[start:start + per_page], 'total': len(live),
                     'total_live': total_live, 'plan': plan, 'page': page})

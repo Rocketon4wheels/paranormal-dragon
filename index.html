@@ -553,8 +553,7 @@
   <!-- Live Network Stats -->
   <div id="network-stats" style="background:#07070f;border-top:1px solid rgba(124,58,237,.1);border-bottom:1px solid rgba(124,58,237,.1);padding:2rem;">
     <div style="max-width:900px;margin:0 auto;display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:rgba(124,58,237,.12);border:1px solid rgba(124,58,237,.12);border-radius:6px;overflow:hidden">
-      <div style="background:#0d0015;padding:1.5rem;text-align:center">
-        <a href="report.html" style="text-decoration:none;display:block;background:#0d0015;padding:1.5rem;text-align:center;transition:background .2s" onmouseover="this.style.background='#130028'" onmouseout="this.style.background='#0d0015'">
+      <a href="report.html" style="text-decoration:none;display:block;background:#0d0015;padding:1.5rem;text-align:center;transition:background .2s" onmouseover="this.style.background='#130028'" onmouseout="this.style.background='#0d0015'">
         <div id="stat-reports" style="font-family:'Share Tech Mono',monospace;font-size:2.2rem;font-weight:700;color:#c084fc;line-height:1">—</div>
         <div style="font-family:'Cinzel',serif;font-size:.52rem;letter-spacing:.2em;color:#9080b0;margin-top:.4rem">Intelligence Reports</div>
         <div style="font-size:.78rem;color:#4a4060;margin-top:.25rem;font-style:italic">Published to the network</div>
@@ -964,7 +963,7 @@
             var tagsStripEl = document.getElementById('latest-tags');
             if (tagsStripEl && r.tags && r.tags.length) {
               tagsStripEl.innerHTML = r.tags.slice(0,5).map(function(t) {
-                return '<span style="font-family:'Cinzel',serif;font-size:.48rem;letter-spacing:.1em;color:var(--gold);border:1px solid rgba(212,168,67,.25);padding:2px 9px;border-radius:2px">' + t + '</span>';
+                return '<span style="font-family:Cinzel,serif;font-size:.48rem;letter-spacing:.1em;color:var(--gold);border:1px solid rgba(212,168,67,.25);padding:2px 9px;border-radius:2px">' + t + '</span>';
               }).join('');
             }
           }
