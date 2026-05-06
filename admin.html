@@ -1022,24 +1022,50 @@ SMTP_PASS=abcdabcdabcdabcd</div>
           <div class="panel-title">Signal Intelligence</div>
           <div class="panel-sub">Mainstream headlines scored for hidden patterns · Truth in plain sight</div>
         </div>
-        <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:1rem;align-items:center">
-          <select id="sig-min-score" class="field-input" style="width:auto;font-size:.8rem" onchange="loadSignalIntel()">
-            <option value="4">Score 4+</option>
-            <option value="5">Score 5+</option>
-            <option value="6">Score 6+</option>
-            <option value="7">Score 7+</option>
-          </select>
-          <select id="sig-reviewed" class="field-input" style="width:auto;font-size:.8rem" onchange="loadSignalIntel()">
-            <option value="">All signals</option>
-            <option value="false">Unreviewed</option>
-            <option value="true">Reviewed</option>
-          </select>
-          <button class="btn-sm btn-purple" onclick="analyzeSignals()">🧠 Find Patterns</button>
-          <button class="btn-sm btn-outline" onclick="loadSignalIntel()">↻ Refresh</button>
-          <span id="sig-count" style="font-family:var(--mono);font-size:.7rem;color:var(--muted);margin-left:auto"></span>
+
+        <!-- Tabs -->
+        <div style="display:flex;gap:0;border-bottom:1px solid rgba(124,58,237,.2);margin-bottom:1.25rem">
+          <button id="sig-tab-scored" onclick="sigTab('scored')" style="font-family:var(--nav);font-size:.6rem;letter-spacing:.12em;padding:.6rem 1.25rem;background:rgba(124,58,237,.15);border:none;border-bottom:2px solid var(--purple2);color:var(--purple3);cursor:pointer">SCORED SIGNALS</button>
+          <button id="sig-tab-raw" onclick="sigTab('raw')" style="font-family:var(--nav);font-size:.6rem;letter-spacing:.12em;padding:.6rem 1.25rem;background:transparent;border:none;border-bottom:2px solid transparent;color:var(--muted);cursor:pointer">RAW HEADLINES <span id="sig-raw-count" style="color:var(--gold)"></span></button>
         </div>
-        <div id="sig-analysis" style="display:none;background:rgba(124,58,237,.1);border:1px solid rgba(124,58,237,.3);border-radius:8px;padding:1rem;margin-bottom:1rem;font-family:'Crimson Pro',Georgia,serif;font-size:.95rem;line-height:1.6;color:var(--text)"></div>
-        <div id="signal-intel-list" style="display:flex;flex-direction:column;gap:.5rem"></div>
+
+        <!-- Scored signals view -->
+        <div id="sig-view-scored">
+          <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:1rem;align-items:center">
+            <select id="sig-min-score" class="field-input" style="width:auto;font-size:.8rem" onchange="loadSignalIntel()">
+              <option value="4">Score 4+</option>
+              <option value="5">Score 5+</option>
+              <option value="6">Score 6+</option>
+              <option value="7">Score 7+</option>
+            </select>
+            <select id="sig-reviewed" class="field-input" style="width:auto;font-size:.8rem" onchange="loadSignalIntel()">
+              <option value="">All signals</option>
+              <option value="false">Unreviewed</option>
+              <option value="true">Reviewed</option>
+            </select>
+            <button class="btn-sm btn-purple" onclick="analyzeSignals()">🧠 Find Patterns</button>
+            <button class="btn-sm btn-outline" onclick="loadSignalIntel()">↻ Refresh</button>
+            <span id="sig-count" style="font-family:var(--mono);font-size:.7rem;color:var(--muted);margin-left:auto"></span>
+          </div>
+          <div id="sig-analysis" style="display:none;background:rgba(124,58,237,.1);border:1px solid rgba(124,58,237,.3);border-radius:8px;padding:1rem;margin-bottom:1rem;font-family:'Crimson Pro',Georgia,serif;font-size:.95rem;line-height:1.6;color:var(--text)"></div>
+          <div id="signal-intel-list" style="display:flex;flex-direction:column;gap:.5rem"></div>
+        </div>
+
+        <!-- Raw headlines view -->
+        <div id="sig-view-raw" style="display:none">
+          <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:.75rem;align-items:center">
+            <input id="hl-search" class="field-input" placeholder="Search headlines..." style="flex:1;min-width:180px;font-size:.82rem" oninput="filterRawHeadlines()"/>
+            <select id="hl-src-filter" class="field-input" style="width:auto;font-size:.8rem" onchange="filterRawHeadlines()">
+              <option value="">All sources</option>
+            </select>
+            <button class="btn-sm btn-purple" onclick="loadRawHeadlines()">↻ Refresh</button>
+            <button class="btn-sm btn-red" onclick="if(confirm('Clear all headlines?'))api('/admin/headlines/clear','POST').then(()=>{loadRawHeadlines();toast('Cleared')})">Clear all</button>
+          </div>
+          <div id="hl-raw-stats" style="font-family:var(--mono);font-size:.68rem;color:var(--muted);margin-bottom:.75rem"></div>
+          <div id="hl-raw-list" style="max-height:600px;overflow-y:auto;display:flex;flex-direction:column;gap:0">
+            <div style="color:var(--muted);padding:1rem;font-size:.88rem">Click Refresh to load headlines.</div>
+          </div>
+        </div>
       </div>
 
       <div class="panel" id="panel-stripe">
@@ -2958,6 +2984,92 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 });
 
+// ── Signal Intelligence — Tab switcher ───────────────────────────────────────
+var _sigTab = 'scored';
+var _rawHeadlines = [];
+
+function sigTab(tab) {
+  _sigTab = tab;
+  document.getElementById('sig-view-scored').style.display = tab === 'scored' ? 'block' : 'none';
+  document.getElementById('sig-view-raw').style.display    = tab === 'raw'    ? 'block' : 'none';
+  document.getElementById('sig-tab-scored').style.background    = tab === 'scored' ? 'rgba(124,58,237,.15)' : 'transparent';
+  document.getElementById('sig-tab-scored').style.borderBottomColor = tab === 'scored' ? 'var(--purple2)' : 'transparent';
+  document.getElementById('sig-tab-scored').style.color    = tab === 'scored' ? 'var(--purple3)' : 'var(--muted)';
+  document.getElementById('sig-tab-raw').style.background      = tab === 'raw' ? 'rgba(124,58,237,.15)' : 'transparent';
+  document.getElementById('sig-tab-raw').style.borderBottomColor = tab === 'raw' ? 'var(--purple2)' : 'transparent';
+  document.getElementById('sig-tab-raw').style.color      = tab === 'raw' ? 'var(--purple3)' : 'var(--muted)';
+  if (tab === 'raw' && _rawHeadlines.length === 0) loadRawHeadlines();
+}
+
+async function loadRawHeadlines() {
+  const listEl  = document.getElementById('hl-raw-list');
+  const statsEl = document.getElementById('hl-raw-stats');
+  const srcSel  = document.getElementById('hl-src-filter');
+  if (!listEl) return;
+  listEl.innerHTML = '<div style="color:var(--muted);padding:1rem;font-size:.88rem">Loading headlines...</div>';
+  try {
+    const data = await api('/admin/headlines?limit=500');
+    _rawHeadlines = data.headlines || [];
+    var total    = data.total || 0;
+    var sources  = data.sources || [];
+
+    // Update count badge
+    var countEl = document.getElementById('sig-raw-count');
+    if (countEl) countEl.textContent = '(' + total + ')';
+
+    // Populate source filter
+    if (srcSel) {
+      srcSel.innerHTML = '<option value="">All sources (' + total + ')</option>' +
+        sources.map(function(s) { return '<option value="' + s + '">' + s + '</option>'; }).join('');
+    }
+
+    if (statsEl) statsEl.textContent = total.toLocaleString() + ' headlines stored · showing latest 500 · ' + sources.length + ' sources active';
+
+    filterRawHeadlines();
+  } catch(err) {
+    listEl.innerHTML = '<div style="color:var(--error);padding:1rem">Failed to load: ' + err.message + '</div>';
+  }
+}
+
+function filterRawHeadlines() {
+  var listEl   = document.getElementById('hl-raw-list');
+  var search   = (document.getElementById('hl-search')?.value || '').toLowerCase();
+  var srcFilter = document.getElementById('hl-src-filter')?.value || '';
+  if (!listEl) return;
+
+  var filtered = _rawHeadlines.filter(function(h) {
+    var title  = (h.title || '').toLowerCase();
+    var source = (h.source || '');
+    var matchSrc    = !srcFilter || source === srcFilter;
+    var matchSearch = !search || title.includes(search) || source.toLowerCase().includes(search);
+    return matchSrc && matchSearch;
+  });
+
+  if (!filtered.length) {
+    listEl.innerHTML = '<div style="color:var(--muted);padding:1rem;font-size:.88rem;font-style:italic">No headlines match your filter.</div>';
+    return;
+  }
+
+  // Strip "SourceName: " prefix from title
+  function cleanTitle(h) {
+    var t = h.title || '';
+    var prefix = (h.source || '') + ': ';
+    return t.startsWith(prefix) ? t.slice(prefix.length) : t;
+  }
+
+  listEl.innerHTML = filtered.map(function(h) {
+    var date = (h.fetched_at || '').slice(0,10);
+    var time = h.fetched_at ? new Date(h.fetched_at).toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',timeZone:'America/Denver'}) : '';
+    return '<div style="padding:.45rem .5rem;border-bottom:1px solid rgba(124,58,237,.07);display:flex;gap:.6rem;align-items:flex-start">' +
+      '<div style="font-family:var(--mono);font-size:.6rem;color:var(--muted);white-space:nowrap;min-width:72px;padding-top:.1rem">' + date + '<br>' + time + '</div>' +
+      '<div style="flex:1;min-width:0">' +
+        '<div style="font-size:.85rem;color:var(--text);line-height:1.4;word-break:break-word">' + cleanTitle(h) + '</div>' +
+        '<div style="font-family:var(--mono);font-size:.6rem;color:var(--purple3);margin-top:.1rem">' + (h.source || '') + '</div>' +
+      '</div>' +
+    '</div>';
+  }).join('');
+}
+
 // ── Signal Intelligence ───────────────────────────────────────────────────────
 async function loadSignalIntel() {
   const minScore = document.getElementById('sig-min-score')?.value || 4;
@@ -2966,6 +3078,11 @@ async function loadSignalIntel() {
   const countEl  = document.getElementById('sig-count');
   if (!listEl) return;
   listEl.innerHTML = '<p style="color:var(--muted);font-size:.85rem">Loading signals...</p>';
+  // Also update raw headline count badge
+  api('/admin/headlines?limit=1').then(function(d) {
+    var el = document.getElementById('sig-raw-count');
+    if (el && d.total) el.textContent = '(' + d.total.toLocaleString() + ')';
+  }).catch(function(){});
   try {
     let url = `/admin/signal-intel?min_score=${minScore}`;
     if (reviewed) url += `&reviewed=${reviewed}`;
