@@ -703,6 +703,7 @@ Write the complete Strangeness Report now. Follow all system prompt instructions
             'published_at':      None,
             'date_label':        today,
             'oracle_intel_used': bool(oracle_context),
+            'trigger':           'scheduled',  # overridden to 'manual' when admin triggers
         }
 
         if config.get('report_auto_publish', False) or config.get('slot_autopublish', False):
@@ -1610,9 +1611,9 @@ def admin_get_config():
     # Return current prompts — stored ones take precedence, then module defaults
     if not config.get('oracle_prompt'):
         config['oracle_prompt'] = ORACLE_SYSTEM_PROMPT
-    # Never auto-save the prompt — admin controls it manually via the UI
-    # if not config.get('report_writer_prompt'):
-    #     config['report_writer_prompt'] = REPORT_WRITER_PROMPT
+    # Return default prompt for display — never save it automatically
+    if not config.get('report_writer_prompt'):
+        config['report_writer_prompt'] = REPORT_WRITER_PROMPT
     return jsonify(config)
 
 @app.route('/admin/config', methods=['POST'])
@@ -1698,7 +1699,16 @@ def admin_delete_report(report_id):
 def admin_generate_report():
     err = require_admin()
     if err: return err
-    threading.Thread(target=generate_report, daemon=True).start()
+    def generate_manual():
+        report = generate_report()
+        if report:
+            reports = get_reports()
+            for r in reports:
+                if r['id'] == report['id']:
+                    r['trigger'] = 'manual'
+                    break
+            save_json(REPORTS_FILE, reports)
+    threading.Thread(target=generate_manual, daemon=True).start()
     audit_log('report_generation_triggered')
     return jsonify({'status': 'generating', 'message': 'Report generation started. Check reports in ~30 seconds.'})
 

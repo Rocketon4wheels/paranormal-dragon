@@ -175,6 +175,37 @@
   </script>
 
   <script src="js/chatbot.js"></script>
+
+  <!-- Strange Diagnosis FAB -->
+  <button class="diag-fab" onclick="openDiagnosis()" aria-label="Get your Strange Diagnosis">
+    &#9672; Strange Diagnosis
+  </button>
+
+  <!-- Strange Diagnosis Modal -->
+  <div class="diagnosis-overlay" id="diagnosis-overlay">
+    <div class="diagnosis-modal">
+      <button class="diag-close" onclick="closeDiagnosis()" aria-label="Close">&#x2715;</button>
+      <div class="diag-header">
+        <div class="diag-eyebrow">STRANGENESS IS &mdash; FIELD INTAKE</div>
+        <div class="diag-title">Strange Diagnosis</div>
+        <div class="diag-sub">A classified assessment of your anomalous experience</div>
+      </div>
+      <div id="diag-questions">
+        <div class="diag-progress">
+          <div class="diag-progress-bar-wrap">
+            <div class="diag-progress-bar" id="diag-progress-bar" style="width:0%"></div>
+          </div>
+          <div class="diag-progress-text" id="diag-progress-text">Step 1 of 5</div>
+        </div>
+        <div class="diag-question" id="diag-question-text"></div>
+        <div class="diag-question-sub" id="diag-question-sub"></div>
+        <div class="diag-options" id="diag-options"></div>
+      </div>
+      <div id="diag-result" style="display:none"></div>
+    </div>
+  </div>
+
   <script src="js/strange-meter.js"></script>
+
 </body>
 </html>
