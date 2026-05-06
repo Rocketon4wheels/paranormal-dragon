@@ -918,7 +918,8 @@ def public_stats():
         'map_pins':   len(verified_pins),
     })
 
-@app.route('/chat', methods=['POST'])def chat():
+@app.route('/chat', methods=['POST'])
+def chat():
     data       = request.get_json(silent=True) or {}
     message    = data.get('message', '').strip()
     history    = data.get('history', [])
