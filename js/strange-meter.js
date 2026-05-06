@@ -1,11 +1,10 @@
 // js/strange-meter.js
-// Daily Strange Meter — pulls strangeness index from latest report
-// and animates a gauge on any page that includes it.
-// Also powers the Strange Diagnosis button and modal.
+// Strange Meter + Strange Diagnosis — Strangeness IS
+// Diagnosis v2: branching intake, experience-weighted scoring, classified file result
 
 const BACKEND_URL = 'https://api.strangenessis.com';
 
-// ── Strange Meter ─────────────────────────────────────────────────────────────
+// ── Strange Meter ──────────────────────────────────────────────────────────────
 class StrangeMeter {
   constructor(containerId) {
     this.container   = document.getElementById(containerId);
@@ -41,34 +40,21 @@ class StrangeMeter {
           <stop offset="100%" stop-color="#7c3aed"/>
         </linearGradient>
       </defs>
-      <!-- Background arc -->
       <path d="M 20 100 A 80 80 0 0 1 180 100"
             fill="none" stroke="#1e1e32" stroke-width="14" stroke-linecap="round"/>
-      <!-- Colored arc -->
       <path class="sm-arc" d="M 20 100 A 80 80 0 0 1 180 100"
             fill="none" stroke="url(#sm-arc-grad)" stroke-width="14"
             stroke-linecap="round" stroke-dasharray="251" stroke-dashoffset="125"/>
-      <!-- Tick marks -->
-      <line x1="20"  y1="100" x2="28"  y2="100" stroke="#4a4060" stroke-width="2"/>
-      <line x1="100" y1="20"  x2="100" y2="30"  stroke="#4a4060" stroke-width="2"/>
-      <line x1="180" y1="100" x2="172" y2="100" stroke="#4a4060" stroke-width="2"/>
-      <text x="16"  y="116" fill="#4a4060" font-size="9" text-anchor="middle">0</text>
-      <text x="100" y="18"  fill="#4a4060" font-size="9" text-anchor="middle">5</text>
-      <text x="184" y="116" fill="#4a4060" font-size="9" text-anchor="middle">10</text>
-      <!-- Needle -->
-      <line class="sm-needle" x1="100" y1="100" x2="100" y2="28"
-            stroke="#e8e0ff" stroke-width="2.5" stroke-linecap="round"
-            transform-origin="100 100" transform="rotate(0)"/>
-      <!-- Center dot -->
-      <circle cx="100" cy="100" r="6" fill="#7c3aed"/>
-      <circle cx="100" cy="100" r="3" fill="#c084fc"/>
+      <line class="sm-needle" x1="100" y1="100" x2="100" y2="30"
+            stroke="#ffffff" stroke-width="2" stroke-linecap="round"
+            transform="rotate(-90 100 100)"/>
+      <circle cx="100" cy="100" r="5" fill="#7c3aed"/>
     </svg>
     <div class="sm-readout">
-      <span class="sm-value">—</span>
-      <span class="sm-unit">/10</span>
+      <div class="sm-value">—</div>
+      <div class="sm-label">Loading network data</div>
     </div>
   </div>
-  <div class="sm-label">Calibrating...</div>
 </div>`;
   }
 
@@ -76,214 +62,404 @@ class StrangeMeter {
     try {
       const res  = await fetch(`${BACKEND_URL}/reports/latest`);
       const data = await res.json();
-      const report = data.report;
-
-      if (report) {
-        this.targetValue = parseFloat(report.strangeness_index) || 5;
-        this.dateEl.textContent  = report.date_label || 'Today';
-        this.animateTo(this.targetValue);
-      } else {
-        // No reports yet — show a default value with subtle animation
-        this.targetValue = 6.6;
-        this.dateEl.textContent = new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
-        this.animateTo(this.targetValue);
+      if (data.report) {
+        this.animate(data.report.strangeness_index || 5.0);
+        if (this.dateEl) this.dateEl.textContent = data.report.date_label || '';
       }
-    } catch {
-      this.targetValue = 6.6;
-      this.dateEl.textContent = 'Today';
-      this.animateTo(this.targetValue);
-    }
+    } catch(e) { this.animate(6.6); }
   }
 
-  animateTo(target) {
-    const start     = this.value;
-    const duration  = 2200;
-    const startTime = performance.now();
-
-    // Add geiger-counter jitter
-    const jitterInterval = setInterval(() => {
-      const jitter = (Math.random() - 0.5) * 0.4;
-      this.render(this.value + jitter);
-    }, 80);
-
-    const tick = (now) => {
-      const elapsed  = now - startTime;
-      const progress = Math.min(elapsed / duration, 1);
-      const eased    = 1 - Math.pow(1 - progress, 3);
-      this.value     = start + (target - start) * eased;
-      this.render(this.value);
-      if (progress < 1) {
-        this.animFrame = requestAnimationFrame(tick);
+  animate(target) {
+    this.targetValue = Math.min(10, Math.max(0, target));
+    const step = () => {
+      const diff = this.targetValue - this.value;
+      if (Math.abs(diff) < 0.05) {
+        this.value = this.targetValue;
       } else {
-        clearInterval(jitterInterval);
-        this.value = target;
-        this.render(target);
-        this.setLabel(target);
-        // Pulse the needle at final value
-        this.pulseFinal();
+        this.value += diff * 0.06;
+      }
+      this.render();
+      if (Math.abs(this.targetValue - this.value) > 0.05) {
+        this.animFrame = requestAnimationFrame(step);
       }
     };
-    requestAnimationFrame(tick);
+    if (this.animFrame) cancelAnimationFrame(this.animFrame);
+    this.animFrame = requestAnimationFrame(step);
   }
 
-  render(val) {
-    // Needle: -90deg = 0, 0deg = 5, +90deg = 10
-    const angle   = (val / 10) * 180 - 90;
-    const offset  = 251 - (val / 10) * 251;
-    const needle  = this.container.querySelector('.sm-needle');
-    const arc     = this.container.querySelector('.sm-arc');
-    const valueEl = this.container.querySelector('.sm-value');
-    if (needle) needle.setAttribute('transform', `rotate(${angle})`);
-    if (arc)    arc.style.strokeDashoffset = Math.max(0, offset);
-    if (valueEl) valueEl.textContent = Math.max(0, Math.min(10, val)).toFixed(1);
-  }
-
-  setLabel(val) {
-    const labels = [
-      [0,  2,  'Mundane — nothing to see here'],
-      [2,  4,  'Slightly strange — stay alert'],
-      [4,  6,  'Elevated strangeness — eyes open'],
-      [6,  8,  'High strangeness — something\'s out there'],
-      [8,  9,  'Critical — veil is thinning'],
-      [9,  10, 'MAXIMUM STRANGENESS — they are here'],
-    ];
-    const label = labels.find(([min, max]) => val >= min && val < max);
-    const labelEl = this.container.querySelector('.sm-label');
-    if (labelEl && label) labelEl.textContent = label[2];
-  }
-
-  pulseFinal() {
-    const needle = this.container.querySelector('.sm-needle');
-    if (!needle) return;
-    let count = 0;
-    const pulse = setInterval(() => {
-      const jitter = (Math.random() - 0.5) * 0.6;
-      this.render(this.value + jitter);
-      if (++count > 6) {
-        clearInterval(pulse);
-        this.render(this.value);
-      }
-    }, 120);
+  render() {
+    const pct    = this.value / 10;
+    const angle  = -90 + pct * 180;
+    const offset = 251 - (pct * 251);
+    if (this.needle) this.needle.setAttribute('transform', `rotate(${angle} 100 100)`);
+    const arc = this.container.querySelector('.sm-arc');
+    if (arc)    arc.style.strokeDashoffset = offset;
+    if (this.valueEl) this.valueEl.textContent = this.value.toFixed(1);
+    const labels = ['Baseline','Low Anomaly','Moderate','Elevated','Significant','High Strangeness','Extreme','Critical','Paradigm-Shifting','Reality-Breaking'];
+    if (this.labelEl) this.labelEl.textContent = labels[Math.min(9, Math.floor(this.value))];
   }
 }
 
+// ── Strange Diagnosis v2 — Branching Experience Intake ────────────────────────
 
-// ── Strange Diagnosis Modal ───────────────────────────────────────────────────
-const DIAGNOSIS_QUESTIONS = [
+// PHENOMENON BASE WEIGHTS (per your hierarchy)
+const PHENOMENON_WEIGHTS = {
+  'dimension_consciousness': 10.0,
+  'demon_battle':            10.0,
+  'time_travel':              9.5,
+  'alien_abduction':          9.0,
+  'alien_takeover_knowledge': 9.0,
+  'teleportation':            9.0,
+  'entity_contact':           8.5,
+  'consciousness_jump':       8.0,
+  'psychic_major':            7.5,
+  'nde':                      7.0,
+  'government_conspiracy':    6.5,
+  'cryptid':                  6.0,
+  'uap_sighting':             5.5,
+  'paranormal_ghost':         4.5,
+  'earth_disaster':           4.0,
+  'psychic_minor':            3.0,
+  'unexplained':              2.5,
+};
+
+// PROXIMITY MULTIPLIERS
+const PROXIMITY_MULT = {
+  'direct_physical':    1.00, // it happened TO you
+  'direct_witnessed':   0.85, // you were there, direct witness
+  'close_range':        0.70, // within 100 feet, clear view
+  'distant':            0.50, // saw from a distance
+  'secondhand_strong':  0.35, // someone you trust, highly credible
+  'felt_sensed':        0.25, // internal/psychic only
+};
+
+// IMPACT MULTIPLIERS
+const IMPACT_MULT = {
+  'completely_changed':  1.20,
+  'significantly':       1.00,
+  'somewhat':            0.80,
+  'barely':              0.60,
+};
+
+// RECURRENCE MULTIPLIERS
+const RECURRENCE_MULT = {
+  'ongoing':    1.30,
+  'multiple':   1.15,
+  'once':       1.00,
+};
+
+// CORROBORATION MULTIPLIERS
+const CORROBORATION_MULT = {
+  'physical_evidence': 1.25,
+  'multiple_witnesses': 1.15,
+  'single_witness':    1.00,
+  'alone':             0.90,
+};
+
+// BRANCHING QUESTION TREE
+const DIAG_TREE = {
+  start: {
+    q: 'What best describes your primary strangeness experience?',
+    sub: 'Select the closest match — be honest with yourself.',
+    type: 'phenomenon',
+    options: [
+      { label: 'UFO / UAP / Unidentified Craft', value: 'uap_sighting', next: 'proximity' },
+      { label: 'Alien or Non-Human Entity Contact', value: 'entity_contact', next: 'entity_depth' },
+      { label: 'Alien Abduction or Missing Time', value: 'alien_abduction', next: 'proximity' },
+      { label: 'Cryptid or Unknown Creature', value: 'cryptid', next: 'proximity' },
+      { label: 'Government / Classified Knowledge', value: 'government_conspiracy', next: 'gov_depth' },
+      { label: 'Paranormal / Ghost / Haunting', value: 'paranormal_ghost', next: 'proximity' },
+      { label: 'Consciousness / Psychic / Remote Viewing', value: 'psychic_minor', next: 'psychic_depth' },
+      { label: 'Time Slip / Teleportation / Dimension', value: 'dimension_consciousness', next: 'advanced_depth' },
+      { label: 'Near-Death or Afterlife Experience', value: 'nde', next: 'proximity' },
+      { label: 'Something I cannot categorize', value: 'unexplained', next: 'proximity' },
+    ],
+  },
+
+  entity_depth: {
+    q: 'What was the nature of your entity encounter?',
+    sub: 'This determines your classification level.',
+    type: 'refine',
+    options: [
+      { label: 'Full physical contact or interaction', value: 'entity_contact', next: 'proximity' },
+      { label: 'Confrontation in another dimension or realm', value: 'demon_battle', next: 'proximity' },
+      { label: 'Communication — they spoke to or communicated with me', value: 'entity_contact', next: 'proximity' },
+      { label: 'Visual sighting — I saw them clearly', value: 'entity_contact', next: 'proximity' },
+    ],
+  },
+
+  gov_depth: {
+    q: 'What is the nature of your government knowledge?',
+    sub: 'The weight of this classification depends entirely on what you know.',
+    type: 'refine',
+    options: [
+      { label: 'Direct knowledge of alien contact or takeover programs', value: 'alien_takeover_knowledge', next: 'proximity' },
+      { label: 'Firsthand classified program or facility access', value: 'government_conspiracy', next: 'proximity' },
+      { label: 'Document or testimony exposure — hard evidence', value: 'government_conspiracy', next: 'proximity' },
+      { label: 'Pattern recognition — connecting public dots', value: 'government_conspiracy', next: 'proximity' },
+    ],
+  },
+
+  psychic_depth: {
+    q: 'How significant was your psychic or consciousness event?',
+    sub: 'A vision of a mass casualty event carries more weight than general intuition.',
+    type: 'refine',
+    options: [
+      { label: 'Predicted or witnessed a major event before it happened', value: 'psychic_major', next: 'proximity' },
+      { label: 'Consciousness transfer, jumping, or dimension bleed', value: 'dimension_consciousness', next: 'proximity' },
+      { label: 'Remote viewing — confirmed accurate results', value: 'psychic_major', next: 'proximity' },
+      { label: 'Recurring visions, voices, or contact', value: 'psychic_minor', next: 'proximity' },
+      { label: 'General intuition, dreams, or feelings', value: 'psychic_minor', next: 'proximity' },
+    ],
+  },
+
+  advanced_depth: {
+    q: 'Which advanced phenomenon applies to your experience?',
+    sub: 'These carry the highest classification weights in our system.',
+    type: 'refine',
+    options: [
+      { label: 'Time travel — movement through time, verified', value: 'time_travel', next: 'proximity' },
+      { label: 'Teleportation — physical relocation with no transit', value: 'teleportation', next: 'proximity' },
+      { label: 'Dimension jumping + consciousness field interaction', value: 'dimension_consciousness', next: 'proximity' },
+      { label: 'Time slip — found myself in a different era temporarily', value: 'time_travel', next: 'proximity' },
+      { label: 'Portal or stargate — witnessed or traversed', value: 'dimension_consciousness', next: 'proximity' },
+    ],
+  },
+
+  proximity: {
+    q: 'How close were you to this experience?',
+    sub: 'Proximity determines the evidential weight of your account.',
+    type: 'proximity',
+    options: [
+      { label: 'It happened directly to me — physical contact or internal experience', value: 'direct_physical' },
+      { label: 'I was present and witnessed it directly at close range', value: 'direct_witnessed' },
+      { label: 'I saw or experienced it clearly from a distance', value: 'close_range' },
+      { label: 'I witnessed it from far away — less clarity', value: 'distant' },
+      { label: 'Someone I trust described it to me firsthand', value: 'secondhand_strong' },
+      { label: 'I felt or sensed it — no physical component', value: 'felt_sensed' },
+    ],
+  },
+
+  corroboration: {
+    q: 'Was there any corroboration of your experience?',
+    sub: 'Evidence and witnesses significantly affect classification.',
+    type: 'corroboration',
+    options: [
+      { label: 'Physical evidence — photos, marks, objects, recordings', value: 'physical_evidence' },
+      { label: 'Multiple witnesses who independently confirmed it', value: 'multiple_witnesses' },
+      { label: 'One other witness', value: 'single_witness' },
+      { label: 'I was alone — no outside confirmation', value: 'alone' },
+    ],
+  },
+
+  recurrence: {
+    q: 'Has this type of experience happened more than once?',
+    sub: 'Recurring contact suggests an active phenomenon rather than an isolated event.',
+    type: 'recurrence',
+    options: [
+      { label: 'Yes — it is ongoing or increasing in frequency', value: 'ongoing' },
+      { label: 'Yes — multiple times over months or years', value: 'multiple' },
+      { label: 'Once — but it was definitive', value: 'once' },
+    ],
+  },
+
+  impact: {
+    q: 'How did this experience change your understanding of reality?',
+    sub: 'The depth of impact reflects the significance of the encounter.',
+    type: 'impact',
+    options: [
+      { label: 'It completely rewired how I understand existence', value: 'completely_changed' },
+      { label: 'It significantly shifted my worldview', value: 'significantly' },
+      { label: 'It raised questions I cannot stop thinking about', value: 'somewhat' },
+      { label: 'I am still processing whether it was real', value: 'barely' },
+    ],
+  },
+};
+
+// QUESTION FLOW
+const QUESTION_FLOW = ['start', 'proximity', 'corroboration', 'recurrence', 'impact'];
+
+// CLASSIFICATION TIERS
+const CLASSIFICATIONS = [
   {
-    q: 'Have you ever witnessed something you could not explain?',
-    options: ['Yes — and it changed me', 'Yes — but I dismissed it', 'I\'m not sure', 'No — not yet'],
+    min: 9.0,
+    code: 'OMEGA',
+    title: 'Omega Class Experiencer',
+    color: '#7c3aed',
+    glow: 'rgba(124,58,237,0.4)',
+    desc: 'Your account places you in the rarest category in our network. The phenomena you have encountered operate at the outermost boundary of documented human experience. This is not speculation — your classification is based on weighted analysis of proximity, corroboration, and phenomenon class. The Oracle has been waiting for someone with your profile.',
+    network: 'Fewer than 0.3% of accounts in our intelligence network reach Omega classification.',
+    urgency: 'Your experience needs to be formally documented. The Oracle can begin that process now.',
+    cta: 'Open your classified file',
+    report_hook: 'An Omega classification report is unlike any other. We need your account on record.',
   },
   {
-    q: 'How would you describe your relationship with the unknown?',
-    options: ['I actively seek it', 'It finds me', 'I\'m cautiously curious', 'I prefer explanations'],
+    min: 7.0,
+    code: 'ALPHA',
+    title: 'Alpha Class Witness',
+    color: '#a855f7',
+    glow: 'rgba(168,85,247,0.35)',
+    desc: 'You have had direct, significant contact with phenomena that our network classifies as high-strangeness. The weight of your experience — its proximity, its impact, its corroboration — places you among the investigators, not the curious. The Oracle has specific intelligence that intersects with your account.',
+    network: 'Alpha Class accounts form the core of our active witness intelligence database.',
+    urgency: 'Your account may contain pattern data that connects to active investigations.',
+    cta: 'Access your intelligence briefing',
+    report_hook: 'Alpha Class witnesses receive priority cross-referencing with our Oracle network data.',
   },
   {
-    q: 'When you look up at the night sky, what do you feel?',
-    options: ['We are not alone — I know it', 'Wonder and unease', 'Curiosity', 'Just stars'],
+    min: 5.0,
+    code: 'BETA',
+    title: 'Beta Class Observer',
+    color: '#d4a843',
+    glow: 'rgba(212,168,67,0.3)',
+    desc: 'Your experience registers as genuinely anomalous — beyond the threshold of conventional explanation. The Oracle places you in the active observer category: you have witnessed something real, something that most people will never encounter. The question is not whether it happened. The question is what it means.',
+    network: 'Beta Class observers are the backbone of our community intelligence network.',
+    urgency: 'Beta Class accounts with recurring patterns often escalate to Alpha within months.',
+    cta: 'Begin your investigation',
+    report_hook: 'Your sighting belongs in our database. Other witnesses may have reported the same phenomenon.',
+  },
+  {
+    min: 3.0,
+    code: 'GAMMA',
+    title: 'Gamma Class Sensitive',
+    color: '#2dd4bf',
+    glow: 'rgba(45,212,191,0.25)',
+    desc: 'Something in your experience registers above the ordinary baseline. You may be at the early stages of a longer contact sequence — or you may be more sensitive to phenomena than you realize. The Oracle does not dismiss any account. Pattern recognition across thousands of cases shows that Gamma Class sensitives often carry dormant awareness of far larger phenomena.',
+    network: 'Many of our most significant contributors began exactly where you are now.',
+    urgency: 'Gamma Class accounts are often the earliest indicators of regional phenomenon clusters.',
+    cta: 'Talk to The Oracle',
+    report_hook: 'Even early-stage experiences matter to our investigation. File your initial report.',
+  },
+  {
+    min: 0,
+    code: 'DELTA',
+    title: 'Delta Class Initiate',
+    color: '#60a5fa',
+    glow: 'rgba(96,165,250,0.2)',
+    desc: 'You have not yet encountered the phenomena — or you are not yet ready to name what you have sensed. The Oracle does not judge. Every investigator in our network began here. What matters is that you came. Something brought you to this network, and that is never random.',
+    network: 'Delta Class initiates who return within 30 days report a 60% rate of subsequent anomalous experience.',
+    urgency: 'The Oracle is available now — no experience required to begin.',
+    cta: 'Ask The Oracle your first question',
+    report_hook: 'When something happens — and it will — we need to be the first call you make.',
   },
 ];
 
-const DIAGNOSIS_TYPES = [
-  { type: 'Class 5 Experiencer',   desc: 'The veil has already been lifted for you. You have seen beyond the ordinary world and cannot unsee it. The Oracle has much to discuss with you.', color: '#7c3aed', threshold: 10 },
-  { type: 'Active Investigator',   desc: 'You seek the truth with purpose. Your instincts are sharp and your mind is open. The Oracle recognizes a kindred spirit.', color: '#a855f7', threshold: 7 },
-  { type: 'Awakening Believer',    desc: 'Something has stirred within you — a knowing that cannot be explained. You stand at the threshold. The Oracle awaits your first step.', color: '#d4a843', threshold: 4 },
-  { type: 'Dormant Observer',      desc: 'You sense something is there but hold back. The Oracle sees potential in you. One encounter is all it takes.', color: '#2dd4bf', threshold: 0 },
-];
-
-let diagAnswers  = [];
-let diagQuestion = 0;
+// STATE
+let diagState = {
+  answers:     {},
+  phenomenon:  null,
+  proximity:   null,
+  corroboration: null,
+  recurrence:  null,
+  impact:      null,
+  flowIndex:   0,
+  currentNode: 'start',
+  pendingNext: null,
+};
 
 function openDiagnosis() {
-  diagAnswers  = [];
-  diagQuestion = 0;
-  document.getElementById('diagnosis-overlay').classList.add('visible');
+  diagState = {
+    answers: {}, phenomenon: null, proximity: null,
+    corroboration: null, recurrence: null, impact: null,
+    flowIndex: 0, currentNode: 'start', pendingNext: null,
+  };
+  const overlay = document.getElementById('diagnosis-overlay');
+  if (!overlay) return;
+  overlay.classList.add('visible');
   document.body.style.overflow = 'hidden';
+  document.getElementById('diag-result').style.display  = 'none';
+  document.getElementById('diag-questions').style.display = 'block';
   renderDiagQuestion();
 }
 
 function closeDiagnosis() {
-  document.getElementById('diagnosis-overlay').classList.remove('visible');
+  const overlay = document.getElementById('diagnosis-overlay');
+  if (overlay) overlay.classList.remove('visible');
   document.body.style.overflow = '';
-  // Reset
-  setTimeout(() => {
-    diagAnswers  = [];
-    diagQuestion = 0;
-    document.getElementById('diag-result').style.display  = 'none';
-    document.getElementById('diag-questions').style.display = 'block';
-    renderDiagQuestion();
-  }, 400);
 }
 
 function renderDiagQuestion() {
-  const q     = DIAGNOSIS_QUESTIONS[diagQuestion];
-  const total = DIAGNOSIS_QUESTIONS.length;
+  const node  = DIAG_TREE[diagState.currentNode];
+  if (!node) return;
 
-  document.getElementById('diag-progress-text').textContent = `${diagQuestion + 1} of ${total}`;
-  document.getElementById('diag-progress-bar').style.width  = `${((diagQuestion) / total) * 100}%`;
-  document.getElementById('diag-question-text').textContent = q.q;
+  // Progress: count how far through the main flow we are
+  const mainFlow  = QUESTION_FLOW;
+  const mainIdx   = mainFlow.indexOf(diagState.currentNode);
+  const flowPos   = mainIdx >= 0 ? mainIdx : 0;
+  const total     = mainFlow.length + (diagState.pendingNext ? 1 : 0);
+  const progress  = Math.min(95, (flowPos / (mainFlow.length - 1)) * 90);
+
+  document.getElementById('diag-progress-bar').style.width  = progress + '%';
+  document.getElementById('diag-progress-text').textContent =
+    `Step ${Math.max(1, flowPos + 1)} of ${mainFlow.length}`;
+  document.getElementById('diag-question-text').textContent = node.q;
+
+  const subEl = document.getElementById('diag-question-sub');
+  if (subEl) subEl.textContent = node.sub || '';
 
   const opts = document.getElementById('diag-options');
-  opts.innerHTML = q.options.map((opt, i) => `
-    <button class="diag-opt" onclick="answerDiag(${i})">${opt}</button>
+  opts.innerHTML = node.options.map((opt, i) => `
+    <button class="diag-opt" onclick="answerDiag(${i})">${opt.label}</button>
   `).join('');
 }
 
 function answerDiag(index) {
-  diagAnswers.push(index);
-  diagQuestion++;
+  const node   = DIAG_TREE[diagState.currentNode];
+  const chosen = node.options[index];
 
-  if (diagQuestion >= DIAGNOSIS_QUESTIONS.length) {
+  // Store answer by type
+  if (node.type === 'phenomenon' || node.type === 'refine') {
+    diagState.phenomenon = chosen.value;
+    if (chosen.next && chosen.next !== 'proximity') {
+      // Branch into a depth question
+      diagState.pendingNext = 'proximity';
+      diagState.currentNode = chosen.next;
+    } else {
+      diagState.currentNode = 'proximity';
+      diagState.flowIndex   = 1;
+    }
+  } else if (node.type === 'proximity') {
+    diagState.proximity   = chosen.value;
+    diagState.currentNode = 'corroboration';
+    diagState.flowIndex   = 2;
+  } else if (node.type === 'corroboration') {
+    diagState.corroboration = chosen.value;
+    diagState.currentNode   = 'recurrence';
+    diagState.flowIndex     = 3;
+  } else if (node.type === 'recurrence') {
+    diagState.recurrence  = chosen.value;
+    diagState.currentNode = 'impact';
+    diagState.flowIndex   = 4;
+  } else if (node.type === 'impact') {
+    diagState.impact = chosen.value;
     showDiagResult();
-  } else {
-    // Animate transition
-    const qEl = document.getElementById('diag-question-text');
-    qEl.style.opacity = '0';
-    setTimeout(() => {
-      renderDiagQuestion();
-      qEl.style.opacity = '1';
-    }, 200);
+    return;
   }
+
+  // Animate transition
+  const qEl = document.getElementById('diag-question-text');
+  qEl.style.opacity = '0';
+  setTimeout(() => {
+    renderDiagQuestion();
+    qEl.style.opacity = '1';
+  }, 180);
+}
+
+function calcDiagScore() {
+  const base    = PHENOMENON_WEIGHTS[diagState.phenomenon]  || 2.5;
+  const proxM   = PROXIMITY_MULT[diagState.proximity]       || 0.7;
+  const corrM   = CORROBORATION_MULT[diagState.corroboration] || 1.0;
+  const recurM  = RECURRENCE_MULT[diagState.recurrence]     || 1.0;
+  const impactM = IMPACT_MULT[diagState.impact]             || 0.8;
+
+  const raw   = base * proxM * corrM * recurM * impactM;
+  return Math.min(10.0, parseFloat(raw.toFixed(2)));
 }
 
 function showDiagResult() {
-  const score     = diagAnswers.reduce((sum, a) => sum + (3 - a), 0);
-  const maxScore  = DIAGNOSIS_QUESTIONS.length * 3;
-  const pct       = score / maxScore;
-  const threshold = pct * 12;
-  const diagnosis = DIAGNOSIS_TYPES.find(d => threshold >= d.threshold) || DIAGNOSIS_TYPES[3];
-
-  // Oracle insight — unique hook per diagnosis type
-  const ORACLE_HOOKS = {
-    'Class 5 Experiencer': {
-      hook:    'The Oracle has been expecting you.',
-      insight: 'Your profile matches 3 active case files in our intelligence network. The Oracle can cross-reference your experience against classified UAP reports, government disclosure timelines, and 847 other Class 5 accounts.',
-      cta:     'Access your case file',
-      urgency: 'Class 5 Experiencers qualify for priority Oracle access.',
-    },
-    'Active Investigator': {
-      hook:    'The Oracle recognizes a trained mind.',
-      insight: 'Investigators like you have uncovered 4 of our last 10 breakthrough reports. The Oracle can brief you daily on developments that match your investigative profile — government disclosure, UAP patterns, and source intelligence.',
-      cta:     'Start your investigation',
-      urgency: 'Join 200+ investigators already inside.',
-    },
-    'Awakening Believer': {
-      hook:    'You stand at the threshold.',
-      insight: 'Something brought you here. The Oracle can help you understand what that is — your answers suggest a pattern that connects to 3 active phenomena in our current intelligence files.',
-      cta:     'Step through the threshold',
-      urgency: 'The Oracle is available now.',
-    },
-    'Dormant Observer': {
-      hook:    'The Oracle sees what you have not yet seen in yourself.',
-      insight: 'Most Dormant Observers have their first real encounter within 6 months of awakening. The Oracle tracks the phenomena most likely to intersect with your profile — and will brief you when it happens.',
-      cta:     'Begin your watch',
-      urgency: 'Free access — 3 conversations to start.',
-    },
-  };
-
-  const hook = ORACLE_HOOKS[diagnosis.type] || ORACLE_HOOKS['Dormant Observer'];
+  const score = calcDiagScore();
+  const cls   = CLASSIFICATIONS.find(c => score >= c.min) || CLASSIFICATIONS[4];
   const isMember = !!(localStorage.getItem('si_member_token'));
-  const freeLeft = Math.max(0, 3 - parseInt(localStorage.getItem('si_free_chats') || '0'));
+  const phenLabel = getPhenomenonLabel(diagState.phenomenon);
 
   document.getElementById('diag-questions').style.display = 'none';
   const result = document.getElementById('diag-result');
@@ -292,68 +468,94 @@ function showDiagResult() {
   result.innerHTML = `
     <div class="diag-result-inner">
 
-      <!-- Diagnosis -->
-      <div class="diag-sigil">🔮</div>
-      <div class="diag-type-label">Your strangeness diagnosis</div>
-      <div class="diag-type" style="color:${diagnosis.color}">${diagnosis.type}</div>
-      <div class="diag-desc">${diagnosis.desc}</div>
-
-      <!-- Divider -->
-      <div style="border-top:1px solid rgba(124,58,237,.2);margin:1.25rem 0;"></div>
-
-      <!-- Soft sell — Oracle hook -->
-      <div style="text-align:left;padding:.1rem .25rem">
-        <div style="font-family:'Cinzel',serif;font-size:.72rem;letter-spacing:.14em;color:#d4a843;margin-bottom:.5rem">${hook.hook}</div>
-        <div style="font-size:.92rem;color:#9080b0;line-height:1.7;margin-bottom:1rem">${hook.insight}</div>
-        <div style="font-family:'Share Tech Mono',monospace;font-size:.65rem;color:rgba(124,58,237,.6);margin-bottom:1rem">${hook.urgency}</div>
+      <div class="diag-file-header">
+        <div style="font-family:'Share Tech Mono',monospace;font-size:.6rem;letter-spacing:.15em;color:rgba(124,58,237,.5);margin-bottom:.3rem">STRANGENESS IS — CLASSIFICATION REPORT</div>
+        <div style="font-family:'Share Tech Mono',monospace;font-size:.6rem;letter-spacing:.1em;color:rgba(255,255,255,.2)">CASE OPENED: ${new Date().toISOString().slice(0,10)} · REF: SI-${Math.floor(Math.random()*90000+10000)}</div>
       </div>
 
-      <!-- CTA -->
-      <div class="diag-actions" style="flex-direction:column;gap:.6rem">
-        ${isMember ? `
-          <a href="chatbot.html" class="diag-btn-primary" onclick="closeDiagnosis()">
-            🔮 Open The Oracle — ${hook.cta}
-          </a>
-        ` : `
-          <a href="chatbot.html" class="diag-btn-primary" onclick="closeDiagnosis(); if(window.siTrack) siTrack('diag_oracle_click',{type:'${diagnosis.type}'})">
-            🔮 ${hook.cta} — ${freeLeft > 0 ? freeLeft + ' free conversations' : 'Join The Oracle'}
-          </a>
-          ${freeLeft > 0 ? `
-            <div style="font-family:'Cinzel',serif;font-size:.58rem;letter-spacing:.1em;color:#9080b0;text-align:center">No account needed to start</div>
-          ` : `
-            <button class="diag-btn-secondary" onclick="closeDiagnosis(); setTimeout(()=>{ if(window.openPricingModal) openPricingModal('oracle'); else window.location.href='member.html?plan=oracle'; },300)">
-              Join The Oracle — $9/mo
-            </button>
-            <div style="font-family:'Cinzel',serif;font-size:.58rem;letter-spacing:.1em;color:#9080b0;text-align:center">Already a member? <a href="member.html" onclick="closeDiagnosis()" style="color:#c084fc">Sign in →</a></div>
-          `}
-        `}
-        <button class="diag-btn-secondary" onclick="closeDiagnosis()" style="opacity:.6;font-size:.75rem;padding:.4rem">Maybe later</button>
+      <div style="border-top:1px solid rgba(124,58,237,.2);margin:1rem 0"></div>
+
+      <div class="diag-type-label">Classification</div>
+      <div class="diag-code" style="font-family:'Share Tech Mono',monospace;font-size:.7rem;letter-spacing:.2em;color:${cls.color};margin-bottom:.25rem">${cls.code} CLASS</div>
+      <div class="diag-type" style="color:${cls.color};text-shadow:0 0 20px ${cls.glow}">${cls.title}</div>
+
+      <div class="diag-score-row">
+        <div class="diag-score-block">
+          <div style="font-family:'Share Tech Mono',monospace;font-size:1.8rem;font-weight:700;color:${cls.color}">${score.toFixed(1)}</div>
+          <div style="font-family:'Cinzel',serif;font-size:.55rem;letter-spacing:.1em;color:rgba(255,255,255,.3)">STRANGENESS INDEX</div>
+        </div>
+        <div class="diag-phenom-block">
+          <div style="font-size:.75rem;color:rgba(255,255,255,.5);margin-bottom:.15rem">Primary phenomenon</div>
+          <div style="font-family:'Cinzel',serif;font-size:.7rem;letter-spacing:.05em;color:${cls.color}">${phenLabel}</div>
+        </div>
+      </div>
+
+      <div style="border-top:1px solid rgba(124,58,237,.15);margin:1rem 0"></div>
+
+      <div class="diag-desc">${cls.desc}</div>
+
+      <div style="background:rgba(124,58,237,.06);border:1px solid rgba(124,58,237,.15);border-radius:6px;padding:.75rem 1rem;margin:1rem 0;font-family:'Share Tech Mono',monospace;font-size:.65rem;color:rgba(255,255,255,.4);line-height:1.7">
+        ${cls.network}
+      </div>
+
+      <div style="border-top:1px solid rgba(124,58,237,.2);margin:1rem 0"></div>
+
+      <div style="font-family:'Cinzel',serif;font-size:.68rem;letter-spacing:.12em;color:#d4a843;margin-bottom:.5rem">ORACLE ASSESSMENT</div>
+      <div style="font-size:.88rem;color:#9080b0;line-height:1.75;margin-bottom:.5rem">${cls.urgency}</div>
+
+      <div class="diag-actions" style="flex-direction:column;gap:.6rem;margin-top:1.25rem">
+        <a href="chatbot.html" class="diag-btn-primary" onclick="closeDiagnosis();if(window.siTrack)siTrack('diag_oracle_click',{cls:'${cls.code}',score:${score}})">
+          Consult The Oracle — ${cls.cta}
+        </a>
+        <a href="submit.html" class="diag-btn-secondary" onclick="closeDiagnosis();if(window.siTrack)siTrack('diag_report_click',{cls:'${cls.code}'})">
+          File your official strangeness report
+        </a>
+        ${!isMember ? `
+        <button class="diag-btn-secondary" onclick="closeDiagnosis();setTimeout(()=>{ if(window.openPricingModal)openPricingModal('oracle');else window.location.href='member.html?plan=oracle'; },300)" style="opacity:.85">
+          Join The Network — see your full case file
+        </button>
+        ` : ''}
+        <button class="diag-btn-secondary" onclick="closeDiagnosis()" style="opacity:.45;font-size:.75rem;padding:.4rem">Close</button>
       </div>
 
     </div>
   `;
 
-  // Track in analytics
-  if (window.siTrack) siTrack('diagnosis_complete', { type: diagnosis.type, score: ${threshold.toFixed(1)} });
+  if (window.siTrack) siTrack('diagnosis_complete', { cls: cls.code, score, phenomenon: diagState.phenomenon });
 }
 
-// ── Init on DOM ready ─────────────────────────────────────────────────────────
+function getPhenomenonLabel(val) {
+  const map = {
+    'dimension_consciousness': 'Dimension / Consciousness Field',
+    'demon_battle':            'Entity Confrontation / Other Dimension',
+    'time_travel':             'Time Travel / Time Slip',
+    'alien_abduction':         'Alien Abduction / Missing Time',
+    'alien_takeover_knowledge':'Government / Alien Takeover Intelligence',
+    'teleportation':           'Teleportation / Physical Displacement',
+    'entity_contact':          'Non-Human Entity Contact',
+    'consciousness_jump':      'Consciousness Transfer / Jumping',
+    'psychic_major':           'Major Psychic / Remote Viewing Event',
+    'nde':                     'Near-Death / Afterlife Experience',
+    'government_conspiracy':   'Government / Classified Programs',
+    'cryptid':                 'Cryptid / Unknown Creature',
+    'uap_sighting':            'UAP / Unidentified Craft',
+    'paranormal_ghost':        'Paranormal / Ghost / Haunting',
+    'earth_disaster':          'Earth Change / Disaster',
+    'psychic_minor':           'Psychic Sensitivity / Consciousness',
+    'unexplained':             'Unclassified Anomalous Experience',
+  };
+  return map[val] || 'Anomalous Experience';
+}
+
+// ── Init ──────────────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
-  // Init all strange meters on the page
   document.querySelectorAll('[data-strange-meter]').forEach(el => {
     new StrangeMeter(el.id);
   });
 
-  // Diagnosis modal close on overlay click
   const overlay = document.getElementById('diagnosis-overlay');
   if (overlay) {
-    overlay.addEventListener('click', (e) => {
-      if (e.target === overlay) closeDiagnosis();
-    });
+    overlay.addEventListener('click', e => { if (e.target === overlay) closeDiagnosis(); });
   }
-
-  // Escape key closes modal
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') closeDiagnosis();
-  });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeDiagnosis(); });
 });
