@@ -1770,63 +1770,89 @@ function reportItem(r) {
 var _qgReportId = null;
 
 async function quickGenerate() {
-  const category  = document.getElementById('qg-category').value.trim();
-  const topic     = document.getElementById('qg-topic').value.trim();
+  const category    = document.getElementById('qg-category').value.trim();
+  const topic       = document.getElementById('qg-topic').value.trim();
   const publishMode = document.getElementById('qg-publish').value;
-  const btn       = document.getElementById('qg-btn');
-  const statusEl  = document.getElementById('qg-status');
-  const resultEl  = document.getElementById('qg-result');
+  const btn         = document.getElementById('qg-btn');
+  const statusEl    = document.getElementById('qg-status');
+  const resultEl    = document.getElementById('qg-result');
 
-  btn.textContent  = '⏳ Generating...';
-  btn.disabled     = true;
+  btn.textContent        = '⏳ Generating...';
+  btn.disabled           = true;
   statusEl.style.display = 'block';
-  statusEl.textContent   = 'Pipeline running — pulling headlines and generating report with GPT-4o. This takes 30–60 seconds...';
+  statusEl.textContent   = 'Setting category and topic focus...';
   resultEl.style.display = 'none';
-  _qgReportId = null;
+  _qgReportId            = null;
 
   try {
-    const payload = {};
-    if (category) payload.category = category;
-    if (topic)    payload.topic    = topic;
-
+    // Set forced category and topic on server config
     await api('/admin/config', 'POST', {
       forced_category: category || null,
       forced_topic:    topic    || null,
     });
 
-    const data = await api('/admin/reports/generate', 'POST', {});
-    const r    = data.report;
-    if (!r) throw new Error('No report returned');
+    // Trigger async generation
+    statusEl.textContent = 'Pipeline running — GPT-4o writing report with 60 headlines. Takes 30–60 seconds...';
+    await api('/admin/reports/generate', 'POST', {});
 
-    _qgReportId = r.id;
+    // Poll for the new report — check every 5 seconds for up to 90 seconds
+    var countBefore = allReports.length;
+    var latestId    = allReports.length > 0 ? allReports[0].id : null;
+    var elapsed     = 0;
+    var dots        = 0;
 
-    document.getElementById('qg-result-headline').textContent = r.headline || '';
-    document.getElementById('qg-result-meta').textContent =
-      'Category: ' + (r.category||'') + '  ·  Strangeness Index: ' + (r.strangeness_index||'?') + '/10  ·  Status: ' + (r.status||'draft').toUpperCase();
-    document.getElementById('qg-result-summary').textContent = r.summary || '';
+    await new Promise(function(resolve, reject) {
+      var timer = setInterval(async function() {
+        elapsed += 5;
+        dots = (dots + 1) % 4;
+        statusEl.textContent = 'Waiting for report' + '.'.repeat(dots+1) + ' (' + elapsed + 's)';
+        try {
+          var data = await api('/admin/reports');
+          var reports = data.reports || [];
+          // Find a report that didn't exist before
+          var newReport = reports.find(function(r) { return r.id !== latestId && r.created_at > (new Date(Date.now() - 120000)).toISOString(); });
+          if (!newReport && reports.length > 0 && reports[0].id !== latestId) {
+            newReport = reports[0];
+          }
+          if (newReport) {
+            clearInterval(timer);
+            allReports = reports;
+            _qgReportId = newReport.id;
+            resolve(newReport);
+          } else if (elapsed >= 90) {
+            clearInterval(timer);
+            reject(new Error('Timed out after 90 seconds — check All Reports panel'));
+          }
+        } catch(e) {
+          // ignore poll errors
+        }
+      }, 5000);
+    }).then(async function(r) {
+      document.getElementById('qg-result-headline').textContent = r.headline || '';
+      document.getElementById('qg-result-meta').textContent =
+        'Category: ' + (r.category||'') + '  ·  Index: ' + (r.strangeness_index||'?') + '/10  ·  ' + (r.status||'draft').toUpperCase();
+      document.getElementById('qg-result-summary').textContent = (r.summary||'').slice(0, 300) + '...';
 
-    const pubBtn = document.getElementById('qg-publish-btn');
-    if (publishMode === 'live' && r.status !== 'live') {
-      // Auto-publish
-      await api('/admin/reports/' + r.id, 'PATCH', {status: 'live'});
-      pubBtn.style.display = 'none';
-      statusEl.textContent = '✓ Report generated and published!';
-    } else if (r.status === 'live') {
-      pubBtn.style.display = 'none';
-      statusEl.textContent = '✓ Report generated and published!';
-    } else {
-      pubBtn.style.display = 'inline-block';
-      statusEl.textContent = '✓ Report generated as draft — review below then publish.';
-    }
+      const pubBtn = document.getElementById('qg-publish-btn');
+      if (publishMode === 'live' && r.status !== 'live') {
+        await api('/admin/reports/' + r.id, 'PATCH', {status:'live'});
+        pubBtn.style.display = 'none';
+        statusEl.textContent = '✓ Generated and published!';
+        loadDashboard();
+      } else {
+        pubBtn.style.display = 'inline-block';
+        statusEl.textContent = '✓ Report generated as draft — review and publish below.';
+      }
+      resultEl.style.display = 'block';
+      loadReports();
+    });
 
-    resultEl.style.display = 'block';
-    loadReports();
   } catch(err) {
-    statusEl.textContent = '✗ Failed: ' + err.message;
-    toast('Generate failed: ' + err.message, 'error');
+    statusEl.textContent = '✗ ' + err.message;
+    toast(err.message, 'error');
   } finally {
     btn.textContent = '⚡ Generate Report Now';
-    btn.disabled = false;
+    btn.disabled    = false;
   }
 }
 
