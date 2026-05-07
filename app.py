@@ -579,24 +579,75 @@ def send_email(to: str, subject: str, body_html: str, body_text: str = None) -> 
 
 def geocode_location(location_str: str) -> tuple:
     """Geocode a location string → (lat, lng) or (0, 0) on failure.
-    Results are cached in memory to avoid repeat Nominatim API calls."""
+    Prefers specific named places (caves, ranches, parks, military bases)
+    over city/state matches. Results cached in memory."""
     if not location_str or not location_str.strip():
         return 0.0, 0.0
     cache_key = location_str.strip().lower()
     if cache_key in _geocode_cache:
         return _geocode_cache[cache_key]
+
+    # Keywords that indicate a specific named place — prioritize these
+    specific_place_keywords = [
+        'cave', 'ranch', 'base', 'fort', 'park', 'forest', 'lake', 'mountain',
+        'peak', 'valley', 'canyon', 'river', 'beach', 'island', 'mine', 'ruins',
+        'site', 'cemetery', 'prison', 'hospital', 'school', 'bridge', 'road',
+        'highway', 'airport', 'dam', 'reservoir', 'falls', 'bay', 'gulf',
+        'pass', 'ridge', 'plateau', 'desert', 'swamp', 'marsh', 'field',
+        'station', 'facility', 'complex', 'installation', 'depot', 'range',
+    ]
+    is_specific = any(kw in location_str.lower() for kw in specific_place_keywords)
+
     try:
+        # Build search params — request more results so we can pick the best one
+        params = {
+            'q':              location_str,
+            'format':         'json',
+            'limit':          5,
+            'addressdetails': 1,
+        }
         resp = requests.get(
             'https://nominatim.openstreetmap.org/search',
-            params={'q': location_str, 'format': 'json', 'limit': 1},
+            params=params,
             headers={'User-Agent': 'StrangenessIS/2.0 (strangenessis.com)'},
             timeout=8,
         )
-        if resp.ok and resp.json():
-            result = resp.json()[0]
-            coords = float(result['lat']), float(result['lon'])
-            _geocode_cache[cache_key] = coords
-            return coords
+        if not resp.ok or not resp.json():
+            _geocode_cache[cache_key] = (0.0, 0.0)
+            return 0.0, 0.0
+
+        results = resp.json()
+
+        if is_specific and len(results) > 1:
+            # Prefer natural features, historic sites, tourism nodes over cities
+            preferred_types = {
+                'natural', 'peak', 'cave', 'bay', 'spring', 'waterfall',
+                'historic', 'archaeological', 'tourism', 'leisure',
+                'military', 'aeroway', 'amenity', 'landuse',
+            }
+            city_types = {'city', 'town', 'village', 'administrative', 'suburb', 'county'}
+
+            # Score each result
+            def result_score(r):
+                rclass = r.get('class', '')
+                rtype  = r.get('type', '')
+                # High score = more specific
+                if rclass in preferred_types or rtype in preferred_types:
+                    return 3
+                if rclass in city_types or rtype in city_types:
+                    return 1
+                return 2
+
+            results = sorted(results, key=result_score, reverse=True)
+
+        result = results[0]
+        coords = float(result['lat']), float(result['lon'])
+        _geocode_cache[cache_key] = coords
+        app.logger.debug(
+            f'Geocoded "{location_str}" → {coords[0]:.4f},{coords[1]:.4f} '            f'(class:{result.get("class")} type:{result.get("type")})'
+        )
+        return coords
+
     except Exception as e:
         app.logger.debug(f'Geocoding failed for "{location_str}": {e}')
     _geocode_cache[cache_key] = (0.0, 0.0)
