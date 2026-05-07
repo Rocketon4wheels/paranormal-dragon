@@ -702,7 +702,16 @@ def generate_report() -> dict | None:
     # Inject live categories into the prompt at runtime
     writer_prompt = base_prompt.replace('{MASTER_CATEGORIES}', live_categories)
 
-    user_prompt = f"""Today is {today}. Assigned category: {chosen_category}
+    # Topic hint — set via Quick Generate or forced_topic config
+    forced_topic = config.get('forced_topic', '') or ''
+    topic_clause = f'\n\nSPECIFIC FOCUS DIRECTIVE: {forced_topic}\nThis topic must be the primary subject of this report. Pull all relevant headlines and cross-references around this specific subject.' if forced_topic else ''
+    # Clear topic hint after use
+    if forced_topic:
+        stored_topic = load_json(CONFIG_FILE, {})
+        stored_topic['forced_topic'] = None
+        save_json(CONFIG_FILE, stored_topic)
+
+    user_prompt = f"""Today is {today}. Assigned category: {chosen_category}{topic_clause}
 
 INTELLIGENCE PACKAGE:
 {'=' * 60}

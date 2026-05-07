@@ -284,6 +284,7 @@
       </div>
       <div class="sidebar-section">
         <span class="sidebar-label">Strangeness Report</span>
+        <button class="sidebar-item" id="nav-quickgen" onclick="showPanel('quick-generate',this)"><span class="dot"></span>⚡ Quick Generate</button>
         <button class="sidebar-item" id="nav-reports" onclick="showPanel('reports',this)"><span class="dot"></span>All Reports</button>
         <button class="sidebar-item" onclick="showPanel('report-schedule',this)"><span class="dot"></span>Pipeline</button>
       </div>
@@ -469,7 +470,83 @@
       </div>
 
       <!-- ALL REPORTS -->
-      <div class="panel" id="panel-reports">
+      <!-- QUICK GENERATE -->
+      <div class="panel" id="panel-quick-generate">
+        <div class="panel-header">
+          <div class="panel-title">⚡ Quick Generate</div>
+          <div class="panel-sub">Generate a single report right now with a specific category and topic focus.</div>
+        </div>
+        <div class="admin-section">
+          <div class="field-row">
+            <label class="field-label">Category</label>
+            <select class="field-input" id="qg-category">
+              <option value="">🔄 Auto-rotate</option>
+              <optgroup label="── UFO / CONTACT ──────────────">
+              <option value="UFO/UAP/NHI/Orbs/Plasma">🛸 UFO / UAP / NHI / Orbs / Plasma</option>
+              <option value="Aliens &amp; Entities">👽 Aliens &amp; Entities</option>
+              <option value="Non-Human Biologics">🧬 Non-Human Biologics</option>
+              <option value="Alien Abduction &amp; Missing Time">⏳ Alien Abduction &amp; Missing Time</option>
+              <option value="Interdimensional Portals">🌀 Interdimensional Portals</option>
+              <option value="Orb Intelligence">💫 Orb Intelligence</option>
+              </optgroup>
+              <optgroup label="── GOVERNMENT / DISCLOSURE ────">
+              <option value="Government &amp; Civilian Disclosure">🏛️ Government &amp; Civilian Disclosure</option>
+              <option value="Secret Space Program">🚀 Secret Space Program</option>
+              <option value="Whistleblower &amp; SCIF Intelligence">🔐 Whistleblower &amp; SCIF Intelligence</option>
+              <option value="Hidden History &amp; Ancient Mysteries">📜 Hidden History &amp; Ancient Mysteries</option>
+              <option value="Conspiracy Theories">🕵️ Conspiracy Theories</option>
+              </optgroup>
+              <optgroup label="── CREATURES / PARANORMAL ──────">
+              <option value="Cryptid &amp; Creature Sightings">🦶 Cryptid &amp; Creature Sightings</option>
+              <option value="Paranormal &amp; Supernatural">👻 Paranormal &amp; Supernatural</option>
+              <option value="Animal Mutilation">🐄 Animal Mutilation</option>
+              <option value="Skinwalker Ranch">🌵 Skinwalker Ranch</option>
+              <option value="Electronic Voice Phenomena">📻 Electronic Voice Phenomena (EVP)</option>
+              </optgroup>
+              <optgroup label="── CONSCIOUSNESS / HUMAN ───────">
+              <option value="Consciousness &amp; Remote Viewing">🧠 Consciousness &amp; Remote Viewing</option>
+              <option value="Enhanced Humans &amp; Special Abilities">⚡ Enhanced Humans &amp; Special Abilities</option>
+              <option value="Afterlife &amp; Dimensions">✨ Afterlife &amp; Dimensions</option>
+              <option value="Medical Anomalies &amp; Miracles">🏥 Medical Anomalies &amp; Miracles</option>
+              <option value="Mandela Effect &amp; Simulation">🔁 Mandela Effect &amp; Simulation</option>
+              </optgroup>
+              <optgroup label="── EARTH / TECHNOLOGY ──────────">
+              <option value="Advanced Technology">🔬 Advanced Technology</option>
+              <option value="Earth Changes">🌍 Earth Changes &amp; Disasters</option>
+              <option value="Missing 411">🏕️ Missing 411</option>
+              <option value="End Times &amp; Prophecy">⚠️ End Times &amp; Prophecy</option>
+              </optgroup>
+            </select>
+          </div>
+          <div class="field-row">
+            <label class="field-label">Topic focus <span style="font-weight:400;color:var(--muted)">(optional — be specific)</span></label>
+            <input class="field-input" type="text" id="qg-topic" placeholder="e.g. David Grusch testimony on non-human biologics, Nimitz encounter pattern analysis, recent pastor disclosure briefing"/>
+          </div>
+          <div class="field-row">
+            <label class="field-label">Publish immediately?</label>
+            <select class="field-input" id="qg-publish" style="max-width:280px">
+              <option value="draft">No — save as draft for review</option>
+              <option value="live">Yes — publish immediately</option>
+            </select>
+          </div>
+          <div class="btn-row" style="margin-top:1.25rem">
+            <button class="btn-sm btn-purple" id="qg-btn" onclick="quickGenerate()">⚡ Generate Report Now</button>
+          </div>
+          <div id="qg-status" style="margin-top:1rem;font-family:var(--mono);font-size:.78rem;color:var(--muted);display:none"></div>
+          <div id="qg-result" style="display:none;margin-top:1.5rem;background:rgba(124,58,237,.06);border:1px solid rgba(124,58,237,.2);border-radius:8px;padding:1.25rem">
+            <div style="font-family:var(--mono);font-size:.6rem;letter-spacing:.15em;color:var(--purple3);margin-bottom:.75rem">GENERATED REPORT</div>
+            <div id="qg-result-headline" style="font-family:'Cinzel Decorative',serif;font-size:1rem;color:var(--text);line-height:1.4;margin-bottom:.75rem"></div>
+            <div id="qg-result-meta" style="font-family:var(--mono);font-size:.62rem;color:var(--muted);margin-bottom:.75rem"></div>
+            <div id="qg-result-summary" style="font-size:.88rem;color:var(--muted);font-style:italic;margin-bottom:1rem"></div>
+            <div class="btn-row">
+              <button class="btn-sm btn-green" id="qg-publish-btn" onclick="quickPublish()" style="display:none">✓ Publish this report</button>
+              <button class="btn-sm btn-outline" onclick="showPanel('reports',document.getElementById('nav-reports'))">View all reports →</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+            <div class="panel" id="panel-reports">
         <div class="panel-header"><div class="panel-title">All Reports</div><div class="panel-sub">Manage published and draft Strangeness Reports.</div></div>
         <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:1rem;align-items:center">
           <button class="btn-sm btn-purple" onclick="generateReportNow()" id="btn-gen2">Generate with pipeline</button>
@@ -603,18 +680,41 @@
             <div class="field-label" style="margin-bottom:.3rem">Assigned category</div>
             <select class="field-input" id="sched-category">
               <option value="auto">🔄 Auto-rotate (recommended)</option>
-              <option value="ufo">🛸 UFO / UAP / NHI</option>
-              <option value="aliens">👽 Aliens &amp; Entities</option>
-              <option value="government">🏛️ Government Disclosure</option>
-              <option value="cryptids">🦶 Cryptids</option>
-              <option value="consciousness">🧠 Consciousness</option>
-              <option value="paranormal">👻 Paranormal</option>
-              <option value="technology">⚡ Advanced Technology</option>
-              <option value="phenomena">🌀 Phenomena</option>
-              <option value="secret">🔒 Secret Programs</option>
-              <option value="earth">🌍 Earth Changes</option>
-              <option value="ancient">🏛 Ancient Mysteries</option>
-              <option value="endtimes">⚠️ End Times</option>
+              <optgroup label="── UFO / CONTACT ──────────────">
+              <option value="UFO/UAP/NHI/Orbs/Plasma">🛸 UFO / UAP / NHI / Orbs / Plasma</option>
+              <option value="Aliens &amp; Entities">👽 Aliens &amp; Entities</option>
+              <option value="Non-Human Biologics">🧬 Non-Human Biologics</option>
+              <option value="Alien Abduction &amp; Missing Time">⏳ Alien Abduction &amp; Missing Time</option>
+              <option value="Interdimensional Portals">🌀 Interdimensional Portals</option>
+              <option value="Orb Intelligence">💫 Orb Intelligence</option>
+              </optgroup>
+              <optgroup label="── GOVERNMENT / DISCLOSURE ────">
+              <option value="Government &amp; Civilian Disclosure">🏛️ Government &amp; Civilian Disclosure</option>
+              <option value="Secret Space Program">🚀 Secret Space Program</option>
+              <option value="Whistleblower &amp; SCIF Intelligence">🔐 Whistleblower &amp; SCIF Intelligence</option>
+              <option value="Hidden History &amp; Ancient Mysteries">📜 Hidden History &amp; Ancient Mysteries</option>
+              <option value="Conspiracy Theories">🕵️ Conspiracy Theories</option>
+              </optgroup>
+              <optgroup label="── CREATURES / PARANORMAL ──────">
+              <option value="Cryptid &amp; Creature Sightings">🦶 Cryptid &amp; Creature Sightings</option>
+              <option value="Paranormal &amp; Supernatural">👻 Paranormal &amp; Supernatural</option>
+              <option value="Animal Mutilation">🐄 Animal Mutilation</option>
+              <option value="Skinwalker Ranch">🌵 Skinwalker Ranch</option>
+              <option value="Electronic Voice Phenomena">📻 Electronic Voice Phenomena (EVP)</option>
+              </optgroup>
+              <optgroup label="── CONSCIOUSNESS / HUMAN ───────">
+              <option value="Consciousness &amp; Remote Viewing">🧠 Consciousness &amp; Remote Viewing</option>
+              <option value="Enhanced Humans &amp; Special Abilities">⚡ Enhanced Humans &amp; Special Abilities</option>
+              <option value="Afterlife &amp; Dimensions">✨ Afterlife &amp; Dimensions</option>
+              <option value="Medical Anomalies &amp; Miracles">🏥 Medical Anomalies &amp; Miracles</option>
+              <option value="Mandela Effect &amp; Simulation">🔁 Mandela Effect &amp; Simulation</option>
+              </optgroup>
+              <optgroup label="── EARTH / TECHNOLOGY ──────────">
+              <option value="Advanced Technology">🔬 Advanced Technology</option>
+              <option value="Earth Changes">🌍 Earth Changes &amp; Disasters</option>
+              <option value="Missing 411">🏕️ Missing 411</option>
+              <option value="End Times &amp; Prophecy">⚠️ End Times &amp; Prophecy</option>
+              </optgroup>
             </select>
           </div>
           <div style="margin-bottom:.75rem">
@@ -1505,8 +1605,12 @@ function showPanel(id, btn) {
   document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.sidebar-item').forEach(b => b.classList.remove('active'));
   const panel = document.getElementById('panel-' + id);
-  if (panel) panel.classList.add('active');
+  if (panel) { panel.classList.add('active'); panel.scrollTop = 0; }
   if (btn)   btn.classList.add('active');
+  // Scroll main content area to top
+  const main = document.getElementById('admin-main') || document.querySelector('.admin-main') || document.querySelector('main');
+  if (main) main.scrollTop = 0;
+  window.scrollTo(0, 0);
   if (window.innerWidth <= 900) {
     document.getElementById('admin-sidebar')?.classList.remove('open');
     document.getElementById('sidebar-overlay')?.classList.remove('open');
@@ -1527,6 +1631,7 @@ function showPanel(id, btn) {
     members:              loadMembers,
     headlines:            loadHeadlines,
     'signal-intel':       loadSignalIntel,
+    'quick-generate':     function() {},  // no load needed
     'admin-team':         loadTeam,
     'weekly-schedule':    loadWeeklySchedule,
             'oracle-config':      loadOracleConfig,
@@ -1659,6 +1764,82 @@ function reportItem(r) {
       '<button class="btn-sm btn-red" onclick="deleteReport(\'' + id + '\')">Delete</button>' +
     '</div>' +
   '</li>';
+}
+
+// ── Quick Generate ────────────────────────────────────────────────────────────
+var _qgReportId = null;
+
+async function quickGenerate() {
+  const category  = document.getElementById('qg-category').value.trim();
+  const topic     = document.getElementById('qg-topic').value.trim();
+  const publishMode = document.getElementById('qg-publish').value;
+  const btn       = document.getElementById('qg-btn');
+  const statusEl  = document.getElementById('qg-status');
+  const resultEl  = document.getElementById('qg-result');
+
+  btn.textContent  = '⏳ Generating...';
+  btn.disabled     = true;
+  statusEl.style.display = 'block';
+  statusEl.textContent   = 'Pipeline running — pulling headlines and generating report with GPT-4o. This takes 30–60 seconds...';
+  resultEl.style.display = 'none';
+  _qgReportId = null;
+
+  try {
+    const payload = {};
+    if (category) payload.category = category;
+    if (topic)    payload.topic    = topic;
+
+    await api('/admin/config', 'POST', {
+      forced_category: category || null,
+      forced_topic:    topic    || null,
+    });
+
+    const data = await api('/admin/reports/generate', 'POST', {});
+    const r    = data.report;
+    if (!r) throw new Error('No report returned');
+
+    _qgReportId = r.id;
+
+    document.getElementById('qg-result-headline').textContent = r.headline || '';
+    document.getElementById('qg-result-meta').textContent =
+      'Category: ' + (r.category||'') + '  ·  Strangeness Index: ' + (r.strangeness_index||'?') + '/10  ·  Status: ' + (r.status||'draft').toUpperCase();
+    document.getElementById('qg-result-summary').textContent = r.summary || '';
+
+    const pubBtn = document.getElementById('qg-publish-btn');
+    if (publishMode === 'live' && r.status !== 'live') {
+      // Auto-publish
+      await api('/admin/reports/' + r.id, 'PATCH', {status: 'live'});
+      pubBtn.style.display = 'none';
+      statusEl.textContent = '✓ Report generated and published!';
+    } else if (r.status === 'live') {
+      pubBtn.style.display = 'none';
+      statusEl.textContent = '✓ Report generated and published!';
+    } else {
+      pubBtn.style.display = 'inline-block';
+      statusEl.textContent = '✓ Report generated as draft — review below then publish.';
+    }
+
+    resultEl.style.display = 'block';
+    loadReports();
+  } catch(err) {
+    statusEl.textContent = '✗ Failed: ' + err.message;
+    toast('Generate failed: ' + err.message, 'error');
+  } finally {
+    btn.textContent = '⚡ Generate Report Now';
+    btn.disabled = false;
+  }
+}
+
+async function quickPublish() {
+  if (!_qgReportId) return;
+  try {
+    await api('/admin/reports/' + _qgReportId, 'PATCH', {status: 'live'});
+    document.getElementById('qg-publish-btn').style.display = 'none';
+    document.getElementById('qg-status').textContent = '✓ Published!';
+    toast('Published!', 'success');
+    loadReports();
+    loadDashboard();
+  } catch(e) { toast('Failed: ' + e.message, 'error'); }
 }
 
 async function loadReports() {
@@ -3119,8 +3300,29 @@ async function loadRawHeadlines() {
 }
 
 var _hlWeight = 'all';
-var HIGH_WEIGHT_KWS = ['ufo', 'uap', 'alien', 'abduction', 'entity', 'disclosure', 'whistleblower', 'non-human', 'biologics', 'classified', 'scif', 'extraterrestrial', 'congress', 'testimony', 'grusch', 'pentagon', 'military', 'government', 'crash', 'retrieval', 'implant', 'contact'];
-var MED_WEIGHT_KWS  = ['cryptid', 'bigfoot', 'paranormal', 'ghost', 'haunting', 'cryptid', 'mothman', 'skinwalker', 'dogman', 'poltergeist', 'spirit', 'demon', 'apparition', 'creature', 'bermuda', 'triangle'];
+var HIGH_WEIGHT_KWS = [
+  // UAP / NHI core
+  'ufo', 'uap', 'uap', 'nhi', 'orb', 'craft', 'saucer', 'tic-tac', 'nimitz', 'gimbal', 'gofast',
+  // Contact / entities
+  'alien', 'extraterrestrial', 'non-human', 'biologics', 'entity', 'abduction', 'contact', 'implant',
+  // Disclosure / gov
+  'disclosure', 'whistleblower', 'classified', 'scif', 'grusch', 'corbell', 'elizondo', 'fravor',
+  'pentagon', 'aaro', 'ndaa', 'congressional', 'testimony', 'hearing', 'retrieval', 'crash retrieval',
+  // Specific programs/events
+  'area 51', 'roswell', 'skinwalker', 'tic tac', 'ryan graves', 'david grusch', 'karl nell',
+  'timothy gallaudet', 'lue elizondo', 'james fox', 'disclosure briefing', 'pastor briefing',
+  'ultraterrestrial', 'p47', 'p52', 'amy eskridge', 'non-biological', 'crash site',
+  // High-weight paranormal
+  'possession', 'demonic', 'black-eyed', 'shadow person', 'reptilian', 'nordic', 'grey', 'gray'
+];
+var MED_WEIGHT_KWS  = [
+  'cryptid', 'bigfoot', 'sasquatch', 'paranormal', 'ghost', 'haunting', 'mothman', 'dogman',
+  'poltergeist', 'spirit', 'demon', 'apparition', 'creature', 'bermuda', 'triangle',
+  'chupacabra', 'thunderbird', 'wendigo', 'el chupacabra', 'loch ness', 'sea monster',
+  'missing 411', 'david paulides', 'national park disappear', 'cattle mutilation', 'animal mutilation',
+  'remote viewing', 'psychic', 'telepathy', 'consciousness', 'astral', 'nde', 'near-death',
+  'time slip', 'mandela effect', 'simulation', 'ancient', 'megalith', 'lost civilization'
+];
 
 function setHlWeight(w, btn) {
   _hlWeight = w;
