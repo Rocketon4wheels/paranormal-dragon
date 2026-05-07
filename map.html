@@ -18,7 +18,7 @@
       --dark:#07070f; --dark2:#0d0015; --surface:#0a0018;
       --text:#e8e0ff; --muted:#9080b0;
     }
-    .map-page { min-height:100vh; padding-top:60px; background:var(--dark); }
+    .map-page { height:100vh; overflow:hidden; padding-top:0; background:var(--dark); }
 
     .map-header {
       padding: 3rem 2rem 1.5rem;
@@ -34,18 +34,37 @@
     .map-eyebrow { font-family:'Cinzel',serif; font-size:.65rem; letter-spacing:.25em; color:var(--gold); margin-bottom:.5rem; display:flex; align-items:center; gap:.6rem; }
     .map-live-dot { width:7px; height:7px; background:#ef4444; border-radius:50%; animation:mapBlink 1.5s ease-in-out infinite; }
     @keyframes mapBlink{0%,100%{opacity:1;box-shadow:0 0 6px #ef4444}50%{opacity:.3;box-shadow:none}}
-    .map-title { font-family:'Cinzel Decorative',serif; font-size:clamp(1.4rem,3vw,2rem); font-weight:400; color:var(--text); }
+    .map-title { font-family:'Cinzel Decorative',serif; font-size:clamp(1rem,2vw,1.4rem); font-weight:400; color:var(--text); }
     .map-title span { color:var(--gold2); }
     .map-sub { font-family:'Crimson Pro',Georgia,serif; font-size:.95rem; color:var(--muted); font-style:italic; margin-top:.25rem; }
+
+    /* Map overlay top bar */
+    .map-overlay-top {
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      z-index: 1000;
+      pointer-events: none;
+    }
+    .map-overlay-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      padding: .75rem 1.25rem .5rem;
+      background: linear-gradient(to bottom, rgba(7,7,15,.92) 80%, transparent);
+      pointer-events: auto;
+      flex-wrap: wrap;
+      gap: .5rem;
+    }
 
     /* Category filter pills */
     .map-filters {
       display: flex;
-      gap: .4rem;
+      gap: .35rem;
       flex-wrap: wrap;
-      padding: .75rem 2rem;
-      background: #08001a;
-      border-bottom: 1px solid rgba(124,58,237,.12);
+      padding: .4rem 1.25rem .6rem;
+      background: rgba(8,0,26,.85);
+      backdrop-filter: blur(4px);
+      pointer-events: auto;
     }
     .map-filter-pill {
       font-family:'Cinzel',serif;
@@ -68,14 +87,16 @@
     .map-layout {
       display: grid;
       grid-template-columns: 1fr 320px;
-      height: calc(100vh - 180px);
+      height: calc(100vh - 60px);  /* full viewport minus navbar */
       min-height: 500px;
+      overflow: hidden;
     }
 
-    /* Map container */
+    /* Map container — explicit height prevents Leaflet tile collapse */
     #strangeness-map {
       width: 100%;
       height: 100%;
+      min-height: 500px;
       background: #07070f;
     }
 
@@ -324,36 +345,35 @@
   </nav>
 
   <div class="map-page">
-    <div class="map-header">
-      <div class="map-header-left">
-        <div class="map-eyebrow">
-          <span class="map-live-dot"></span>
-          Live intelligence network — updated continuously
-        </div>
-        <h1 class="map-title">Strangeness <span>Map</span></h1>
-        <p class="map-sub">Verified sightings from our global network of investigators and reporters.</p>
-      </div>
-      <div style="display:flex;gap:.6rem;flex-wrap:wrap">
-        <a href="submit.html" style="font-family:'Cinzel',serif;font-size:.6rem;letter-spacing:.14em;color:var(--gold2);border:1px solid rgba(212,168,67,.4);padding:.6rem 1.2rem;border-radius:4px;text-decoration:none;transition:all .2s">+ Submit a Sighting</a>
-        <a href="chatbot.html" style="font-family:'Cinzel',serif;font-size:.6rem;letter-spacing:.14em;color:var(--purple3);border:1px solid rgba(124,58,237,.35);padding:.6rem 1.2rem;border-radius:4px;text-decoration:none">Ask The Oracle</a>
-      </div>
-    </div>
-
-    <!-- Category filters -->
-    <div class="map-filters">
-      <button class="map-filter-pill all active" data-filter="all" onclick="filterMap('all',this)">All Sightings</button>
-      <button class="map-filter-pill" data-filter="ufo" onclick="filterMap('ufo',this)">🛸 UFO/UAP</button>
-      <button class="map-filter-pill" data-filter="aliens" onclick="filterMap('aliens',this)">👽 Aliens</button>
-      <button class="map-filter-pill" data-filter="cryptids" onclick="filterMap('cryptids',this)">🦶 Cryptids</button>
-      <button class="map-filter-pill" data-filter="paranormal" onclick="filterMap('paranormal',this)">👻 Paranormal</button>
-      <button class="map-filter-pill" data-filter="consciousness" onclick="filterMap('consciousness',this)">🧠 Consciousness</button>
-      <button class="map-filter-pill" data-filter="government" onclick="filterMap('government',this)">🏛️ Government</button>
-      <button class="map-filter-pill" data-filter="phenomena" onclick="filterMap('phenomena',this)">🌀 Phenomena</button>
-    </div>
-
+    <!-- Map layout fills full viewport below navbar -->
     <div class="map-layout">
       <!-- Map -->
-      <div id="strangeness-map"></div>
+      <div id="strangeness-map">
+        <!-- Overlay: title + filters float over the map -->
+        <div class="map-overlay-top">
+          <div class="map-overlay-header">
+            <div>
+              <div class="map-eyebrow"><span class="map-live-dot"></span>Live intelligence network</div>
+              <h1 class="map-title">Strangeness <span>Map</span></h1>
+            </div>
+            <div style="display:flex;gap:.5rem;flex-wrap:wrap;align-items:center">
+              <a href="submit.html" style="font-family:'Cinzel',serif;font-size:.58rem;letter-spacing:.12em;color:var(--gold2);border:1px solid rgba(212,168,67,.4);padding:.45rem 1rem;border-radius:4px;text-decoration:none;background:rgba(7,7,15,.8)">+ Submit Sighting</a>
+              <a href="chatbot.html" style="font-family:'Cinzel',serif;font-size:.58rem;letter-spacing:.12em;color:var(--purple3);border:1px solid rgba(124,58,237,.35);padding:.45rem 1rem;border-radius:4px;text-decoration:none;background:rgba(7,7,15,.8)">Ask Oracle</a>
+            </div>
+          </div>
+          <!-- Category filters -->
+          <div class="map-filters">
+            <button class="map-filter-pill all active" data-filter="all" onclick="filterMap('all',this)">All</button>
+            <button class="map-filter-pill" data-filter="ufo" onclick="filterMap('ufo',this)">🛸 UFO/UAP</button>
+            <button class="map-filter-pill" data-filter="aliens" onclick="filterMap('aliens',this)">👽 Aliens</button>
+            <button class="map-filter-pill" data-filter="cryptids" onclick="filterMap('cryptids',this)">🦶 Cryptids</button>
+            <button class="map-filter-pill" data-filter="paranormal" onclick="filterMap('paranormal',this)">👻 Paranormal</button>
+            <button class="map-filter-pill" data-filter="consciousness" onclick="filterMap('consciousness',this)">🧠 Consciousness</button>
+            <button class="map-filter-pill" data-filter="government" onclick="filterMap('government',this)">🏛️ Gov</button>
+            <button class="map-filter-pill" data-filter="phenomena" onclick="filterMap('phenomena',this)">🌀 Phenomena</button>
+          </div>
+        </div>
+      </div>
 
       <!-- Sidebar -->
       <div class="map-sidebar">
@@ -421,6 +441,16 @@
       markersLayer = L.layerGroup().addTo(map);
 
       loadSightings();
+
+      // Force Leaflet to recalculate tile layout after DOM settles
+      setTimeout(function() {
+        map.invalidateSize();
+      }, 200);
+
+      // Also recalculate on window resize
+      window.addEventListener('resize', function() {
+        map.invalidateSize();
+      });
     });
 
     async function loadSightings() {
