@@ -1061,6 +1061,13 @@ SMTP_PASS=abcdabcdabcdabcd</div>
             <button class="btn-sm btn-purple" onclick="loadRawHeadlines()">↻ Refresh</button>
             <button class="btn-sm btn-red" onclick="if(confirm('Clear all headlines?'))api('/admin/headlines/clear','POST').then(()=>{loadRawHeadlines();toast('Cleared')})">Clear all</button>
           </div>
+          <div style="display:flex;gap:.5rem;align-items:center;margin-bottom:.5rem;flex-wrap:wrap">
+            <span style="font-family:var(--mono);font-size:.62rem;color:var(--muted)">Strangeness weight:</span>
+            <button onclick="setHlWeight('all',this)" class="btn-sm btn-purple" style="font-size:.6rem;padding:.2rem .6rem">All</button>
+            <button onclick="setHlWeight('high',this)" class="btn-sm btn-outline" style="font-size:.6rem;padding:.2rem .6rem">🔴 High (UAP/Entity/Gov)</button>
+            <button onclick="setHlWeight('medium',this)" class="btn-sm btn-outline" style="font-size:.6rem;padding:.2rem .6rem">🟡 Medium (Cryptid/Paranormal)</button>
+            <button onclick="setHlWeight('low',this)" class="btn-sm btn-outline" style="font-size:.6rem;padding:.2rem .6rem">🟢 Low (General)</button>
+          </div>
           <div id="hl-raw-stats" style="font-family:var(--mono);font-size:.68rem;color:var(--muted);margin-bottom:.75rem"></div>
           <div id="hl-raw-list" style="max-height:600px;overflow-y:auto;display:flex;flex-direction:column;gap:0">
             <div style="color:var(--muted);padding:1rem;font-size:.88rem">Click Refresh to load headlines.</div>
@@ -1659,6 +1666,11 @@ async function loadReports() {
     const data = await api('/admin/reports');
     allReports = data.reports || [];
     filterReportsList();
+    // Always scroll report list to top
+    const listEl = document.getElementById('reports-list');
+    if (listEl) listEl.scrollTop = 0;
+    const panel = document.getElementById('panel-reports');
+    if (panel) panel.scrollTop = 0;
   } catch(err) { toast('Failed to load reports: ' + err.message, 'error'); }
 }
 
@@ -1686,6 +1698,94 @@ async function deleteReport(id) {
 function editReport(id) {
   const r = allReports.find(r => r.id === id);
   if (!r) { toast('Report not found', 'error'); return; }
+
+  // Build inline review modal
+  const existing = document.getElementById('report-review-modal');
+  if (existing) existing.remove();
+
+  const isLive = r.status === 'live';
+  const date = r.published_at
+    ? new Date(r.published_at).toLocaleString('en-US',{month:'short',day:'numeric',year:'numeric',hour:'numeric',minute:'2-digit',timeZone:'America/Denver'}) + ' MST'
+    : (r.created_at ? new Date(r.created_at).toLocaleString('en-US',{month:'short',day:'numeric',year:'numeric',hour:'numeric',minute:'2-digit',timeZone:'America/Denver'}) + ' MST' : '');
+
+  const modal = document.createElement('div');
+  modal.id = 'report-review-modal';
+  modal.style.cssText = 'position:fixed;inset:0;z-index:10001;background:rgba(4,3,14,.92);backdrop-filter:blur(6px);display:flex;align-items:flex-start;justify-content:center;padding:2rem 1rem;overflow-y:auto';
+
+  modal.innerHTML = \`
+    <div style="background:#0d0820;border:1px solid rgba(124,58,237,.35);border-radius:12px;padding:2rem;max-width:720px;width:100%;position:relative">
+      <button onclick="document.getElementById('report-review-modal').remove()" style="position:absolute;top:1rem;right:1rem;background:none;border:none;color:var(--muted);font-size:1.2rem;cursor:pointer;line-height:1">✕</button>
+
+      <div style="font-family:var(--mono);font-size:.6rem;letter-spacing:.15em;color:var(--purple3);margin-bottom:.5rem">REPORT REVIEW · \${r.category || ''}</div>
+      <div style="font-family:var(--mono);font-size:.6rem;color:var(--muted);margin-bottom:1rem">\${date} · Strangeness Index: \${r.strangeness_index}/10 · <span style="color:\${isLive?'var(--green)':'var(--amber)'}">\${isLive?'LIVE':'DRAFT'}</span></div>
+
+      <h2 style="font-family:'Cinzel Decorative',serif;font-size:1.1rem;font-weight:400;color:var(--text);line-height:1.35;margin-bottom:1rem">\${r.headline}</h2>
+
+      <div style="font-size:.82rem;color:var(--muted);background:rgba(124,58,237,.05);border:1px solid rgba(124,58,237,.12);border-radius:6px;padding:1rem;margin-bottom:1rem;font-style:italic">\${r.summary || ''}</div>
+
+      <div style="font-size:.9rem;color:var(--text);line-height:1.85;white-space:pre-wrap;max-height:400px;overflow-y:auto;border:1px solid rgba(124,58,237,.12);border-radius:6px;padding:1rem;margin-bottom:1rem">\${r.content || ''}</div>
+
+      <div style="display:flex;gap:.4rem;flex-wrap:wrap;margin-bottom:1.25rem">
+        \${(r.tags||[]).map(t=>\`<span style="font-family:var(--mono);font-size:.58rem;color:var(--gold);border:1px solid rgba(212,168,67,.25);padding:2px 8px;border-radius:2px">\${t}</span>\`).join('')}
+      </div>
+
+      <div style="font-family:var(--mono);font-size:.62rem;color:var(--muted);margin-bottom:1.25rem">
+        Sources: \${(r.sources||[]).join(', ')||'Unknown'} \${r.oracle_intel_used?' · Oracle intel used':''}
+      </div>
+
+      <div style="display:flex;gap:.75rem;flex-wrap:wrap;border-top:1px solid rgba(124,58,237,.15);padding-top:1.25rem">
+        \${!isLive ? \`<button onclick="reviewPublish('\${r.id}')" style="font-family:var(--nav);font-size:.58rem;letter-spacing:.12em;padding:.55rem 1.25rem;background:rgba(34,197,94,.15);border:1px solid rgba(34,197,94,.4);color:#4ade80;border-radius:4px;cursor:pointer">✓ Publish</button>\` : \`<button onclick="reviewUnpublish('\${r.id}')" style="font-family:var(--nav);font-size:.58rem;letter-spacing:.12em;padding:.55rem 1.25rem;background:rgba(212,168,67,.1);border:1px solid rgba(212,168,67,.35);color:var(--gold);border-radius:4px;cursor:pointer">↩ Unpublish</button>\`}
+        <button onclick="reviewEdit('\${r.id}')" style="font-family:var(--nav);font-size:.58rem;letter-spacing:.12em;padding:.55rem 1.25rem;background:transparent;border:1px solid rgba(124,58,237,.4);color:var(--purple3);border-radius:4px;cursor:pointer">✎ Edit text</button>
+        <button onclick="reviewDelete('\${r.id}')" style="font-family:var(--nav);font-size:.58rem;letter-spacing:.12em;padding:.55rem 1.25rem;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.35);color:#f87171;border-radius:4px;cursor:pointer">✕ Delete</button>
+        <button onclick="document.getElementById('report-review-modal').remove()" style="font-family:var(--nav);font-size:.58rem;letter-spacing:.12em;padding:.55rem 1.25rem;background:transparent;border:1px solid rgba(255,255,255,.1);color:var(--muted);border-radius:4px;cursor:pointer;margin-left:auto">Close</button>
+      </div>
+    </div>
+  \`;
+
+  document.body.appendChild(modal);
+  modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
+}
+
+async function reviewPublish(id) {
+  // Guard: check if already live before publishing
+  const r = allReports.find(r => r.id === id);
+  if (r && r.status === 'live') {
+    toast('This report is already published — close and unpublish first if you want to re-date it.', 'info');
+    return;
+  }
+  try {
+    await api('/admin/reports/' + id, 'PATCH', {status: 'live'});
+    toast('Published!', 'success');
+    document.getElementById('report-review-modal')?.remove();
+    loadReports();
+    loadDashboard();
+  } catch(e) { toast('Failed: ' + e.message, 'error'); }
+}
+
+async function reviewUnpublish(id) {
+  try {
+    await api('/admin/reports/' + id, 'PATCH', {status: 'draft'});
+    toast('Unpublished — moved to draft');
+    document.getElementById('report-review-modal')?.remove();
+    loadReports();
+  } catch(e) { toast('Failed: ' + e.message, 'error'); }
+}
+
+async function reviewDelete(id) {
+  if (!confirm('Delete this report permanently?')) return;
+  try {
+    await api('/admin/reports/' + id, 'DELETE');
+    toast('Deleted');
+    document.getElementById('report-review-modal')?.remove();
+    loadReports();
+    loadDashboard();
+  } catch(e) { toast('Failed: ' + e.message, 'error'); }
+}
+
+function reviewEdit(id) {
+  document.getElementById('report-review-modal')?.remove();
+  const r = allReports.find(r => r.id === id);
+  if (!r) return;
   showPanel('report-new', null);
   setTimeout(() => {
     const fields = {
@@ -1695,22 +1795,14 @@ function editReport(id) {
       'new-tags':     (r.tags||[]).join(', '),
       'new-index':    r.strangeness_index || 7,
     };
-    Object.entries(fields).forEach(([id, val]) => {
-      const el = document.getElementById(id);
+    Object.entries(fields).forEach(([fid, val]) => {
+      const el = document.getElementById(fid);
       if (el) el.value = val;
     });
     _editingReportId = id;
-    const srcDisplayEl = document.getElementById('edit-report-sources');
-    if (srcDisplayEl) srcDisplayEl.style.display = 'block';
-    // Show sources and pipeline info
-    const srcEl = document.getElementById('edit-report-sources');
-    if (srcEl) {
-      const srcs  = (r.sources || []).join(', ') || 'Unknown';
-      const trig  = r.trigger || 'scheduled';
-      const oracle = r.oracle_intel_used ? ' · Oracle intel used' : '';
-      srcEl.textContent = trig.toUpperCase() + ' · Sources: ' + srcs + oracle;
-    }
-    toast('Report loaded — edit and click Publish', 'info');
+    toast('Report loaded for editing', 'info');
+    // Scroll to top of edit panel
+    document.getElementById('panel-report-new')?.scrollIntoView({behavior:'smooth'});
   }, 150);
 }
 
@@ -2788,7 +2880,7 @@ function renderWeeklyGrid() {
       '<div style="font-family:var(--nav);font-size:.55rem;letter-spacing:.1em;color:var(--purple3);margin-bottom:.4rem">' + d.toUpperCase() + '</div>' +
       (byDay[i]||[]).map(s =>
         '<div style="background:var(--dark2);border:1px solid rgba(124,58,237,.2);border-radius:4px;padding:.35rem .5rem;margin-bottom:.3rem">' +
-        '<div style="font-family:var(--mono);font-size:.6rem;color:var(--gold)">' + s.time + '</div>' +
+        '<div style="font-family:var(--mono);font-size:.6rem;color:var(--gold)">' + (function(t){try{var p=t.split(':');var h=parseInt(p[0]),m=p[1],ampm=h>=12?'PM':'AM';h=h%12||12;return h+':'+m+' '+ampm+' MST';}catch(e){return t;}})( s.time) + '</div>' +
         '<div style="font-size:.75rem;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + (CAT_LABELS[s.category]||s.category) + '</div>' +
         '<div style="display:flex;gap:.3rem;margin-top:.25rem"><span style="font-family:var(--mono);font-size:.5rem;color:' + (s.autopublish?'var(--green)':'var(--amber)') + '">' + (s.autopublish?'AUTO':'DRAFT') + '</span>' +
         '<button onclick="removeScheduleSlot(\'' + s.id + '\')" style="background:none;border:none;color:var(--red);font-size:.7rem;cursor:pointer;padding:0;margin-left:auto">✕</button></div>' +
@@ -2939,7 +3031,7 @@ async function loadPipelineStatus() {
     set('ps-reports',   d.total_reports);
     set('ps-interval',  d.scan_interval);
     set('ps-slots',     d.weekly_slots);
-    set('ps-schedule',  'Daily at ' + d.report_schedule + ' UTC');
+    set('ps-schedule',  'Daily at ' + (function(t){try{var p=t.split(':');var h=parseInt(p[0]),m=p[1],ampm=h>=12?'PM':'AM';h=h%12||12;return h+':'+m+' '+ampm+' MST';}catch(e){return t+' MST';}})(d.report_schedule));
     set('ps-latest-hl', d.latest_headline);
     set('ps-latest-rep', d.latest_report);
     const hlTime = d.latest_headline_time !== '—' ? new Date(d.latest_headline_time).toLocaleString() : '—';
@@ -3031,6 +3123,26 @@ async function loadRawHeadlines() {
   }
 }
 
+var _hlWeight = 'all';
+var HIGH_WEIGHT_KWS = ['ufo', 'uap', 'alien', 'abduction', 'entity', 'disclosure', 'whistleblower', 'non-human', 'biologics', 'classified', 'scif', 'extraterrestrial', 'congress', 'testimony', 'grusch', 'pentagon', 'military', 'government', 'crash', 'retrieval', 'implant', 'contact'];
+var MED_WEIGHT_KWS  = ['cryptid', 'bigfoot', 'paranormal', 'ghost', 'haunting', 'cryptid', 'mothman', 'skinwalker', 'dogman', 'poltergeist', 'spirit', 'demon', 'apparition', 'creature', 'bermuda', 'triangle'];
+
+function setHlWeight(w, btn) {
+  _hlWeight = w;
+  document.querySelectorAll('#sig-view-raw .btn-sm').forEach(function(b) {
+    b.className = b === btn ? 'btn-sm btn-purple' : 'btn-sm btn-outline';
+    b.style.fontSize = '.6rem'; b.style.padding = '.2rem .6rem';
+  });
+  filterRawHeadlines();
+}
+
+function getHeadlineWeight(h) {
+  var t = (h.title || '').toLowerCase();
+  if (HIGH_WEIGHT_KWS.some(function(k){return t.includes(k);})) return 'high';
+  if (MED_WEIGHT_KWS.some(function(k){return t.includes(k);})) return 'medium';
+  return 'low';
+}
+
 function filterRawHeadlines() {
   var listEl   = document.getElementById('hl-raw-list');
   var search   = (document.getElementById('hl-search')?.value || '').toLowerCase();
@@ -3042,7 +3154,8 @@ function filterRawHeadlines() {
     var source = (h.source || '');
     var matchSrc    = !srcFilter || source === srcFilter;
     var matchSearch = !search || title.includes(search) || source.toLowerCase().includes(search);
-    return matchSrc && matchSearch;
+    var matchWeight = _hlWeight === 'all' || getHeadlineWeight(h) === _hlWeight;
+    return matchSrc && matchSearch && matchWeight;
   });
 
   if (!filtered.length) {

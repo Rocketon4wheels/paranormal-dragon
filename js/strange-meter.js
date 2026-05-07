@@ -62,9 +62,13 @@ class StrangeMeter {
     try {
       const res  = await fetch(`${BACKEND_URL}/reports/latest`);
       const data = await res.json();
-      if (data.report) {
-        this.animate(data.report.strangeness_index || 5.0);
-        if (this.dateEl) this.dateEl.textContent = data.report.date_label || '';
+      // Use daily planetary strangeness index (weighted avg of all reports)
+      // falls back to latest report's index if not available
+      const idx = data.daily_strangeness_index || (data.report ? data.report.strangeness_index : null) || 6.6;
+      this.animate(idx);
+      if (this.dateEl) {
+        const now = new Date();
+        this.dateEl.textContent = now.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric',timeZone:'America/Denver'}) + ' MST';
       }
     } catch(e) { this.animate(6.6); }
   }
