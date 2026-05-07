@@ -540,6 +540,7 @@
             <div id="qg-result-summary" style="font-size:.88rem;color:var(--muted);font-style:italic;margin-bottom:1rem"></div>
             <div class="btn-row">
               <button class="btn-sm btn-green" id="qg-publish-btn" onclick="quickPublish()" style="display:none">✓ Publish this report</button>
+              <button class="btn-sm btn-outline" id="qg-edit-btn" onclick="quickEditReport()" style="display:none">✎ Edit before publishing</button>
               <button class="btn-sm btn-outline" onclick="showPanel('reports',document.getElementById('nav-reports'))">View all reports →</button>
             </div>
           </div>
@@ -1159,6 +1160,7 @@ SMTP_PASS=abcdabcdabcdabcd</div>
               <option value="">All sources</option>
             </select>
             <button class="btn-sm btn-purple" onclick="loadRawHeadlines()">↻ Refresh</button>
+            <button class="btn-sm btn-gold" onclick="rawScanNow()" id="raw-scan-btn">📡 Scan RSS now</button>
             <button class="btn-sm btn-red" onclick="if(confirm('Clear all headlines?'))api('/admin/headlines/clear','POST').then(()=>{loadRawHeadlines();toast('Cleared')})">Clear all</button>
           </div>
           <div style="display:flex;gap:.5rem;align-items:center;margin-bottom:.5rem;flex-wrap:wrap">
@@ -1756,6 +1758,7 @@ function reportItem(r) {
       ((r.oracle_intel_used || (r.sources||[]).includes('Oracle Witness Network')) ? '<span style="font-family:var(--mono);font-size:.58rem;background:rgba(212,168,67,.1);color:#d4a843;padding:1px 5px;border-radius:3px">oracle intel</span>' : '') +
       ((r.sources||[]).includes('Community Field Database') ? '<span style="font-family:var(--mono);font-size:.58rem;background:rgba(29,158,117,.1);color:#1D9E75;padding:1px 5px;border-radius:3px">community data</span>' : '') +
     '</div>' +
+    (r.case_number ? '<div style="font-family:var(--mono);font-size:.58rem;color:var(--gold);margin-bottom:2px">' + r.case_number + (r.primary_location?' · 📍 ' + r.primary_location:'') + '</div>' : '') +
     '<div class="ri-title">' + (r.headline||'Untitled') + '</div>' +
     '<span class="ri-status ' + cls + '">' + cls + '</span>' +
     '<div class="ri-actions">' +
@@ -1833,15 +1836,18 @@ async function quickGenerate() {
         'Category: ' + (r.category||'') + '  ·  Index: ' + (r.strangeness_index||'?') + '/10  ·  ' + (r.status||'draft').toUpperCase();
       document.getElementById('qg-result-summary').textContent = (r.summary||'').slice(0, 300) + '...';
 
-      const pubBtn = document.getElementById('qg-publish-btn');
+      const pubBtn  = document.getElementById('qg-publish-btn');
+      const editBtn = document.getElementById('qg-edit-btn');
       if (publishMode === 'live' && r.status !== 'live') {
         await api('/admin/reports/' + r.id, 'PATCH', {status:'live'});
-        pubBtn.style.display = 'none';
+        pubBtn.style.display  = 'none';
+        if (editBtn) editBtn.style.display = 'none';
         statusEl.textContent = '✓ Generated and published!';
         loadDashboard();
       } else {
-        pubBtn.style.display = 'inline-block';
-        statusEl.textContent = '✓ Report generated as draft — review and publish below.';
+        pubBtn.style.display  = 'inline-block';
+        if (editBtn) editBtn.style.display = 'inline-block';
+        statusEl.textContent = '✓ Report generated as draft — review, edit, or publish below.';
       }
       resultEl.style.display = 'block';
       loadReports();
@@ -1861,11 +1867,18 @@ async function quickPublish() {
   try {
     await api('/admin/reports/' + _qgReportId, 'PATCH', {status: 'live'});
     document.getElementById('qg-publish-btn').style.display = 'none';
+    var eb = document.getElementById('qg-edit-btn'); if(eb) eb.style.display='none';
     document.getElementById('qg-status').textContent = '✓ Published!';
     toast('Published!', 'success');
     loadReports();
     loadDashboard();
   } catch(e) { toast('Failed: ' + e.message, 'error'); }
+}
+
+function quickEditReport() {
+  if (!_qgReportId) return;
+  // Load into full edit modal
+  editReport(_qgReportId);
 }
 
 async function loadReports() {
@@ -1930,7 +1943,8 @@ function editReport(id) {
     '<div style="background:#0d0820;border:1px solid rgba(124,58,237,.35);border-radius:12px;padding:2rem;max-width:720px;width:100%;position:relative">' +
       '<button onclick="document.getElementById(\'report-review-modal\').remove()" style="position:absolute;top:1rem;right:1rem;background:none;border:none;color:var(--muted);font-size:1.2rem;cursor:pointer">\u2715</button>' +
       '<div style="font-family:var(--mono);font-size:.6rem;letter-spacing:.15em;color:var(--purple3);margin-bottom:.5rem">REPORT REVIEW \u00b7 ' + (r.category||'') + '</div>' +
-      '<div style="font-family:var(--mono);font-size:.6rem;color:var(--muted);margin-bottom:1rem">' + date + ' \u00b7 Strangeness Index: ' + r.strangeness_index + '/10 \u00b7 <span style="color:' + (isLive?'var(--green)':'var(--amber)') + '">' + (isLive?'LIVE':'DRAFT') + '</span></div>' +
+      '<div style="font-family:var(--mono);font-size:.6rem;color:var(--muted);margin-bottom:.3rem">' + date + ' \u00b7 SI: ' + r.strangeness_index + '/10 \u00b7 <span style="color:' + (isLive?'var(--green)':'var(--amber)') + '">' + (isLive?'LIVE':'DRAFT') + '</span></div>' +
+      (r.case_number ? '<div style="font-family:var(--mono);font-size:.65rem;color:var(--gold);margin-bottom:.75rem">Case ' + r.case_number + (r.primary_location?' · \ud83d\udccd ' + r.primary_location:'') + (r.lat && r.lat !== 0 ? ' · ' + r.lat.toFixed(4) + ', ' + r.lng.toFixed(4):'') + '</div>' : '') +
       '<h2 style="font-family:\'Cinzel Decorative\',serif;font-size:1.1rem;font-weight:400;color:var(--text);line-height:1.35;margin-bottom:1rem">' + (r.headline||'') + '</h2>' +
       '<div style="font-size:.82rem;color:var(--muted);background:rgba(124,58,237,.05);border:1px solid rgba(124,58,237,.12);border-radius:6px;padding:1rem;margin-bottom:1rem;font-style:italic">' + (r.summary||'') + '</div>' +
       '<div style="font-size:.9rem;color:var(--text);line-height:1.85;white-space:pre-wrap;max-height:400px;overflow-y:auto;border:1px solid rgba(124,58,237,.12);border-radius:6px;padding:1rem;margin-bottom:1rem">' + (r.content||'') + '</div>' +
@@ -3009,6 +3023,24 @@ async function loadHeadlines() {
 }
 
 function setHlFilter(source) { _hlSourceFilter = source; loadHeadlines(); }
+
+async function rawScanNow() {
+  var btn = document.getElementById('raw-scan-btn');
+  var statsEl = document.getElementById('hl-raw-stats');
+  if (btn) { btn.textContent = '⏳ Scanning...'; btn.disabled = true; }
+  if (statsEl) statsEl.textContent = 'Scan started — refreshing in 45 seconds...';
+  try {
+    await api('/admin/headlines/fetch', 'POST');
+    toast('RSS scan started — list refreshes in 45 seconds', 'info');
+    setTimeout(function() {
+      loadRawHeadlines();
+      if (btn) { btn.textContent = '📡 Scan RSS now'; btn.disabled = false; }
+    }, 45000);
+  } catch(e) {
+    toast('Scan failed: ' + e.message, 'error');
+    if (btn) { btn.textContent = '📡 Scan RSS now'; btn.disabled = false; }
+  }
+}
 
 async function fetchHeadlinesNow() {
   var el = document.getElementById('hl-fetch-result');

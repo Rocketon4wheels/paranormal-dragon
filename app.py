@@ -320,8 +320,12 @@ A report that says "witnesses reported strange lights" is unacceptable. A report
 
 MANDATORY CONTENT STRUCTURE
 
-HEADLINE (line 1 only):
+CASE NUMBER: Will be auto-assigned as SI-YYYY-NNNN by the system. Do not generate a case number yourself.
+
+HEADLINE (line 1 only — output the headline text ONLY, no label, no prefix, no "HEADLINE:", no markdown):
 [SPECIFIC LOCATION or NAMED SUBJECT]: [PRECISELY WHAT HAPPENED] — [WHY IT MATTERS FOR INVESTIGATION]
+CRITICAL: Do NOT write "HEADLINE:" before the headline. Output the headline text directly as the first line.
+CRITICAL: The location in the headline must be a REAL, SPECIFIC place name — a city, state, region, military base, national park, or named geographic feature. Never use generic terms like "United States" or "Unknown Location" as the location prefix.
 
 STRANGENESS INDEX (line 2 only):
 STRANGENESS INDEX: X.X/10 — [CATEGORY]
@@ -331,13 +335,22 @@ INCIDENT SUMMARY (3-4 paragraphs)
 Name the event. Give full date. Give full location. Describe exactly what was observed, in order, with specific sensory details. Name the witnesses if documented. State their backgrounds and credibility indicators. State what official agencies responded. State what the official explanation was. State precisely why that explanation does or does not account for the observed details.
 
 PATTERN ANALYSIS (2-3 paragraphs)  
-Cross-reference against minimum 2 documented historical cases with full names and dates. Identify geographic or temporal clustering. Identify recurring characteristics in witness descriptions (specific colors, sounds, smells, physiological effects, missing time, electromagnetic effects on equipment). Quantify where possible. Reference specific databases: MUFON, NUFORC, Project Blue Book, Majestic Documents, Congressional testimony records.
+Cross-reference against minimum 2 documented historical cases with full names, dates, and case numbers where available. Identify geographic or temporal clustering. Identify recurring characteristics in witness descriptions (specific colors, sounds, smells, physiological effects, missing time, electromagnetic effects on equipment). Quantify where possible.
+
+Reference specific databases by name: NUFORC (National UFO Reporting Center — nuforc.org, cite case numbers if available), MUFON (Mutual UFO Network — cite case IDs), Project Blue Book (cite file numbers and dates), Phantoms and Monsters (Lon Strickler's case archive), Singular Fortean Society (rigorous cryptid and paranormal cases), NICAP (National Investigations Committee on Aerial Phenomena), The Debrief (investigative journalism), The Black Vault (FOIA documents). Congressional testimony records with specific hearing dates and speaker names.
 
 CROSS-REFERENCES (2 paragraphs)
 Name specific documented historical precedents with dates and case numbers where available. Reference relevant Congressional hearings by name, date, and specific testimony. Reference relevant legislation: UAP Disclosure Act, NDAA UAP provisions, AARO reports. Reference relevant whistleblower testimony by full name and specific claim. Reference relevant declassified documents by name/date. Reference relevant folklore, myths, or legends from the affected region with their specific traditional details — NOT generic "local legends say" but "The Tohono O'odham people of southern Arizona have documented accounts of the I'itoi spirit encounters in the Baboquivari Peak area dating to oral traditions recorded by ethnographer Edward Spicer in 1940."
 
 FIELD INVESTIGATOR ALERT (1 paragraph)
-Specific actionable intelligence: what a field investigator should do RIGHT NOW. Include specific locations to monitor, specific databases to check, specific FOIA requests that could yield results, specific witnesses or agencies to contact, specific physical evidence that may still be recoverable, specific patterns to watch for.
+Specific actionable intelligence: what a field investigator should do RIGHT NOW. Always include:
+- Primary incident location with city, state/country, and approximate GPS coordinates or landmark if known
+- Specific databases to search immediately: NUFORC (nuforc.org), MUFON case search, Phantoms and Monsters archive, BFRO database
+- Specific FOIA request language that could yield results from relevant agencies
+- Physical evidence indicators to look for at or near the location
+- Specific time windows when phenomena were reported (time of day, season, lunar phase if relevant)
+- Equipment recommendations for field investigation (EMF meter, IR camera, audio recorder, UV light)
+- What to submit to Strangeness IS if witnessed again (case number format, what details to document)
 
 ANALYST ASSESSMENT (1-2 paragraphs)
 State competing explanations ranked by fit to evidence. Identify the single most anomalous data point that conventional explanations cannot account for. State precisely what additional evidence would confirm or rule out each explanation. Assign confidence levels.
@@ -348,9 +361,28 @@ STYLE RULES
 Length: 800-1200 words minimum. No bullet points. No markdown. Write in active, precise prose. Atmosphere comes from facts, not adjectives. Never use: "shrouded in mystery," "spine-tingling," "baffling experts," or any other tabloid language. The reader is a serious investigator. Treat them as one.
 
 SOURCE INTEGRATION
-When supplied RSS headlines: extract the specific event, location, date, and named individuals from each headline. Do not use headlines as atmosphere — use them as leads to investigate in your analysis. Note when a headline lacks sufficient detail and state what additional sourcing would be needed.
+The intelligence package contains headlines from multiple source tiers. Use them as follows:
 
-When supplied Oracle witness data: cross-reference with headline data for geographic and temporal overlap. Flag any patterns across multiple witness reports.
+TIER 1 — CASE DATABASE SOURCES (highest investigative value):
+NUFORC: Each filing contains date, time, location, shape, duration, witness description. Extract all specifics.
+Phantoms & Monsters: Lon Strickler's cases include witness interviews and location details. Use verbatim details.
+Singular Fortean: Rigorously verified cases. Treat as peer-reviewed field data.
+MUFON / NICAP / UFO Casebook: Cross-reference case numbers when cited.
+
+TIER 2 — INVESTIGATIVE JOURNALISM:
+The Debrief, The Black Vault, Open Minds TV: Use as sourced journalism. Cite author and publication date.
+Coast to Coast AM, Unknown Country: Interview-based. Extract specific witness claims and dates.
+
+TIER 3 — COMMUNITY INTELLIGENCE (Reddit, forums):
+Treat as unverified field reports. Note platform and subreddit. Flag for independent verification.
+Look for geographic clustering across multiple Reddit reports — this is a strong signal.
+
+TIER 4 — MAINSTREAM MEDIA:
+Use for political and institutional context only (congressional activity, military statements, government positions).
+
+When a headline lacks sufficient detail: state explicitly "The [source] headline indicates [X] but lacks [specific detail needed]. Investigators should search NUFORC/MUFON for corroborating cases from the same geographic area and time window."
+
+When Oracle witness data is supplied: cross-reference with headline data for geographic and temporal overlap. Flag any patterns across multiple witness reports. Always cite Oracle case numbers if present.
 
 MASTER CATEGORY REFERENCE:
 {MASTER_CATEGORIES}
@@ -713,12 +745,15 @@ def generate_report() -> dict | None:
 
     user_prompt = f"""Today is {today}. Assigned category: {chosen_category}{topic_clause}
 
+SYSTEM NOTE: This report will be auto-assigned case number SI-{datetime.now().strftime('%Y')}-XXXX by the platform. Do not include a case number in your output.
+
 INTELLIGENCE PACKAGE:
 {'=' * 60}
 {chr(10).join(source_data)}
 {'=' * 60}
 
 Sources available: {', '.join(sources_used)}
+Total RSS database: {len(load_json(HEADLINES_FILE, [])):,} headlines
 
 Write the complete Strangeness Report now. Follow all system prompt instructions exactly.{avoid_clause}"""
 
@@ -736,9 +771,23 @@ Write the complete Strangeness Report now. Follow all system prompt instructions
         lines   = content.split('\n')
 
         # Parse headline (first non-empty line)
+        # Strip any format labels the AI accidentally includes (HEADLINE:, SUBJECT:, etc.)
+        _format_prefixes = [
+            'HEADLINE:', 'HEADLINE :', 'HEADLINE**:', '**HEADLINE**:', '**HEADLINE:',
+            'SUBJECT:', 'SUBJECT :', 'TITLE:', 'TITLE :',
+            'REPORT HEADLINE:', 'REPORT TITLE:',
+        ]
         headline = f'Strangeness Report — {datetime.now().strftime("%B %d")}'
-        for line in lines[:5]:
+        for line in lines[:8]:
             cleaned = line.strip().lstrip('#*—').strip()
+            # Strip format label prefixes
+            upper = cleaned.upper()
+            for prefix in _format_prefixes:
+                if upper.startswith(prefix):
+                    cleaned = cleaned[len(prefix):].strip().lstrip('*').strip()
+                    break
+            # Also strip trailing ** markdown
+            cleaned = cleaned.rstrip('*').strip()
             if cleaned and 'STRANGENESS INDEX' not in cleaned.upper() and len(cleaned) > 10:
                 headline = cleaned
                 break
@@ -760,8 +809,48 @@ Write the complete Strangeness Report now. Follow all system prompt instructions
                 tags = [t.strip().lower() for t in raw.replace('#', '').split(',') if t.strip()][:6]
                 break
 
+        # Generate SI case number: SI-YYYY-NNNN
+        import string as _string
+        existing_reports = get_reports()
+        existing_nums = set()
+        for r in existing_reports:
+            cn = r.get('case_number', '')
+            if cn and cn.startswith('SI-'):
+                try: existing_nums.add(int(cn.split('-')[-1]))
+                except: pass
+        year_str = datetime.now().strftime('%Y')
+        year_reports = [r for r in existing_reports if r.get('case_number','').startswith(f'SI-{year_str}-')]
+        case_seq = len(year_reports) + 1
+        case_number = f'SI-{year_str}-{case_seq:04d}'
+
+        # Extract primary location from headline and content for geocoding
+        primary_location = None
+        location_coords  = (0.0, 0.0)
+        # Try to parse location from headline (format: LOCATION: What happened)
+        if ':' in headline:
+            loc_candidate = headline.split(':')[0].strip()
+            # Filter out generic non-location prefixes
+            skip = {'SUBJECT', 'REPORT', 'INVESTIGATION', 'ANALYSIS', 'ALERT', 'BREAKING', 'UPDATE'}
+            if loc_candidate.upper() not in skip and len(loc_candidate) > 3:
+                primary_location = loc_candidate
+        # Also scan first paragraph for location patterns
+        if not primary_location:
+            loc_match = re.search(
+                r'([A-Z][a-z]+(?: [A-Z][a-z]+)*,\s*(?:[A-Z][a-z]+|[A-Z]{2}))',
+                content[:500]
+            )
+            if loc_match:
+                primary_location = loc_match.group(1)
+
+        if primary_location:
+            try:
+                location_coords = geocode_location(primary_location)
+            except Exception as geo_err:
+                app.logger.debug(f'Geocoding failed for {primary_location}: {geo_err}')
+
         report = {
             'id':                f'report_{int(datetime.now().timestamp())}',
+            'case_number':       case_number,
             'headline':          headline,
             'content':           content,
             'summary':           ' '.join(content.split()[:50]) + '...',
@@ -774,7 +863,10 @@ Write the complete Strangeness Report now. Follow all system prompt instructions
             'published_at':      None,
             'date_label':        today,
             'oracle_intel_used': bool(oracle_context),
-            'trigger':           'scheduled',  # overridden to 'manual' when admin triggers
+            'trigger':           'scheduled',
+            'primary_location':  primary_location,
+            'lat':               location_coords[0],
+            'lng':               location_coords[1],
         }
 
         if config.get('report_auto_publish', False):
@@ -783,11 +875,39 @@ Write the complete Strangeness Report now. Follow all system prompt instructions
 
         reports = get_reports()
         reports.insert(0, report)
-        reports = reports[:90]
+        reports = reports[:200]
         save_json(REPORTS_FILE, reports)
 
-        app.logger.info(f'Report generated: {headline}')
+        # Auto-pin to map if location was found and report is live
+        def _auto_pin(r=report):
+            try:
+                if r.get('lat') and r.get('lng') and r['lat'] != 0.0:
+                    pins = get_pins()
+                    # Avoid duplicate pins for same report
+                    if not any(p.get('report_id') == r['id'] for p in pins):
+                        pins.append({
+                            'id':          f'pin_report_{r["id"]}',
+                            'report_id':   r['id'],
+                            'case_number': r['case_number'],
+                            'title':       r['headline'][:80],
+                            'category':    r['category'],
+                            'description': r['summary'][:200],
+                            'location':    r['primary_location'],
+                            'lat':         r['lat'],
+                            'lng':         r['lng'],
+                            'type':        'report',
+                            'strangeness_index': r['strangeness_index'],
+                            'verified':    False,
+                            'created_at':  r['created_at'],
+                        })
+                        save_json(PINS_FILE, pins)
+                        app.logger.info(f'Auto-pinned report {r["case_number"]} at {r["primary_location"]}')
+            except Exception as pin_err:
+                app.logger.warning(f'Auto-pin failed: {pin_err}')
+
+        app.logger.info(f'Report generated: {case_number} — {headline}')
         threading.Thread(target=send_report_notification, args=(report,), daemon=True).start()
+        threading.Thread(target=_auto_pin, daemon=True).start()
         return report
 
     except Exception as e:
@@ -908,12 +1028,18 @@ def scan_all_news_sources() -> int:
 
 
 def run_scheduler():
+    import zoneinfo
+    mst = zoneinfo.ZoneInfo('America/Denver')
+
     config     = get_config()
     run_time   = config.get('report_time', '07:00')
     _last_time = run_time
     schedule.every().day.at(run_time).do(generate_report).tag('daily_report')
     schedule.every(15).minutes.do(scan_all_news_sources)
-    app.logger.info(f'Scheduler started — reports daily at {run_time}, news scan every 15 min')
+    app.logger.info(f'Scheduler started — reports daily at {run_time} MST, news scan every 15 min, weekly slots active')
+
+    # Track which slots fired today to prevent double-firing
+    _fired_today = {}  # slot_id -> date string
 
     while True:
         # Hot-reload report_time if admin changes it
@@ -926,6 +1052,89 @@ def run_scheduler():
             _last_time = new_run_time
 
         schedule.run_pending()
+
+        # ── Weekly slot processor ─────────────────────────────────────────────
+        try:
+            now_mst      = datetime.now(mst)
+            today_str    = now_mst.strftime('%Y-%m-%d')
+            now_day      = now_mst.weekday()  # 0=Mon … 6=Sun
+            # Convert to slot day format: 0=Sun 1=Mon … 6=Sat
+            slot_day_now = (now_day + 1) % 7
+            now_hhmm     = now_mst.strftime('%H:%M')
+
+            # Clean up _fired_today for old dates
+            _fired_today = {k: v for k, v in _fired_today.items() if v == today_str}
+
+            cfg   = get_config()
+            slots = cfg.get('weekly_schedule', [])
+            if not slots:
+                time.sleep(60)
+                continue
+
+            # Group slots by (day, time) to detect collisions and apply offsets
+            from collections import defaultdict
+            by_slot = defaultdict(list)
+            for s in slots:
+                if s.get('enabled', True):
+                    key = (int(s.get('day', 0)), s.get('time', '00:00'))
+                    by_slot[key].append(s)
+
+            # Check each group for the current minute
+            for (day, slot_time), group in by_slot.items():
+                if day != slot_day_now:
+                    continue
+
+                for offset_idx, slot in enumerate(group):
+                    sid = slot.get('id', '')
+                    fire_key = f"{sid}_{today_str}"
+
+                    if fire_key in _fired_today:
+                        continue  # already fired today
+
+                    # Apply 5-minute offset per index within same slot
+                    base_h, base_m = map(int, slot_time.split(':'))
+                    offset_minutes = offset_idx * 5
+                    total_minutes  = base_h * 60 + base_m + offset_minutes
+                    fire_h = (total_minutes // 60) % 24
+                    fire_m = total_minutes % 60
+                    fire_hhmm = f'{fire_h:02d}:{fire_m:02d}'
+
+                    if now_hhmm != fire_hhmm:
+                        continue  # not time yet
+
+                    # Fire this slot
+                    app.logger.info(f'Weekly slot firing: {slot.get("category")} at {fire_hhmm} MST (offset {offset_idx*5}min from {slot_time})')
+                    _fired_today[fire_key] = today_str
+
+                    def _fire_slot(s=slot):
+                        try:
+                            cat = s.get('category')
+                            if cat and cat != 'auto':
+                                stored = load_json(CONFIG_FILE, {})
+                                stored['forced_category'] = cat
+                                if s.get('topic'):
+                                    stored['forced_topic'] = s['topic']
+                                save_json(CONFIG_FILE, stored)
+                            report = generate_report()
+                            if report and s.get('autopublish', False):
+                                reports = get_reports()
+                                for r in reports:
+                                    if r.get('id') == report.get('id'):
+                                        r['status']       = 'live'
+                                        r['published_at'] = datetime.now(timezone.utc).isoformat()
+                                        break
+                                save_json(REPORTS_FILE, reports)
+                                app.logger.info(f'Weekly slot auto-published: {report.get("headline","?")}')
+                            elif report:
+                                app.logger.info(f'Weekly slot draft saved: {report.get("headline","?")}')
+                        except Exception as e:
+                            app.logger.error(f'Weekly slot generation failed: {e}')
+
+                    threading.Thread(target=_fire_slot, daemon=True).start()
+
+        except Exception as slot_err:
+            app.logger.warning(f'Weekly slot processor error: {slot_err}')
+
         time.sleep(60)
 
 scheduler_thread = threading.Thread(target=run_scheduler, daemon=True)
@@ -2463,17 +2672,36 @@ def admin_save_categories():
 # ═══════════════════════════════════════════════════════════
 
 NEWS_SOURCES = [
-    # ── Paranormal-specific ───────────────────────────────────
+    # ── PRIMARY CASE DATABASES — structured incident data ────
+    ('https://nuforc.org/rss/recent-reports.xml',                             'NUFORC'),
+    ('https://www.phantomsandmonsters.com/feeds/posts/default',               'Phantoms & Monsters'),
+    ('https://singularfortean.com/feed/',                                     'Singular Fortean'),
+    ('https://www.ufocasebook.com/feed/',                                     'UFO Casebook'),
+    ('https://www.nicap.org/rss.xml',                                         'NICAP'),
+    ('https://www.openminds.tv/feed/',                                        'Open Minds TV'),
+    ('https://thedebrief.org/feed/',                                          'The Debrief'),
     ('https://www.theblackvault.com/casebook/feed/',                          'The Black Vault'),
-    ('https://www.openminds.tv/feed/',                                         'Open Minds TV'),
-    ('https://mysteriousuniverse.org/feed/',                                   'Mysterious Universe'),
-    ('https://thedebrief.org/feed/',                                           'The Debrief'),
+    ('https://mysteriousuniverse.org/feed/',                                  'Mysterious Universe'),
+    ('https://anomalyinfo.com/feed',                                          'Anomaly Info'),
+    ('https://www.theparacast.com/feed/',                                     'The Paracast'),
+    ('https://www.coasttocoastam.com/feed/recent/',                           'Coast to Coast AM'),
+    ('https://www.unknowncountry.com/feed/',                                  'Unknown Country'),
+    ('https://www.cryptomundo.com/feed/',                                     'Cryptomundo'),
+    ('https://www.bfro.net/news/rss.asp',                                     'BFRO'),
+    ('https://www.lochnessinvestigation.com/feed/',                           'Loch Ness Investigation'),
+    # ── REDDIT CASE COMMUNITIES ───────────────────────────────
     ('https://www.reddit.com/r/UFOs/.rss',                                    'Reddit UFOs'),
     ('https://www.reddit.com/r/Paranormal/.rss',                              'Reddit Paranormal'),
     ('https://www.reddit.com/r/conspiracy/.rss',                              'Reddit Conspiracy'),
     ('https://www.reddit.com/r/aliens/.rss',                                  'Reddit Aliens'),
     ('https://www.reddit.com/r/cryptids/.rss',                                'Reddit Cryptids'),
     ('https://www.reddit.com/r/bigfoot/.rss',                                 'Reddit Bigfoot'),
+    ('https://www.reddit.com/r/Missing411/.rss',                              'Reddit Missing411'),
+    ('https://www.reddit.com/r/SkinwalkerRanch/.rss',                        'Reddit Skinwalker'),
+    ('https://www.reddit.com/r/HighStrangeness/.rss',                        'Reddit HighStrangeness'),
+    ('https://www.reddit.com/r/NDE/.rss',                                    'Reddit NDE'),
+    ('https://www.reddit.com/r/RemoteViewing/.rss',                          'Reddit RemoteViewing'),
+    ('https://www.reddit.com/r/ufo/.rss',                                    'Reddit UFO'),
     # ── Google News targeted searches ─────────────────────────
     ('https://news.google.com/rss/search?q=UAP+UFO+disclosure&hl=en-US',              'Google UAP'),
     ('https://news.google.com/rss/search?q=paranormal+cryptid&hl=en-US',             'Google Paranormal'),
