@@ -1696,10 +1696,9 @@ async function deleteReport(id) {
 }
 
 function editReport(id) {
-  const r = allReports.find(r => r.id === id);
+  const r = allReports.find(function(x){ return x.id === id; });
   if (!r) { toast('Report not found', 'error'); return; }
 
-  // Build inline review modal
   const existing = document.getElementById('report-review-modal');
   if (existing) existing.remove();
 
@@ -1712,38 +1711,34 @@ function editReport(id) {
   modal.id = 'report-review-modal';
   modal.style.cssText = 'position:fixed;inset:0;z-index:10001;background:rgba(4,3,14,.92);backdrop-filter:blur(6px);display:flex;align-items:flex-start;justify-content:center;padding:2rem 1rem;overflow-y:auto';
 
-  modal.innerHTML = \`
-    <div style="background:#0d0820;border:1px solid rgba(124,58,237,.35);border-radius:12px;padding:2rem;max-width:720px;width:100%;position:relative">
-      <button onclick="document.getElementById('report-review-modal').remove()" style="position:absolute;top:1rem;right:1rem;background:none;border:none;color:var(--muted);font-size:1.2rem;cursor:pointer;line-height:1">✕</button>
+  var tagsHtml = (r.tags||[]).map(function(t){
+    return '<span style="font-family:var(--mono);font-size:.58rem;color:var(--gold);border:1px solid rgba(212,168,67,.25);padding:2px 8px;border-radius:2px">' + t + '</span>';
+  }).join('');
 
-      <div style="font-family:var(--mono);font-size:.6rem;letter-spacing:.15em;color:var(--purple3);margin-bottom:.5rem">REPORT REVIEW · \${r.category || ''}</div>
-      <div style="font-family:var(--mono);font-size:.6rem;color:var(--muted);margin-bottom:1rem">\${date} · Strangeness Index: \${r.strangeness_index}/10 · <span style="color:\${isLive?'var(--green)':'var(--amber)'}">\${isLive?'LIVE':'DRAFT'}</span></div>
+  var actionBtn = isLive
+    ? '<button onclick="reviewUnpublish(\'' + id + '\')" style="font-family:var(--nav);font-size:.58rem;letter-spacing:.12em;padding:.55rem 1.25rem;background:rgba(212,168,67,.1);border:1px solid rgba(212,168,67,.35);color:var(--gold);border-radius:4px;cursor:pointer">\u21a9 Unpublish</button>'
+    : '<button onclick="reviewPublish(\'' + id + '\')" style="font-family:var(--nav);font-size:.58rem;letter-spacing:.12em;padding:.55rem 1.25rem;background:rgba(34,197,94,.15);border:1px solid rgba(34,197,94,.4);color:#4ade80;border-radius:4px;cursor:pointer">\u2713 Publish</button>';
 
-      <h2 style="font-family:'Cinzel Decorative',serif;font-size:1.1rem;font-weight:400;color:var(--text);line-height:1.35;margin-bottom:1rem">\${r.headline}</h2>
-
-      <div style="font-size:.82rem;color:var(--muted);background:rgba(124,58,237,.05);border:1px solid rgba(124,58,237,.12);border-radius:6px;padding:1rem;margin-bottom:1rem;font-style:italic">\${r.summary || ''}</div>
-
-      <div style="font-size:.9rem;color:var(--text);line-height:1.85;white-space:pre-wrap;max-height:400px;overflow-y:auto;border:1px solid rgba(124,58,237,.12);border-radius:6px;padding:1rem;margin-bottom:1rem">\${r.content || ''}</div>
-
-      <div style="display:flex;gap:.4rem;flex-wrap:wrap;margin-bottom:1.25rem">
-        \${(r.tags||[]).map(t=>\`<span style="font-family:var(--mono);font-size:.58rem;color:var(--gold);border:1px solid rgba(212,168,67,.25);padding:2px 8px;border-radius:2px">\${t}</span>\`).join('')}
-      </div>
-
-      <div style="font-family:var(--mono);font-size:.62rem;color:var(--muted);margin-bottom:1.25rem">
-        Sources: \${(r.sources||[]).join(', ')||'Unknown'} \${r.oracle_intel_used?' · Oracle intel used':''}
-      </div>
-
-      <div style="display:flex;gap:.75rem;flex-wrap:wrap;border-top:1px solid rgba(124,58,237,.15);padding-top:1.25rem">
-        \${!isLive ? \`<button onclick="reviewPublish('\${r.id}')" style="font-family:var(--nav);font-size:.58rem;letter-spacing:.12em;padding:.55rem 1.25rem;background:rgba(34,197,94,.15);border:1px solid rgba(34,197,94,.4);color:#4ade80;border-radius:4px;cursor:pointer">✓ Publish</button>\` : \`<button onclick="reviewUnpublish('\${r.id}')" style="font-family:var(--nav);font-size:.58rem;letter-spacing:.12em;padding:.55rem 1.25rem;background:rgba(212,168,67,.1);border:1px solid rgba(212,168,67,.35);color:var(--gold);border-radius:4px;cursor:pointer">↩ Unpublish</button>\`}
-        <button onclick="reviewEdit('\${r.id}')" style="font-family:var(--nav);font-size:.58rem;letter-spacing:.12em;padding:.55rem 1.25rem;background:transparent;border:1px solid rgba(124,58,237,.4);color:var(--purple3);border-radius:4px;cursor:pointer">✎ Edit text</button>
-        <button onclick="reviewDelete('\${r.id}')" style="font-family:var(--nav);font-size:.58rem;letter-spacing:.12em;padding:.55rem 1.25rem;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.35);color:#f87171;border-radius:4px;cursor:pointer">✕ Delete</button>
-        <button onclick="document.getElementById('report-review-modal').remove()" style="font-family:var(--nav);font-size:.58rem;letter-spacing:.12em;padding:.55rem 1.25rem;background:transparent;border:1px solid rgba(255,255,255,.1);color:var(--muted);border-radius:4px;cursor:pointer;margin-left:auto">Close</button>
-      </div>
-    </div>
-  \`;
+  modal.innerHTML =
+    '<div style="background:#0d0820;border:1px solid rgba(124,58,237,.35);border-radius:12px;padding:2rem;max-width:720px;width:100%;position:relative">' +
+      '<button onclick="document.getElementById(\'report-review-modal\').remove()" style="position:absolute;top:1rem;right:1rem;background:none;border:none;color:var(--muted);font-size:1.2rem;cursor:pointer">\u2715</button>' +
+      '<div style="font-family:var(--mono);font-size:.6rem;letter-spacing:.15em;color:var(--purple3);margin-bottom:.5rem">REPORT REVIEW \u00b7 ' + (r.category||'') + '</div>' +
+      '<div style="font-family:var(--mono);font-size:.6rem;color:var(--muted);margin-bottom:1rem">' + date + ' \u00b7 Strangeness Index: ' + r.strangeness_index + '/10 \u00b7 <span style="color:' + (isLive?'var(--green)':'var(--amber)') + '">' + (isLive?'LIVE':'DRAFT') + '</span></div>' +
+      '<h2 style="font-family:\'Cinzel Decorative\',serif;font-size:1.1rem;font-weight:400;color:var(--text);line-height:1.35;margin-bottom:1rem">' + (r.headline||'') + '</h2>' +
+      '<div style="font-size:.82rem;color:var(--muted);background:rgba(124,58,237,.05);border:1px solid rgba(124,58,237,.12);border-radius:6px;padding:1rem;margin-bottom:1rem;font-style:italic">' + (r.summary||'') + '</div>' +
+      '<div style="font-size:.9rem;color:var(--text);line-height:1.85;white-space:pre-wrap;max-height:400px;overflow-y:auto;border:1px solid rgba(124,58,237,.12);border-radius:6px;padding:1rem;margin-bottom:1rem">' + (r.content||'') + '</div>' +
+      '<div style="display:flex;gap:.4rem;flex-wrap:wrap;margin-bottom:1.25rem">' + tagsHtml + '</div>' +
+      '<div style="font-family:var(--mono);font-size:.62rem;color:var(--muted);margin-bottom:1.25rem">Sources: ' + ((r.sources||[]).join(', ')||'Unknown') + (r.oracle_intel_used?' \u00b7 Oracle intel used':'') + '</div>' +
+      '<div style="display:flex;gap:.75rem;flex-wrap:wrap;border-top:1px solid rgba(124,58,237,.15);padding-top:1.25rem">' +
+        actionBtn +
+        '<button onclick="reviewEdit(\'' + id + '\')" style="font-family:var(--nav);font-size:.58rem;letter-spacing:.12em;padding:.55rem 1.25rem;background:transparent;border:1px solid rgba(124,58,237,.4);color:var(--purple3);border-radius:4px;cursor:pointer">\u270e Edit text</button>' +
+        '<button onclick="reviewDelete(\'' + id + '\')" style="font-family:var(--nav);font-size:.58rem;letter-spacing:.12em;padding:.55rem 1.25rem;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.35);color:#f87171;border-radius:4px;cursor:pointer">\u2715 Delete</button>' +
+        '<button onclick="document.getElementById(\'report-review-modal\').remove()" style="font-family:var(--nav);font-size:.58rem;letter-spacing:.12em;padding:.55rem 1.25rem;background:transparent;border:1px solid rgba(255,255,255,.1);color:var(--muted);border-radius:4px;cursor:pointer;margin-left:auto">Close</button>' +
+      '</div>' +
+    '</div>';
 
   document.body.appendChild(modal);
-  modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
+  modal.addEventListener('click', function(e){ if (e.target === modal) modal.remove(); });
 }
 
 async function reviewPublish(id) {
