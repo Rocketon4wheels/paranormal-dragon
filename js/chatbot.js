@@ -4,6 +4,7 @@
 
 const BACKEND_URL   = 'https://api.strangenessis.com';
 const FREE_MESSAGES = 3;
+const PHONE_NUMBER  = '1-800-STRANGE'; // Update when vanity number is confirmed
 
 let messageCount        = 0;
 let portalShown         = false;
@@ -11,6 +12,7 @@ let portalDismissed     = false;
 let chatHistory         = [];
 let conversationSummary = '';
 let sessionId           = 'sess_' + Math.random().toString(36).slice(2);
+
 
 const messagesEl    = document.getElementById('messages');
 const inputEl       = document.getElementById('user-input');
@@ -66,6 +68,7 @@ async function sendMessage() {
   if (portalShown && !portalDismissed) return;
 
   messageCount++;
+
   updateCounter();
 
   appendMessage('user', text);
