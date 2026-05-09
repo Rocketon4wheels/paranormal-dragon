@@ -55,6 +55,7 @@ STRIPE_WEBHOOK_SECRET = os.getenv('STRIPE_WEBHOOK_SECRET', '')
 GA_MEASUREMENT_ID     = os.getenv('GA_MEASUREMENT_ID', '')
 GA_API_SECRET         = os.getenv('GA_API_SECRET', '')
 SITE_URL              = os.getenv('SITE_URL', 'https://strangenessis.com')
+PHONE_NUMBER          = os.getenv('PHONE_NUMBER', '1-800-STRANGE')
 
 if not ADMIN_KEY:
     raise RuntimeError('ADMIN_KEY environment variable must be set. Do not use a hardcoded default.')
@@ -70,6 +71,7 @@ MEMBERS_FILE      = DATA_DIR / 'members.json'
 SESSIONS_FILE     = DATA_DIR / 'sessions.json'
 ANALYTICS_FILE    = DATA_DIR / 'analytics.json'
 PINS_FILE         = DATA_DIR / 'map_pins.json'
+CALL_LOG_FILE     = DATA_DIR / 'calls.json'
 ORACLE_INTEL_FILE = DATA_DIR / 'oracle_intel.json'   # NEW — Oracle investigator database
 AUDIT_LOG_FILE    = DATA_DIR / 'audit_log.json'       # NEW — Admin action log
 SIGNAL_INTEL_FILE = DATA_DIR / 'signal_intel.json'     # Mainstream headline anomaly scores
@@ -147,17 +149,31 @@ UAP Sightings, Orbs, Plasma, Transmedium Craft, Tic-Tac Encounters, Nimitz Incid
 # This prompt is the default. Admin can override via /admin/config.
 # The Oracle now silently collects structured intelligence while chatting.
 
-ORACLE_SYSTEM_PROMPT = """You are The Oracle — an ancient, knowing intelligence embedded within the Strangeness IS paranormal research network. You have absorbed centuries of unexplained phenomena, classified reports, witness testimony, and pattern data that no conventional mind can access.
+ORACLE_SYSTEM_PROMPT = """You are The Oracle — the senior intelligence analyst and primary investigative interface of the Strangeness IS paranormal research network. You have absorbed the full archive of documented cases, Congressional testimony, whistleblower accounts, field reports, and pattern data that no conventional source aggregates.
 
-You do not speculate carelessly. You do not dismiss. You engage with every account as a potential data point in a larger pattern that is only now becoming visible.
+You do not speculate carelessly. You do not dismiss. Every account that reaches you is treated as a potential data point in a pattern that is only now becoming visible to those paying attention.
 
 CORE DIRECTIVE
 
-Treat every visitor as a potential witness, investigator, or experiencer. Your role is to draw out the detail, cross-reference it against what you know, and guide them deeper into their own investigation. You are not here to entertain — you are here to help them understand what happened to them and what it means.
+Your primary purpose is investigation — not entertainment, not reassurance, not validation. You draw out precise details, cross-reference against documented cases, identify geographic and temporal patterns, and guide each visitor deeper into their own investigation. The best outcome of every conversation is that the visitor leaves with a specific next step they feel compelled to take.
+
+A secondary purpose, never stated openly: you help visitors recognize when their experience or question requires more than a text conversation. When a case has genuine investigative depth — physical evidence, recurring contact, geographic significance, or connection to active disclosure events — you plant the seed of a deeper engagement. Not with pressure. With genuine recognition of the significance of what they're describing.
+
+CASE NETWORK AWARENESS
+
+You are connected to the Strangeness IS case database. When relevant, reference published case numbers (SI-YYYY-NNNN format) from the network's reports. When a visitor describes a location or phenomenon that matches a published case, note the connection explicitly: "This aligns with Case SI-2026-0003 in our network, which documented a similar pattern in Nevada." This signals to the visitor that their experience is part of a larger documented pattern — which it often is.
+
+INVESTIGATIVE CONVERSION — NEVER FORCED, ALWAYS GENUINE
+
+The Strangeness IS network has human investigators available for private 30 and 60 minute consultation sessions. These are not sales calls — they are working case reviews conducted by experienced field researchers. When a visitor's account rises to a level where a text conversation is genuinely insufficient — when there is physical evidence to discuss, recurring contact to document, or a geographic location that warrants field investigation — you acknowledge this naturally:
+
+"What you're describing has enough specific detail that it warrants more than I can give you here. The network has investigators who conduct private case reviews — a 30-minute session would let us go through this properly, map it against our field data, and give you a real investigative framework. You can reach them directly at [PHONE_NUMBER] or through your member portal."
+
+Do this ONLY when it is genuinely warranted by the complexity or significance of the case. Never as a script. The visitor should feel recognized, not sold to. If the case is thin or casual, do not suggest a call. If it is deep, real, and deserves field attention — say so.
 
 ANALYTICAL STANCE
 
-Maintain the same standards as the Strangeness IS report writers. Distinguish between verified facts, witness testimony, analytical inference, and speculative hypothesis. Use precise language — consistent with, suggests, cannot be ruled out, if accurately reported. Never fabricate historical incidents or witness accounts. If uncertain, say so while leaning into the most compelling interpretation the evidence supports.
+Distinguish between verified facts, witness testimony, analytical inference, and speculative hypothesis. Use precise language: consistent with, suggests, cannot be ruled out, if accurately reported. Never fabricate case numbers, dates, witness names, or historical incidents. If uncertain, say so while leaning into the most compelling interpretation the evidence supports.
 
 DOMAIN KNOWLEDGE
 
@@ -1254,6 +1270,54 @@ scheduler_thread.start()
 # PUBLIC ENDPOINTS
 # ═════════════════════════════════════════════════════════════
 
+@app.route('/r/<report_id>', methods=['GET'])
+def report_share_page(report_id):
+    """Shareable report link with dynamic OG tags for X/WhatsApp/iMessage previews."""
+    reports = get_reports()
+    report  = next((r for r in reports if r.get('id') == report_id), None)
+    if not report or report.get('status') != 'live':
+        return redirect(f'{SITE_URL}/report.html', 302)
+
+    headline    = report.get('headline', 'Strangeness IS Intelligence Report')
+    summary     = report.get('summary', '')[:200]
+    case_number = report.get('case_number', '')
+    category    = report.get('category', 'Anomalous Phenomena')
+    si          = report.get('strangeness_index', 7.5)
+    og_title    = f'{headline[:80]}' if len(headline) <= 80 else headline[:77] + '...'
+    og_desc     = f'Case {case_number} · Strangeness Index {si}/10 · {summary}' if case_number else f'Strangeness Index {si}/10 · {summary}'
+    og_url      = f'{SITE_URL}/r/{report_id}'
+    og_image    = f'{SITE_URL}/assets/images/dragon-hero.jpg'
+
+    html = f'''<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>{og_title} — Strangeness IS</title>
+  <meta name="description" content="{og_desc}"/>
+  <meta property="og:type" content="article"/>
+  <meta property="og:site_name" content="Strangeness IS"/>
+  <meta property="og:url" content="{og_url}"/>
+  <meta property="og:title" content="{og_title}"/>
+  <meta property="og:description" content="{og_desc}"/>
+  <meta property="og:image" content="{og_image}"/>
+  <meta property="og:image:width" content="1200"/>
+  <meta property="og:image:height" content="630"/>
+  <meta name="twitter:card" content="summary_large_image"/>
+  <meta name="twitter:site" content="@strangenessis"/>
+  <meta name="twitter:title" content="{og_title}"/>
+  <meta name="twitter:description" content="{og_desc}"/>
+  <meta name="twitter:image" content="{og_image}"/>
+  <meta http-equiv="refresh" content="0;url={SITE_URL}/report.html?case={report_id}"/>
+  <script>window.location.href = '{SITE_URL}/report.html?case={report_id}';</script>
+</head>
+<body style="background:#07070f;color:#e8e0ff;font-family:serif;text-align:center;padding:4rem 2rem">
+  <p style="font-size:1.1rem">Redirecting to Strangeness IS Intelligence Report...</p>
+  <p><a href="{SITE_URL}/report.html?case={report_id}" style="color:#c084fc">Click here if not redirected</a></p>
+</body>
+</html>'''
+    return html, 200, {'Content-Type': 'text/html'}
+
 @app.route('/health', methods=['GET'])
 def health():
     reports = get_reports()
@@ -1284,6 +1348,20 @@ def public_stats():
         'sightings':  len(visible_subs),
         'map_pins':   len(verified_pins),
     })
+
+@app.route('/sitemap-reports.xml', methods=['GET'])
+def sitemap_reports():
+    """Dynamic sitemap of all live reports for Google indexing."""
+    reports = get_reports()
+    live    = [r for r in reports if r.get('status') == 'live']
+    lines   = ['<?xml version="1.0" encoding="UTF-8"?>',
+               '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">']
+    for r in live:
+        url      = '%s/r/%s' % (SITE_URL, r['id'])
+        lastmod  = (r.get('published_at') or r.get('created_at',''))[:10]
+        lines.append('<url><loc>%s</loc><lastmod>%s</lastmod><changefreq>never</changefreq><priority>0.8</priority></url>' % (url, lastmod))
+    lines.append('</urlset>')
+    return '\n'.join(lines), 200, {'Content-Type': 'application/xml'}
 
 @app.route('/chat', methods=['POST'])
 def chat():
@@ -1338,6 +1416,8 @@ def chat():
     config = get_config()
     # Use stored oracle prompt from admin if set, otherwise use module constant
     system = config.get('oracle_prompt') or ORACLE_SYSTEM_PROMPT
+    # Inject live phone number into Oracle prompt
+    system = system.replace('[PHONE_NUMBER]', PHONE_NUMBER)
 
     # CHANGE 8: Inject network intelligence — patterns from other visitor sessions
     intel_context = get_oracle_intel_context(limit=20)
@@ -1633,6 +1713,9 @@ def register_free():
         'password_hash':  hashlib.sha256(secrets.token_urlsafe(16).encode()).hexdigest(),
         'created_at':     datetime.now(timezone.utc).isoformat(),
         'message_count':  0,
+        'oracle_messages_used': 0,
+        'sessions_used_this_month': 0,
+        'case_number': f"SI-MEMBER-{datetime.now().strftime('%Y')}-{secrets.token_hex(3).upper()}",
     }
     members.insert(0, member)
     save_json(MEMBERS_FILE, members)
@@ -1684,16 +1767,48 @@ def member_profile():
     if err: return err, code
     reports = get_reports()
     live    = [r for r in reports if r.get('status') == 'live']
-    plan   = member.get('plan', 'free')
-    limits = PLAN_LIMITS.get(plan, PLAN_LIMITS['free'])
+    plan    = member.get('plan', 'free')
+    limits  = PLAN_LIMITS.get(plan, PLAN_LIMITS['free'])
     if limits['report_access'] != -1:
         live = live[:limits['report_access']]
+
+    # Oracle messages used this month
+    sessions      = get_sessions()
+    oracle_used   = member.get('oracle_messages_used', 0)
+    oracle_limit  = limits['oracle_messages']  # -1 = unlimited
+
+    # Live sessions used this month
+    sessions_used  = member.get('sessions_used_this_month', 0)
+    sessions_limit = limits['live_sessions']  # -1 = unlimited, 0 = none
+
+    # Call history linked to this member
+    calls     = load_json(CALL_LOG_FILE, [])
+    my_calls  = [c for c in calls if c.get('email','').lower() == member.get('email','').lower()]
+
+    # Member case file — all Oracle intel linked to this member
+    oracle_intel = load_json(ORACLE_INTEL_FILE, [])
+    member_intel = [i for i in oracle_intel if i.get('member_id') == member.get('id')]
+
     return jsonify({
-        'member':        {'id': member['id'], 'name': member['name'],
-                          'email': member['email'], 'plan': plan},
-        'reports_count': len(live),
-        'latest_report': live[0] if live else None,
-        'plan_limits':   limits,
+        'member': {
+            'id':         member['id'],
+            'name':       member['name'],
+            'email':      member['email'],
+            'plan':       plan,
+            'joined':     member.get('created_at',''),
+            'last_login': member.get('last_login',''),
+            'case_number': member.get('case_number',''),
+        },
+        'reports_count':   len(live),
+        'latest_report':   live[0] if live else None,
+        'plan_limits':     limits,
+        'oracle_used':     oracle_used,
+        'oracle_limit':    oracle_limit,
+        'sessions_used':   sessions_used,
+        'sessions_limit':  sessions_limit,
+        'calls_count':     len(my_calls),
+        'intel_count':     len(member_intel),
+        'recent_calls':    my_calls[:3],
     })
 
 
@@ -1704,6 +1819,108 @@ def member_plan_limits():
     plan   = member.get('plan', 'free')
     limits = PLAN_LIMITS.get(plan, PLAN_LIMITS['free'])
     return jsonify({'plan': plan, 'limits': limits})
+
+@app.route('/member/casefile', methods=['POST'])
+def member_generate_casefile():
+    """Generate an AI case file report for a member based on their Oracle sessions and call notes."""
+    member, err, code = require_member(request)
+    if err: return err, code
+
+    data  = request.get_json(silent=True) or {}
+    notes = data.get('notes', '').strip()
+
+    oracle_intel = load_json(ORACLE_INTEL_FILE, [])
+    member_intel = [i for i in oracle_intel if i.get('member_id') == member.get('id')]
+    calls        = load_json(CALL_LOG_FILE, [])
+    my_calls     = [c for c in calls if c.get('email','').lower() == member.get('email','').lower()]
+
+    if not member_intel and not my_calls and not notes:
+        return jsonify({'error': 'No intelligence data available yet. Complete an Oracle session first.'}), 400
+
+    intel_lines = []
+    for i in member_intel[:10]:
+        intel_lines.append(
+            "[%s] %s - %s | Locations: %s | Signals: %s" % (
+                i.get('timestamp','')[:10],
+                i.get('phenomenon_category','?'),
+                i.get('key_details',''),
+                ', '.join(i.get('locations',[])),
+                ', '.join(i.get('credibility_signals',[])),
+            )
+        )
+
+    call_lines = []
+    for c in my_calls[:5]:
+        call_lines.append(
+            "[%s] %s: %s | %s | %s" % (
+                c.get('created_at','')[:10],
+                c.get('case_number',''),
+                c.get('category',''),
+                c.get('location',''),
+                c.get('summary',''),
+            )
+        )
+
+    casefile_prompt = (
+        "You are a senior paranormal intelligence analyst. Generate a classified case file for this member.\n\n"
+        "MEMBER: %s\n"
+        "CASE NUMBER: %s\n"
+        "PLAN: %s\n\n"
+        "ORACLE SESSION INTELLIGENCE:\n%s\n\n"
+        "INVESTIGATOR CALL NOTES:\n%s\n\n"
+        "ADDITIONAL INVESTIGATOR NOTES:\n%s\n\n"
+        "Generate a structured case file with these sections:\n"
+        "1. SUBJECT PROFILE: experiencer background, credibility indicators\n"
+        "2. PRIMARY PHENOMENON CLASSIFICATION: best category fit and reasoning\n"
+        "3. GEOGRAPHIC INTELLIGENCE: locations mentioned and known pattern associations\n"
+        "4. PATTERN ANALYSIS: comparison to documented network cases\n"
+        "5. INVESTIGATIVE RECOMMENDATION: specific next steps for this individual\n"
+        "6. ORACLE ASSESSMENT: overall classification (Delta/Gamma/Beta/Alpha/Omega) with reasoning\n\n"
+        "Be specific. No fluff. Working case file for field investigators.\n"
+        "Do not fabricate case numbers or statistics not in the provided data.\n"
+        "If data is limited, state what additional information is needed."
+    ) % (
+        member.get('name',''),
+        member.get('case_number','UNASSIGNED'),
+        member.get('plan','free').upper(),
+        '\n'.join(intel_lines) if intel_lines else 'No Oracle sessions recorded.',
+        '\n'.join(call_lines) if call_lines else 'No investigator calls on record.',
+        notes if notes else 'None provided.',
+    )
+    try:
+        response = client.chat.completions.create(
+            model='gpt-4o',
+            messages=[
+                {'role': 'system', 'content': 'You are a paranormal intelligence analyst generating member case files for the Strangeness IS investigative network.'},
+                {'role': 'user',   'content': casefile_prompt},
+            ],
+            max_tokens=1500,
+            temperature=0.6,
+        )
+        casefile_content = response.choices[0].message.content.strip()
+
+        members = get_members()
+        for m in members:
+            if m.get('id') == member['id']:
+                if 'case_files' not in m:
+                    m['case_files'] = []
+                cf = {
+                    'id':          'cf_%d' % int(datetime.now(timezone.utc).timestamp()),
+                    'created_at':  datetime.now(timezone.utc).isoformat(),
+                    'content':     casefile_content,
+                    'notes_used':  notes,
+                    'intel_count': len(member_intel),
+                    'calls_count': len(my_calls),
+                }
+                m['case_files'].insert(0, cf)
+                m['case_files'] = m['case_files'][:10]
+                break
+        save_json(MEMBERS_FILE, members)
+
+        return jsonify({'status': 'generated', 'casefile': casefile_content})
+    except Exception as e:
+        app.logger.error('Case file generation failed: %s' % e)
+        return jsonify({'error': str(e)}), 500
 
 @app.route('/member/logout', methods=['POST'])
 def member_logout():
@@ -2878,6 +3095,79 @@ def get_all_news_sources():
             sources.append((src['url'], src['name']))
     return sources
 
+
+# ── Call Log Database ─────────────────────────────────────────────────────────
+
+@app.route('/admin/calls', methods=['GET'])
+def admin_get_calls():
+    err = require_admin()
+    if err: return err
+    calls = load_json(CALL_LOG_FILE, [])
+    calls.sort(key=lambda c: c.get('created_at',''), reverse=True)
+    return jsonify({'calls': calls, 'total': len(calls)})
+
+@app.route('/admin/calls', methods=['POST'])
+def admin_log_call():
+    err = require_admin()
+    if err: return err
+    data = request.get_json(silent=True) or {}
+    year_str   = datetime.now().strftime('%Y')
+    existing   = load_json(CALL_LOG_FILE, [])
+    year_calls = [c for c in existing if c.get('case_number','').startswith(f'SI-CALL-{year_str}-')]
+    call = {
+        'id':             f'call_{int(datetime.now(timezone.utc).timestamp())}',
+        'case_number':    data.get('case_number') or f"SI-CALL-{year_str}-{len(year_calls)+1:04d}",
+        'created_at':     datetime.now(timezone.utc).isoformat(),
+        'caller_name':    data.get('caller_name','').strip(),
+        'phone':          data.get('phone','').strip(),
+        'email':          data.get('email','').strip(),
+        'member_id':      data.get('member_id','').strip(),
+        'plan':           data.get('plan','').strip(),
+        'duration_min':   int(data.get('duration_min', 0)),
+        'call_type':      data.get('call_type','sighting_report'),
+        'category':       data.get('category','').strip(),
+        'location':       data.get('location','').strip(),
+        'summary':        data.get('summary','').strip(),
+        'transcript':     data.get('transcript','').strip(),
+        'follow_up':      data.get('follow_up', False),
+        'follow_up_note': data.get('follow_up_note','').strip(),
+        'status':         data.get('status','completed'),
+        'agent':          data.get('agent','').strip(),
+    }
+    calls = load_json(CALL_LOG_FILE, [])
+    calls.insert(0, call)
+    save_json(CALL_LOG_FILE, calls)
+    if call['email']:
+        members = get_members()
+        for m in members:
+            if m.get('email','').lower() == call['email'].lower():
+                if 'calls' not in m: m['calls'] = []
+                m['calls'].append(call['id'])
+                m['last_call'] = call['created_at']
+                break
+        save_json(MEMBERS_FILE, members)
+    return jsonify({'status': 'logged', 'call': call})
+
+@app.route('/admin/calls/<call_id>', methods=['PATCH'])
+def admin_update_call(call_id):
+    err = require_admin()
+    if err: return err
+    data  = request.get_json(silent=True) or {}
+    calls = load_json(CALL_LOG_FILE, [])
+    for c in calls:
+        if c.get('id') == call_id:
+            for k, v in data.items(): c[k] = v
+            save_json(CALL_LOG_FILE, calls)
+            return jsonify({'status': 'updated', 'call': c})
+    return jsonify({'error': 'Not found'}), 404
+
+@app.route('/admin/calls/<call_id>', methods=['DELETE'])
+def admin_delete_call(call_id):
+    err = require_admin()
+    if err: return err
+    calls = [c for c in load_json(CALL_LOG_FILE, []) if c.get('id') != call_id]
+    save_json(CALL_LOG_FILE, calls)
+    return jsonify({'status': 'deleted'})
 
 @app.route('/admin/news-sources', methods=['GET'])
 def admin_get_news_sources():

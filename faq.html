@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>FAQ — Strangeness IS</title>
+  <meta name="description" content="Frequently asked questions about Strangeness IS — the paranormal intelligence network, membership plans, the Oracle, and how to report a sighting."/>
+  <meta property="og:title" content="FAQ — Strangeness IS"/>
+  <meta property="og:description" content="Everything you need to know about the Strangeness IS investigative network."/>
+  <meta property="og:image" content="https://strangenessis.com/assets/images/dragon-hero.jpg"/>
+  <meta name="twitter:card" content="summary_large_image"/>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cinzel:wght@400;600&family=Crimson+Pro:ital,wght@0,300;0,400;1,300&family=Share+Tech+Mono&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --dark:#07070f; --surface:#0d0015; --purple:#7c3aed; --purple2:#a855f7;
+      --purple3:#c084fc; --gold:#d4a843; --gold2:#e8c46a; --text:#e8e0ff;
+      --muted:#9080b0; --nav:'Cinzel',serif; --mono:'Share Tech Mono',monospace;
+    }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { background:var(--dark); color:var(--text); font-family:'Crimson Pro',Georgia,serif; font-size:1.05rem; line-height:1.8; }
+    a { color:var(--purple3); text-decoration:none; }
+    a:hover { color:var(--purple2); }
+
+    .navbar { position:fixed; top:0; left:0; right:0; z-index:100; padding:.9rem 2rem; display:flex; align-items:center; justify-content:space-between; background:rgba(7,7,15,.9); backdrop-filter:blur(8px); border-bottom:1px solid rgba(124,58,237,.1); }
+    .nav-logo { font-family:'Cinzel Decorative',serif; font-size:.9rem; letter-spacing:.15em; color:var(--purple3); }
+    .nav-links { display:flex; gap:1.5rem; }
+    .nav-links a { font-family:var(--nav); font-size:.58rem; letter-spacing:.14em; color:var(--muted); transition:color .2s; }
+    .nav-links a:hover { color:var(--purple3); }
+
+    .page { padding:6rem 2rem 4rem; max-width:800px; margin:0 auto; }
+    .page-eyebrow { font-family:var(--nav); font-size:.58rem; letter-spacing:.28em; color:var(--gold); margin-bottom:.75rem; }
+    .page-title { font-family:'Cinzel Decorative',serif; font-size:clamp(1.6rem,4vw,2.4rem); font-weight:400; color:var(--text); margin-bottom:.5rem; }
+    .page-sub { font-size:.95rem; color:var(--muted); font-style:italic; margin-bottom:3rem; border-bottom:1px solid rgba(124,58,237,.12); padding-bottom:1.5rem; }
+
+    .faq-section-title { font-family:'Cinzel',serif; font-size:.65rem; letter-spacing:.2em; color:var(--gold); margin:2.5rem 0 1.25rem; border-bottom:1px solid rgba(212,168,67,.15); padding-bottom:.5rem; }
+
+    .faq-item { border-bottom:1px solid rgba(124,58,237,.1); }
+    .faq-q { padding:1.1rem 0 1.1rem; cursor:pointer; display:flex; justify-content:space-between; align-items:center; gap:1rem; }
+    .faq-q-text { font-family:'Cinzel',serif; font-size:.9rem; color:var(--text); font-weight:400; line-height:1.35; }
+    .faq-toggle { font-family:var(--mono); font-size:.9rem; color:var(--purple3); flex-shrink:0; transition:transform .2s; }
+    .faq-item.open .faq-toggle { transform:rotate(45deg); }
+    .faq-a { display:none; padding:0 0 1.25rem; font-size:.95rem; color:var(--muted); line-height:1.8; }
+    .faq-item.open .faq-a { display:block; }
+    .faq-a a { color:var(--purple3); }
+    .faq-a strong { color:var(--text); }
+
+    .cta-box { margin-top:3rem; background:rgba(124,58,237,.08); border:1px solid rgba(124,58,237,.2); border-radius:8px; padding:2rem; text-align:center; }
+    .cta-box-title { font-family:'Cinzel',serif; font-size:.8rem; letter-spacing:.15em; color:var(--purple3); margin-bottom:.75rem; }
+    .cta-box p { font-size:.95rem; color:var(--muted); margin-bottom:1.25rem; }
+    .cta-btn { font-family:var(--nav); font-size:.6rem; letter-spacing:.12em; padding:.65rem 1.75rem; background:var(--purple); color:#fff; border:none; border-radius:4px; cursor:pointer; display:inline-block; transition:background .2s; }
+    .cta-btn:hover { background:var(--purple2); color:#fff; }
+  </style>
+</head>
+<body>
+  <nav class="navbar">
+    <a href="index.html" class="nav-logo">Strangeness <span style="color:var(--gold2)">IS</span></a>
+    <div class="nav-links">
+      <a href="report.html">Reports</a>
+      <a href="blog.html">Dispatch</a>
+      <a href="faq.html" style="color:var(--purple3)">FAQ</a>
+      <a href="chatbot.html">Oracle</a>
+      <a href="member.html">Portal</a>
+    </div>
+  </nav>
+
+  <div class="page">
+    <div class="page-eyebrow">Answers</div>
+    <h1 class="page-title">Frequently Asked Questions</h1>
+    <p class="page-sub">Everything you need to know about the Strangeness IS investigative network, our membership plans, and how to get involved.</p>
+
+    <div class="faq-section-title">About Strangeness IS</div>
+
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">
+        <span class="faq-q-text">What is Strangeness IS?</span>
+        <span class="faq-toggle">+</span>
+      </div>
+      <div class="faq-a">Strangeness IS is a paranormal intelligence network whose purpose is solving mysteries — not entertaining audiences. We aggregate intelligence from 50+ global sources, generate daily case file reports on UAP, cryptid, government disclosure, and paranormal phenomena, and provide investigators with the tools to conduct real field research. We are not a fan site. We are an active investigation operation.</div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">
+        <span class="faq-q-text">Who runs Strangeness IS?</span>
+        <span class="faq-toggle">+</span>
+      </div>
+      <div class="faq-a">Strangeness IS is led by a field investigator with deep experience across UAP, cryptid, government disclosure, and consciousness research. Our analysis is conducted by human experts working in conjunction with specialized AI intelligence systems trained specifically for paranormal pattern analysis. Every published report is reviewed before publication.</div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">
+        <span class="faq-q-text">How is the Strangeness Index calculated?</span>
+        <span class="faq-toggle">+</span>
+      </div>
+      <div class="faq-a">The Strangeness Index is a weighted score from 1.0 to 10.0 based on five factors: the base weight of the phenomenon class (UAP sightings vs. dimension contact, for example), the proximity of the primary witness, the degree of independent corroboration, the recurrence pattern, and the impact on the experiencer's worldview. Scores above 7.0 indicate cases where multiple anomalous factors collectively resist conventional explanation. See our <a href="blog.html">Intelligence Dispatch</a> for a full breakdown of the scoring methodology.</div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">
+        <span class="faq-q-text">Is the information on this site accurate? How do you prevent hallucination?</span>
+        <span class="faq-toggle">+</span>
+      </div>
+      <div class="faq-a">Every report generated by our system follows strict epistemic standards. Claims are labeled as <strong>Verified</strong>, <strong>Alleged</strong>, <strong>Reported</strong>, or <strong>Inferred</strong>. Our writer system includes a built-in reference library of confirmed Congressional hearing dates, verified testimony, and documented historical cases — it cannot invent Blue Book case numbers or fabricate witness identities. When sourcing is thin, our reports say so explicitly rather than filling gaps with invented specifics. We delete reports that fall below this standard before publication.</div>
+    </div>
+
+    <div class="faq-section-title">Membership</div>
+
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">
+        <span class="faq-q-text">What do I get as a free visitor?</span>
+        <span class="faq-toggle">+</span>
+      </div>
+      <div class="faq-a">Free visitors get access to the 3 most recent published intelligence reports, 3 free Oracle questions per session, the public Strangeness Map, and the ability to submit sightings. This is enough to understand what the network is about and whether it is right for you.</div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">
+        <span class="faq-q-text">What is The Oracle plan ($9/month)?</span>
+        <span class="faq-toggle">+</span>
+      </div>
+      <div class="faq-a">The Oracle plan gives you unlimited access to the Oracle intelligence system, the full published report archive, daily digest emails, and the ability to download reports as PDFs. This is for people who want to stay informed and engage with the Oracle regularly but are not conducting active field investigations.</div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">
+        <span class="faq-q-text">What is The Investigator plan ($19/month)?</span>
+        <span class="faq-toggle">+</span>
+      </div>
+      <div class="faq-a">The Investigator plan includes everything in The Oracle plus access to our Signal Intelligence layer (mainstream headlines scored for hidden patterns), 2 live 30-minute sessions per month with a Strangeness IS field researcher, early access to new features, and a personal member case file that accumulates intelligence from your Oracle sessions and investigator calls. This plan is for people conducting active investigations.</div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">
+        <span class="faq-q-text">What is The Chronicler plan ($89/year)?</span>
+        <span class="faq-toggle">+</span>
+      </div>
+      <div class="faq-a">The Chronicler plan is the full annual membership. It includes everything in The Investigator plus unlimited live investigator sessions, a verified pin on the Strangeness Map, priority cross-referencing of your cases against the Oracle network database, and access to the monthly exclusive deep-dive report. At $89 per year, it saves $139 compared to monthly billing.</div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">
+        <span class="faq-q-text">What is a live Believer Agent session?</span>
+        <span class="faq-toggle">+</span>
+      </div>
+      <div class="faq-a">A Believer Agent session is a private 30-minute consultation with a Strangeness IS field researcher. You can use it to review a case you are investigating, analyze a personal experience, or get guidance on field investigation methodology. Sessions are conducted by phone. Investigator members receive 2 sessions per month. Chronicler members have unlimited sessions. You can also book standalone sessions by calling us directly.</div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">
+        <span class="faq-q-text">Can I cancel anytime?</span>
+        <span class="faq-toggle">+</span>
+      </div>
+      <div class="faq-a">Yes. Monthly plans can be cancelled at any time from your member portal. Annual plans can be cancelled but are non-refundable after the first 7 days. Payments are processed securely through Stripe. We do not store your payment information.</div>
+    </div>
+
+    <div class="faq-section-title">The Oracle</div>
+
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">
+        <span class="faq-q-text">What is The Oracle?</span>
+        <span class="faq-toggle">+</span>
+      </div>
+      <div class="faq-a">The Oracle is the primary intelligence interface of the Strangeness IS network. It is a specialized AI system trained on paranormal research, Congressional testimony, documented cases, and field investigation methodology. It does not speculate carelessly, does not dismiss accounts, and maintains the same epistemic standards as our written reports. Every Oracle session is analyzed for intelligence patterns that feed back into the network's case database — with your privacy protected.</div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">
+        <span class="faq-q-text">Does the Oracle remember my previous conversations?</span>
+        <span class="faq-toggle">+</span>
+      </div>
+      <div class="faq-a">Within a single session, the Oracle maintains full conversation context. Across sessions, your conversation summaries are stored in your member profile (paid members only) and used to build your personal case file. The Oracle does not have access to your account details during a conversation unless you provide them.</div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">
+        <span class="faq-q-text">What is a member case file?</span>
+        <span class="faq-toggle">+</span>
+      </div>
+      <div class="faq-a">A member case file is an AI-generated intelligence report built specifically for you, based on your Oracle sessions and any notes from investigator calls. It classifies your experiences using our Omega/Alpha/Beta/Gamma/Delta classification system, identifies geographic patterns, cross-references your accounts against documented cases, and provides specific investigative recommendations. Case files are generated on demand from your member portal and are visible only to you and network investigators.</div>
+    </div>
+
+    <div class="faq-section-title">Reporting a Sighting</div>
+
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">
+        <span class="faq-q-text">How do I report a sighting?</span>
+        <span class="faq-toggle">+</span>
+      </div>
+      <div class="faq-a">Submit your account at <a href="submit.html">strangenessis.com/submit.html</a>. Include the exact date, time, and location, a detailed chronological description of what you observed, any photographs or video, the names of any other witnesses, and any physical evidence (marks, objects, physiological effects). The more specific your submission, the more useful it is for cross-referencing. You can also call us directly to report verbally.</div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">
+        <span class="faq-q-text">What happens after I submit a sighting?</span>
+        <span class="faq-toggle">+</span>
+      </div>
+      <div class="faq-a">Your submission enters our review queue. Credible submissions are verified and added to the Oracle intelligence database, where they may be cross-referenced in future reports. High-significance submissions may be selected for a full intelligence report. Your submission may also be added to the Strangeness Map if a specific location is provided. You will be notified if your account is featured in a report.</div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">
+        <span class="faq-q-text">Is my submission kept confidential?</span>
+        <span class="faq-toggle">+</span>
+      </div>
+      <div class="faq-a">Yes. Your personal identifying information is never published without your explicit consent. Submissions may be summarized and included in intelligence reports or the Oracle database, but will not include your name, contact information, or any details you have indicated are private. If you wish your submission to be completely anonymous, do not include identifying information in the submission text.</div>
+    </div>
+
+    <div class="faq-section-title">Contact</div>
+
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">
+        <span class="faq-q-text">How do I reach a human investigator?</span>
+        <span class="faq-toggle">+</span>
+      </div>
+      <div class="faq-a">You can call us directly to report a sighting, book a Believer Agent session, or ask a question. Investigator and Chronicler members can also book sessions through the member portal. For general inquiries, the Oracle is available 24 hours a day at <a href="chatbot.html">strangenessis.com/chatbot.html</a>.</div>
+    </div>
+
+    <div class="cta-box">
+      <div class="cta-box-title">Ready to investigate?</div>
+      <p>Join the Strangeness IS network and gain access to the full intelligence archive, the Oracle, and a community of serious investigators.</p>
+      <a href="member.html" class="cta-btn">Join the network →</a>
+    </div>
+  </div>
+
+  <script>
+    function toggleFaq(el) {
+      var item = el.closest('.faq-item');
+      item.classList.toggle('open');
+    }
+  </script>
+</body>
+</html>

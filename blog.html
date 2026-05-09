@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Intelligence Dispatch — Strangeness IS</title>
+  <meta name="description" content="Field notes, investigator dispatches, and deep analysis from the Strangeness IS paranormal intelligence network."/>
+  <meta property="og:title" content="Intelligence Dispatch — Strangeness IS"/>
+  <meta property="og:description" content="Field notes and investigator dispatches from the edge of the known world."/>
+  <meta property="og:image" content="https://strangenessis.com/assets/images/dragon-hero.jpg"/>
+  <meta name="twitter:card" content="summary_large_image"/>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cinzel:wght@400;600&family=Crimson+Pro:ital,wght@0,300;0,400;1,300&family=Share+Tech+Mono&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --dark:#07070f; --surface:#0d0015; --purple:#7c3aed; --purple2:#a855f7;
+      --purple3:#c084fc; --gold:#d4a843; --gold2:#e8c46a; --text:#e8e0ff;
+      --muted:#9080b0; --nav:'Cinzel',serif; --mono:'Share Tech Mono',monospace;
+    }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { background:var(--dark); color:var(--text); font-family:'Crimson Pro',Georgia,serif; font-size:1.05rem; line-height:1.8; }
+    a { color:inherit; text-decoration:none; }
+
+    /* NAV */
+    .navbar { position:fixed; top:0; left:0; right:0; z-index:100; padding:.9rem 2rem; display:flex; align-items:center; justify-content:space-between; background:rgba(7,7,15,.9); backdrop-filter:blur(8px); border-bottom:1px solid rgba(124,58,237,.1); }
+    .nav-logo { font-family:'Cinzel Decorative',serif; font-size:.9rem; letter-spacing:.15em; color:var(--purple3); }
+    .nav-links { display:flex; gap:1.5rem; }
+    .nav-links a { font-family:var(--nav); font-size:.58rem; letter-spacing:.14em; color:var(--muted); transition:color .2s; }
+    .nav-links a:hover { color:var(--purple3); }
+
+    /* PAGE */
+    .page { padding:6rem 2rem 4rem; max-width:860px; margin:0 auto; }
+    .page-eyebrow { font-family:var(--nav); font-size:.58rem; letter-spacing:.28em; color:var(--gold); margin-bottom:.75rem; }
+    .page-title { font-family:'Cinzel Decorative',serif; font-size:clamp(1.6rem,4vw,2.4rem); font-weight:400; color:var(--text); margin-bottom:.5rem; line-height:1.2; }
+    .page-sub { font-size:.95rem; color:var(--muted); font-style:italic; margin-bottom:2.5rem; border-bottom:1px solid rgba(124,58,237,.12); padding-bottom:1.5rem; }
+
+    /* BLOG POSTS */
+    .post-grid { display:flex; flex-direction:column; gap:2.5rem; }
+    .post-card { border:1px solid rgba(124,58,237,.15); border-radius:8px; padding:1.75rem; background:rgba(13,0,21,.5); transition:border-color .2s; }
+    .post-card:hover { border-color:rgba(124,58,237,.35); }
+    .post-meta { font-family:var(--mono); font-size:.6rem; color:var(--muted); margin-bottom:.6rem; display:flex; gap:1rem; flex-wrap:wrap; }
+    .post-category { color:var(--gold); }
+    .post-title { font-family:'Cinzel',serif; font-size:1.15rem; font-weight:600; color:var(--text); line-height:1.35; margin-bottom:.75rem; }
+    .post-excerpt { font-size:.95rem; color:var(--muted); line-height:1.75; margin-bottom:1rem; }
+    .post-read-more { font-family:var(--nav); font-size:.58rem; letter-spacing:.12em; color:var(--purple3); border:1px solid rgba(124,58,237,.3); padding:.35rem .85rem; border-radius:3px; display:inline-block; transition:all .2s; }
+    .post-read-more:hover { background:rgba(124,58,237,.1); border-color:var(--purple2); }
+
+    /* FULL POST */
+    .post-full { display:none; }
+    .post-full.active { display:block; }
+    .post-content { font-size:1rem; line-height:1.9; color:var(--text); }
+    .post-content p { margin-bottom:1.25rem; }
+    .post-content h3 { font-family:'Cinzel',serif; font-size:1rem; color:var(--gold); margin:1.75rem 0 .75rem; letter-spacing:.08em; }
+    .post-content blockquote { border-left:2px solid rgba(212,168,67,.4); padding-left:1.25rem; color:var(--muted); font-style:italic; margin:1.25rem 0; }
+    .back-btn { font-family:var(--nav); font-size:.58rem; letter-spacing:.12em; color:var(--muted); cursor:pointer; margin-bottom:1.5rem; display:inline-block; }
+    .back-btn:hover { color:var(--purple3); }
+
+    #post-list-view { }
+    #post-full-view { display:none; }
+  </style>
+</head>
+<body>
+  <nav class="navbar">
+    <a href="index.html" class="nav-logo">Strangeness <span style="color:var(--gold2)">IS</span></a>
+    <div class="nav-links">
+      <a href="report.html">Reports</a>
+      <a href="blog.html" style="color:var(--purple3)">Dispatch</a>
+      <a href="faq.html">FAQ</a>
+      <a href="chatbot.html">Oracle</a>
+      <a href="member.html">Portal</a>
+    </div>
+  </nav>
+
+  <div class="page">
+    <!-- List view -->
+    <div id="post-list-view">
+      <div class="page-eyebrow">Field Intelligence</div>
+      <h1 class="page-title">Intelligence Dispatch</h1>
+      <p class="page-sub">Field notes, investigator dispatches, and deep analysis from the Strangeness IS paranormal intelligence network.</p>
+
+      <div class="post-grid" id="post-grid">
+        <!-- Posts rendered by JS -->
+      </div>
+    </div>
+
+    <!-- Full post view -->
+    <div id="post-full-view">
+      <span class="back-btn" onclick="showPostList()">← Back to Dispatch</span>
+      <div class="post-meta" id="full-post-meta"></div>
+      <h1 class="page-title" id="full-post-title"></h1>
+      <div class="post-content" id="full-post-content"></div>
+    </div>
+  </div>
+
+  <script>
+    const API = 'https://api.strangenessis.com';
+
+    // Static posts — will be supplemented by published reports
+    const STATIC_POSTS = [
+      {
+        id: 'dispatch-001',
+        title: 'How We Score Strangeness: The SI Index Explained',
+        category: 'Methodology',
+        date: 'May 7, 2026',
+        excerpt: 'Every report generated by the Strangeness IS network carries a Strangeness Index — a score from 1.0 to 10.0 that reflects the evidential weight of the phenomena described. Here is exactly how that score is calculated and what it means for investigators.',
+        content: `<p>The Strangeness Index is not a measure of how strange something feels. It is a weighted composite of five investigative factors: phenomenon class, proximity of the witness, corroboration by evidence or additional witnesses, recurrence pattern, and impact on the experiencer's understanding of reality.</p>
+
+<h3>Phenomenon Class (Base Weight)</h3>
+<p>Not all phenomena are created equal. Dimension jumping combined with consciousness field interaction carries the highest base weight in our system — 10.0. A UAP sighting at distance carries a base weight of 5.5. This reflects the body of documented evidence behind each category and the difficulty of producing a conventional explanation that accounts for all reported characteristics.</p>
+
+<h3>Proximity Multiplier</h3>
+<p>Direct physical contact with a phenomenon multiplies the base weight at full value (1.0). A distant visual sighting reduces it to 0.5. A secondhand account from a credible source reduces it further to 0.35. The Oracle's Strange Diagnosis intake uses this multiplier when classifying experiencers.</p>
+
+<h3>Corroboration Multiplier</h3>
+<p>Physical evidence — photographs, biological samples, electromagnetic readings, physical trace marks — increases the effective score by 25%. Multiple independent witnesses increase it by 15%. A single witness with no corroboration reduces it by 10%.</p>
+
+<h3>What the Scores Mean in Practice</h3>
+<p>Scores below 3.0 suggest a likely conventional explanation. Between 4.0 and 6.0, the phenomena warrant documentation. Between 7.0 and 8.0, the case carries multiple anomalous factors that collectively resist conventional explanation. Above 9.0, the case has major implications for our understanding of reality if the reported details are accurate — and should be treated as an active investigation priority.</p>
+
+<p>The Daily Strange Meter shown on the homepage is a weighted average of all published reports, with more recent reports weighted higher. It reflects the overall strangeness level of the network's intelligence on any given day.</p>`
+      },
+      {
+        id: 'dispatch-002',
+        title: 'What the Grusch Testimony Actually Said — A Line by Line Analysis',
+        category: 'Government Disclosure',
+        date: 'May 6, 2026',
+        excerpt: 'On July 26, 2023, David Grusch testified under oath before the House Oversight Subcommittee that the United States government possesses non-human craft and biological material. Here is what he said, what it means, and what field investigators should do with it.',
+        content: `<p>David Grusch is a former intelligence officer who served as the National Reconnaissance Office representative to the UAP Task Force from 2019 to 2021 and as the co-lead of UAP analysis at the National Geospatial-Intelligence Agency from 2021 to 2023. He was granted whistleblower protections before testifying.</p>
+
+<h3>What He Said</h3>
+<p>Under oath, Grusch stated that the United States government, its contractors, and allied nations have been in possession of non-human craft for decades. He stated that biological material of non-human origin has been recovered alongside some of these craft. He stated that he was directly informed of this by individuals with direct knowledge as part of his official duties, and that he filed a complaint with the Inspector General of the Intelligence Community, which the IG found credible and urgent.</p>
+
+<h3>What He Did Not Say</h3>
+<p>Grusch did not provide specific locations, program names, or dates in open session. He stated that these details are classified and offered to provide them in a closed SCIF session. He acknowledged he had not personally viewed the craft or biological material — his testimony was based on briefings from individuals who had.</p>
+
+<h3>Why This Matters for Investigators</h3>
+<p>Congressional testimony under oath carries a different legal and evidentiary weight than press interviews or podcasts. Grusch cannot be dismissed as a conspiracy theorist — he is a credentialed intelligence official who filed through proper whistleblower channels and whose complaint was deemed credible by the Inspector General. The framework he described, if accurate, suggests that retrieval programs have been operating outside congressional oversight for decades.</p>
+
+<h3>What Field Investigators Should Watch For</h3>
+<p>Track AARO report releases at aaro.mil. Monitor any FOIA releases targeting the programs Grusch described. Watch for additional whistleblower filings through the Inspector General's office. Any UAP sighting near known defense contractor facilities in the Intermountain West should be cross-referenced against this framework.</p>`
+      },
+      {
+        id: 'dispatch-003',
+        title: 'The Field Investigator Toolkit: What to Carry, What to Document, What to Submit',
+        category: 'Field Guide',
+        date: 'May 5, 2026',
+        excerpt: 'If something happens near you that cannot be explained, the window for collecting physical evidence is short. Here is exactly what a field investigator needs, what to document in the first 24 hours, and what to submit to the Strangeness IS network.',
+        content: `<p>The most common failure in field investigation is not equipment failure — it is documentation failure. Witnesses rarely have any of the following with them when phenomena occur. The goal is to change that by building a protocol into your routine before anything happens.</p>
+
+<h3>The Minimum Viable Kit</h3>
+<p>A smartphone is actually sufficient for initial documentation if used correctly. What matters is timestamps, GPS coordinates, and video with audio. The moment something occurs, start recording video and do not stop until the phenomenon ends. State the date, time, and your location aloud on the recording. If you have a compass reading, state it. Note any electromagnetic effects on your devices — is the camera glitching, is the battery draining faster than normal, is the compass spinning.</p>
+
+<h3>Physical Evidence Priority</h3>
+<p>If there is a landing site, a trace mark, a scorched area, or any physical disturbance, do not touch it before photographing it thoroughly. Photograph from multiple distances — wide, medium, and close. If you must collect a sample, use a clean container and label it with location, date, time, and your name. Soil samples near landing sites have yielded measurable radiation readings in documented cases including Rendlesham Forest and the Trans-en-Provence case of January 8, 1981, investigated by GEPAN and the French Space Agency.</p>
+
+<h3>Witness Documentation</h3>
+<p>If there are other witnesses, get their contact information immediately, before anyone leaves the scene. Have each witness write down independently what they observed before discussing it with each other. Cross-contamination of witness accounts is one of the primary ways cases lose credibility during formal investigation.</p>
+
+<h3>What to Submit to Strangeness IS</h3>
+<p>Use the Submit a Sighting page at strangenessis.com/submit.html. Include: exact location with GPS if possible, exact date and time, duration of the phenomenon, a detailed description of what was observed in chronological order, any photographs or video, any physical evidence collected, and the names and contact information of any other witnesses. The more specific the submission, the more useful it is for cross-referencing against our case database and generating a formal intelligence report.</p>`
+      }
+    ];
+
+    var currentPosts = [...STATIC_POSTS];
+
+    async function loadBlogPosts() {
+      // Load recent published reports as additional blog content
+      try {
+        var res  = await fetch(API + '/reports/archive?per=6');
+        var data = await res.json();
+        var reports = (data.reports || []).slice(0, 6);
+        var reportPosts = reports.map(function(r) {
+          return {
+            id:       r.id,
+            title:    r.headline,
+            category: r.category || 'Intelligence Report',
+            date:     r.date_label || '',
+            excerpt:  r.summary || '',
+            content:  r.content || '',
+            isReport: true,
+            caseNumber: r.case_number || '',
+            si: r.strangeness_index,
+          };
+        });
+        currentPosts = reportPosts.concat(STATIC_POSTS);
+      } catch(e) {}
+      renderPostList();
+    }
+
+    function renderPostList() {
+      var grid = document.getElementById('post-grid');
+      grid.innerHTML = currentPosts.map(function(p) {
+        var meta = p.isReport
+          ? '<span class="post-category">Intelligence Report</span><span>' + (p.caseNumber || '') + '</span><span>' + p.date + '</span><span>SI: ' + p.si + '/10</span>'
+          : '<span class="post-category">' + p.category + '</span><span>' + p.date + '</span>';
+        return '<div class="post-card" id="card-' + p.id + '">' +
+          '<div class="post-meta">' + meta + '</div>' +
+          '<div class="post-title">' + p.title + '</div>' +
+          '<div class="post-excerpt">' + (p.excerpt || '').slice(0, 220) + '...</div>' +
+          '<span class="post-read-more" onclick="openPost(\'' + p.id + '\')">Read dispatch →</span>' +
+        '</div>';
+      }).join('');
+    }
+
+    function openPost(id) {
+      var post = currentPosts.find(function(p){ return p.id === id; });
+      if (!post) return;
+      document.getElementById('post-list-view').style.display = 'none';
+      document.getElementById('post-full-view').style.display = 'block';
+      document.getElementById('full-post-title').textContent = post.title;
+      document.getElementById('full-post-meta').innerHTML =
+        '<span style="color:var(--gold)">' + post.category + '</span>' +
+        '<span>' + post.date + '</span>' +
+        (post.caseNumber ? '<span>' + post.caseNumber + '</span>' : '') +
+        (post.si ? '<span>Strangeness Index: ' + post.si + '/10</span>' : '');
+      // Render content — static posts have HTML, reports have plaintext
+      var contentEl = document.getElementById('full-post-content');
+      if (post.isReport) {
+        // Format plaintext report as readable HTML
+        var paras = (post.content || '').split('\n\n').filter(function(p){ return p.trim(); });
+        contentEl.innerHTML = paras.map(function(p) {
+          if (p.toUpperCase() === p && p.length < 60) {
+            return '<h3>' + p + '</h3>';
+          }
+          return '<p>' + p + '</p>';
+        }).join('');
+      } else {
+        contentEl.innerHTML = post.content;
+      }
+      window.scrollTo(0,0);
+    }
+
+    function showPostList() {
+      document.getElementById('post-list-view').style.display = 'block';
+      document.getElementById('post-full-view').style.display = 'none';
+      window.scrollTo(0,0);
+    }
+
+    document.addEventListener('DOMContentLoaded', loadBlogPosts);
+  </script>
+</body>
+</html>

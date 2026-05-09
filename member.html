@@ -294,8 +294,36 @@
           <div style="font-family:'Share Tech Mono',monospace;font-size:.65rem;color:var(--muted)" id="dash-email">—</div>
         </div>
         <div class="dash-body">
-          <div class="dash-stat-row" id="dash-stats"></div>
+          <!-- Usage stats row -->
+          <div class="dash-stat-row" id="dash-stats" style="grid-template-columns:repeat(3,1fr)"></div>
 
+          <!-- Case number + member since -->
+          <div id="dash-account-info" style="background:#07070f;border:1px solid rgba(212,168,67,.15);border-radius:6px;padding:.85rem 1rem;margin-bottom:1rem;display:none">
+            <div style="font-family:'Share Tech Mono',monospace;font-size:.58rem;letter-spacing:.12em;color:var(--gold);margin-bottom:.35rem">MEMBER CASE FILE</div>
+            <div style="font-family:'Share Tech Mono',monospace;font-size:.8rem;color:var(--text)" id="dash-case-number">--</div>
+            <div style="font-family:'Share Tech Mono',monospace;font-size:.6rem;color:var(--muted);margin-top:.2rem" id="dash-joined">--</div>
+          </div>
+
+          <!-- Oracle usage -->
+          <div id="dash-oracle-usage" style="background:#07070f;border:1px solid rgba(124,58,237,.15);border-radius:6px;padding:.85rem 1rem;margin-bottom:1rem;display:none">
+            <div style="font-family:'Share Tech Mono',monospace;font-size:.58rem;letter-spacing:.12em;color:var(--purple3);margin-bottom:.5rem">ORACLE ACCESS</div>
+            <div style="display:flex;align-items:center;gap:.75rem;flex-wrap:wrap">
+              <div id="dash-oracle-bar-wrap" style="flex:1;height:6px;background:rgba(124,58,237,.15);border-radius:3px;min-width:100px">
+                <div id="dash-oracle-bar" style="height:100%;background:var(--purple2);border-radius:3px;transition:width .5s;width:0%"></div>
+              </div>
+              <div style="font-family:'Share Tech Mono',monospace;font-size:.72rem;color:var(--text)" id="dash-oracle-text">--</div>
+            </div>
+          </div>
+
+          <!-- Live sessions usage -->
+          <div id="dash-sessions-usage" style="background:#07070f;border:1px solid rgba(212,168,67,.15);border-radius:6px;padding:.85rem 1rem;margin-bottom:1rem;display:none">
+            <div style="font-family:'Share Tech Mono',monospace;font-size:.58rem;letter-spacing:.12em;color:var(--gold);margin-bottom:.35rem">BELIEVER AGENT SESSIONS</div>
+            <div id="dash-sessions-text" style="font-size:.88rem;color:var(--text)">--</div>
+            <div style="font-size:.78rem;color:var(--muted);margin-top:.25rem">30-min consultation with a live Strangeness IS investigator</div>
+            <a href="#" onclick="callInvestigator()" id="dash-call-btn" style="display:none;font-family:'Cinzel',serif;font-size:.6rem;letter-spacing:.1em;color:var(--gold);border:1px solid rgba(212,168,67,.4);padding:.4rem .9rem;border-radius:4px;text-decoration:none;display:inline-block;margin-top:.6rem">📞 Call an Investigator</a>
+          </div>
+
+          <!-- Quick access -->
           <div class="dash-section">
             <div class="dash-section-title">Quick Access</div>
             <a href="chatbot.html" class="dash-btn dash-btn-primary" onclick="siTrack('member_open_oracle')">🔮 Open The Oracle</a>
@@ -304,6 +332,7 @@
             <a href="submit.html" class="dash-btn dash-btn-outline">🛸 Submit a Sighting</a>
           </div>
 
+          <!-- Today's briefing -->
           <div class="dash-section" id="latest-report-section">
             <div class="dash-section-title">Today's Briefing</div>
             <div id="latest-report-card">
@@ -311,12 +340,17 @@
             </div>
           </div>
 
-          <div class="dash-section" id="investigator-section" style="display:none">
-            <div class="dash-section-title">Live Investigator Sessions</div>
-            <div style="font-size:.9rem;color:var(--muted);line-height:1.65;margin-bottom:.75rem">Schedule a live session with one of our investigators via the Believer Portal.</div>
-            <a href="chatbot.html" class="dash-btn dash-btn-gold">Schedule live session →</a>
+          <!-- Case file generator -->
+          <div class="dash-section" id="casefile-section" style="display:none">
+            <div class="dash-section-title">Your Case File</div>
+            <div style="font-size:.85rem;color:var(--muted);line-height:1.65;margin-bottom:.75rem">Generate an AI intelligence report based on your Oracle sessions and investigator call notes. Saved to your member profile.</div>
+            <textarea id="casefile-notes" style="width:100%;background:#07070f;border:1px solid rgba(124,58,237,.2);border-radius:4px;padding:.65rem;color:var(--text);font-family:'Crimson Pro',Georgia,serif;font-size:.9rem;resize:vertical;margin-bottom:.6rem;box-sizing:border-box" rows="3" placeholder="Add investigator notes before generating (optional)..."></textarea>
+            <button class="dash-btn dash-btn-gold" id="casefile-btn" onclick="generateCaseFile()">Generate Case File Report</button>
+            <div id="casefile-status" style="font-family:'Share Tech Mono',monospace;font-size:.72rem;color:var(--muted);margin-top:.5rem;display:none"></div>
+            <div id="casefile-result" style="display:none;margin-top:1rem;background:#07070f;border:1px solid rgba(124,58,237,.2);border-radius:6px;padding:1rem;font-size:.85rem;color:var(--text);line-height:1.8;white-space:pre-wrap;max-height:400px;overflow-y:auto"></div>
           </div>
 
+          <!-- Account -->
           <div class="dash-section">
             <div class="dash-section-title">Account</div>
             <button class="dash-btn dash-btn-outline" onclick="showView('change-password')">Change password</button>
@@ -491,10 +525,62 @@
       const sessions = fmt(limits.live_sessions) + (limits.live_sessions > 0 ? '/mo' : '');
       const reports  = limits.report_access === -1 ? 'All' : limits.report_access;
 
-      document.getElementById('dash-stats').innerHTML = `
-        <div class="dash-stat"><div class="dash-stat-num">${reports}</div><div class="dash-stat-lbl">Reports available</div></div>
-        <div class="dash-stat"><div class="dash-stat-num">${oracle}</div><div class="dash-stat-lbl">Oracle messages</div></div>
-        <div class="dash-stat"><div class="dash-stat-num">${sessions}</div><div class="dash-stat-lbl">Live sessions</div></div>`;
+      document.getElementById('dash-stats').innerHTML =
+        '<div class="dash-stat"><div class="dash-stat-num">' + reports + '</div><div class="dash-stat-lbl">Reports</div></div>' +
+        '<div class="dash-stat"><div class="dash-stat-num">' + (data.calls_count || 0) + '</div><div class="dash-stat-lbl">Calls logged</div></div>' +
+        '<div class="dash-stat"><div class="dash-stat-num">' + (data.intel_count || 0) + '</div><div class="dash-stat-lbl">Oracle intel</div></div>';
+
+      // Account info + case number
+      var acctEl = document.getElementById('dash-account-info');
+      if (acctEl && m.case_number) {
+        acctEl.style.display = 'block';
+        document.getElementById('dash-case-number').textContent = 'Case ' + m.case_number;
+        if (m.joined) document.getElementById('dash-joined').textContent =
+          'Member since ' + new Date(m.joined).toLocaleDateString('en-US',{month:'long',year:'numeric'});
+      }
+
+      // Oracle usage bar
+      var oracleUsage = document.getElementById('dash-oracle-usage');
+      if (oracleUsage) {
+        oracleUsage.style.display = 'block';
+        var used  = data.oracle_used || 0;
+        var limit = data.oracle_limit;
+        var barEl = document.getElementById('dash-oracle-bar');
+        var txtEl = document.getElementById('dash-oracle-text');
+        if (limit === -1) {
+          if (barEl) barEl.style.width = '100%';
+          if (barEl) barEl.style.background = 'var(--green)';
+          if (txtEl) txtEl.textContent = 'Unlimited';
+          document.getElementById('dash-oracle-bar-wrap').style.display = 'none';
+        } else {
+          var pct = limit > 0 ? Math.min(100, Math.round((used/limit)*100)) : 100;
+          if (barEl) barEl.style.width = pct + '%';
+          if (barEl) barEl.style.background = pct >= 80 ? '#ef4444' : 'var(--purple2)';
+          if (txtEl) txtEl.textContent = (limit - used) + ' of ' + limit + ' remaining';
+        }
+      }
+
+      // Live sessions
+      var sessEl = document.getElementById('dash-sessions-usage');
+      if (sessEl && limits.live_sessions !== 0) {
+        sessEl.style.display = 'block';
+        var sUsed  = data.sessions_used || 0;
+        var sLimit = data.sessions_limit;
+        var sTxt   = document.getElementById('dash-sessions-text');
+        if (sLimit === -1) {
+          if (sTxt) sTxt.textContent = 'Unlimited sessions included with your plan';
+        } else {
+          if (sTxt) sTxt.textContent = (sLimit - sUsed) + ' of ' + sLimit + ' sessions remaining this month';
+        }
+        var callBtn = document.getElementById('dash-call-btn');
+        if (callBtn) callBtn.style.display = 'inline-block';
+      }
+
+      // Case file section — show for paid members
+      if (['oracle','investigator','chronicler'].includes(m.plan)) {
+        var cfEl = document.getElementById('casefile-section');
+        if (cfEl) cfEl.style.display = 'block';
+      }
 
       // Plan benefits badge
       const benefits = [];
@@ -538,6 +624,41 @@
     }
 
     // ── Logout ────────────────────────────────────────────────
+    async function generateCaseFile() {
+      var btn    = document.getElementById('casefile-btn');
+      var status = document.getElementById('casefile-status');
+      var result = document.getElementById('casefile-result');
+      var notes  = document.getElementById('casefile-notes').value.trim();
+      btn.textContent = 'Generating...';
+      btn.disabled = true;
+      status.style.display = 'block';
+      status.textContent = 'The Oracle is compiling your case file...';
+      result.style.display = 'none';
+      try {
+        var token = localStorage.getItem('si_member_token');
+        var res   = await fetch(API + '/member/casefile', {
+          method: 'POST',
+          headers: {'Content-Type':'application/json','X-Member-Token': token || ''},
+          body: JSON.stringify({ notes: notes }),
+        });
+        var data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Generation failed');
+        status.textContent = 'Case file generated and saved to your profile.';
+        result.style.display = 'block';
+        result.textContent = data.casefile;
+      } catch(e) {
+        status.textContent = 'Error: ' + e.message;
+        status.style.color = '#ef4444';
+      } finally {
+        btn.textContent = 'Generate Case File Report';
+        btn.disabled = false;
+      }
+    }
+
+    function callInvestigator() {
+      window.location.href = 'tel:1-800-STRANGE';
+    }
+
     async function doLogout() {
       const token = localStorage.getItem('si_member_token');
       try { await fetch(`${API}/member/logout`, { method:'POST', headers:{'X-Member-Token':token} }); } catch {}

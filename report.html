@@ -273,6 +273,7 @@
             <div class="report-summary" id="feat-summary"></div>
             <div class="report-full-body" id="feat-full"></div>
             <button class="toggle-full-btn" id="toggle-full-btn" onclick="toggleFull()">Read full report ↓</button>
+            <button id="share-btn" onclick="shareReport()" style="display:none;font-family:'Cinzel',serif;font-size:.55rem;letter-spacing:.1em;padding:.4rem .8rem;background:transparent;border:1px solid rgba(212,168,67,.35);color:var(--gold,#d4a843);border-radius:3px;cursor:pointer;margin-left:.5rem">🔗 Share</button>
           </div>
         </div>
         <div class="report-tags-row" id="feat-tags"></div>
@@ -423,6 +424,11 @@
     let currentPage = 1;
     const PER_PAGE = 10;
 
+    // Auto-select report from URL param ?case=report_id
+    function getUrlParam(name) {
+      return new URLSearchParams(window.location.search).get(name);
+    }
+
     async function loadReports() {
       try {
         // Fetch up to 200 — no member token so free limit applies per-request
@@ -445,8 +451,13 @@
           document.getElementById('archive-list').innerHTML = '<div class="no-results">Reports will appear here after the first pipeline run.</div>';
           return;
         }
-        showFeatured(allReports[0]);
-        updateMeter(allReports[0].strangeness_index || 6.6);
+        // Check for specific report in URL
+        var caseParam = getUrlParam('case');
+        var startReport = caseParam
+          ? (allReports.find(function(r){ return r.id === caseParam; }) || allReports[0])
+          : allReports[0];
+        showFeatured(startReport);
+        updateMeter(startReport.strangeness_index || 6.6);
         currentPage = 1;
         renderArchive(allReports);
       } catch(err) {
@@ -467,6 +478,8 @@
       document.getElementById('feat-full').style.display     = 'none';
       document.getElementById('feat-summary').style.display  = 'block';
       document.getElementById('toggle-full-btn').textContent = 'Read full report ↓';
+      var shareBtn = document.getElementById('share-btn');
+      if (shareBtn) shareBtn.style.display = 'inline-block';
       const tagsEl = document.getElementById('feat-tags');
       tagsEl.innerHTML = (r.tags||[]).map(t => `<span class="rtag" onclick="setFilterFromTag('${t}')">${t}</span>`).join('');
     }
@@ -561,6 +574,23 @@
     function setFilterFromTag(tag) {
       const cat = tagToFilter(tag);
       if (cat) setFilter(cat, document.querySelector(`[data-filter="${cat}"]`));
+    }
+
+    function shareReport() {
+      var r = allReports[0]; // current featured report
+      if (!r) return;
+      var shareUrl = 'https://api.strangenessis.com/r/' + r.id;
+      var shareText = (r.headline || 'Strangeness IS Intelligence Report');
+      if (navigator.share) {
+        navigator.share({ title: shareText, url: shareUrl }).catch(function(){});
+      } else {
+        navigator.clipboard.writeText(shareUrl).then(function() {
+          var btn = document.getElementById('share-btn');
+          if (btn) { btn.textContent = '✓ Copied!'; setTimeout(function(){ btn.textContent = '🔗 Share'; }, 2000); }
+        }).catch(function() {
+          prompt('Copy this link to share:', shareUrl);
+        });
+      }
     }
 
     function scrollToTop() { window.scrollTo({top:0,behavior:'smooth'}); }

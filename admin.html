@@ -274,6 +274,7 @@
         <span class="sidebar-label">Overview</span>
         <button class="sidebar-item active" onclick="showPanel('dashboard',this)"><span class="dot"></span>Dashboard</button>
         <button class="sidebar-item" onclick="showPanel('crm',this)"><span class="dot"></span>CRM</button>
+        <button class="sidebar-item" id="nav-calls" onclick="showPanel('calls',this)"><span class="dot"></span>📞 Call Log</button>
       </div>
       <div class="sidebar-section">
         <span class="sidebar-label">The Oracle</span>
@@ -1036,146 +1037,92 @@ SMTP_PASS=abcdabcdabcdabcd</div>
       </div>
 
       <!-- CRM - redirects to crm.html -->
-      <div class="panel" id="panel-crm">
+      <!-- CALL LOG PANEL -->
+      <div class="panel" id="panel-calls">
         <div class="panel-header">
-          <div class="panel-title">CRM</div>
-          <div class="panel-sub">Full contact management system — opens in dedicated page.</div>
+          <div class="panel-title">📞 Call Log</div>
+          <div class="panel-sub">Every call logged, case-numbered, and linked to member CRM. Start a live call to begin timing.</div>
         </div>
-        <div style="padding:2rem;text-align:center">
-          <div style="font-size:3rem;margin-bottom:1rem">👥</div>
-          <p style="color:var(--muted);font-size:1rem;line-height:1.65;margin-bottom:1.5rem">The CRM has its own dedicated page with full contact management, pipeline board, deals, activity log, and reports.</p>
-          <a href="crm.html" target="_blank" style="display:inline-block;padding:.85rem 2rem;background:var(--purple);color:#fff;border-radius:5px;font-family:var(--nav);font-size:.78rem;letter-spacing:.14em;text-decoration:none">Open CRM →</a>
-          <div style="margin-top:1rem;font-family:var(--mono);font-size:.75rem;color:var(--muted)">Opens in new tab · All data persists in localStorage</div>
-        </div>
-      </div>
 
-
-
-
-      <!-- ANALYTICS -->
-      <div class="panel" id="panel-analytics">
-        <div class="panel-header">
-          <div class="panel-title">Analytics</div>
-          <div class="panel-sub">Revenue, members, page views — pulled from your server.</div>
-        </div>
-        <div class="status-grid" style="grid-template-columns:repeat(auto-fit,minmax(150px,1fr))">
-          <div class="status-card"><div class="status-label">Active members</div><div class="status-value gold" id="an-members">—</div></div>
-          <div class="status-card"><div class="status-label">Monthly revenue</div><div class="status-value green" id="an-revenue">—</div></div>
-          <div class="status-card"><div class="status-label">Oracle plan</div><div class="status-value purple" id="an-oracle">—</div></div>
-          <div class="status-card"><div class="status-label">Investigator</div><div class="status-value purple" id="an-investigator">—</div></div>
-          <div class="status-card"><div class="status-label">Chronicler</div><div class="status-value purple" id="an-chronicler">—</div></div>
-          <div class="status-card"><div class="status-label">Live reports</div><div class="status-value" id="an-reports">—</div></div>
-        </div>
-        <div class="admin-section">
-          <div class="admin-section-title">Page views</div>
-          <div id="an-pageviews" style="font-size:.9rem;color:var(--muted)">Loading...</div>
-        </div>
-        <div class="admin-section">
-          <div class="admin-section-title">Google Analytics 4 — setup guide</div>
-          <p style="font-size:.9rem;color:var(--muted);line-height:1.7;margin-bottom:.75rem">
-            1. Go to analytics.google.com and create a property for strangenessis.com<br/>
-            2. Copy your Measurement ID (format: G-XXXXXXXXXX)<br/>
-            3. Replace G-XXXXXXXXXX in every page meta tag named ga-id<br/>
-            4. Get API Secret: Admin then Data Streams then Measurement Protocol API secrets<br/>
-            5. SSH into server and add to .env: GA_MEASUREMENT_ID=G-XXXX and GA_API_SECRET=xxxx
-          </p>
-          <div class="field-row">
-            <label class="field-label">Measurement ID</label>
-            <input class="field-input" type="text" id="ga-id-input" placeholder="G-XXXXXXXXXX" style="font-family:var(--mono)"/>
+        <!-- LIVE CALL WORKFLOW -->
+        <div class="admin-section" style="background:rgba(34,197,94,.05);border:1px solid rgba(34,197,94,.2);border-radius:8px;margin-bottom:1.5rem">
+          <div style="font-family:var(--mono);font-size:.62rem;letter-spacing:.12em;color:#4ade80;margin-bottom:1rem">LIVE CALL</div>
+          <div id="live-call-idle" style="">
+            <p style="font-size:.88rem;color:var(--muted);margin-bottom:1rem">When a call comes in — fill in the details and start the timer. The log saves automatically when you end the call.</p>
+            <div class="field-row"><label class="field-label">Caller Name</label><input class="field-input" id="lc-name" type="text" placeholder="Full name or Unknown"/></div>
+            <div class="field-row"><label class="field-label">Phone</label><input class="field-input" id="lc-phone" type="tel" placeholder="(555) 555-5555"/></div>
+            <div class="field-row"><label class="field-label">Email <span style="font-weight:400;color:var(--muted)">(links to member profile)</span></label><input class="field-input" id="lc-email" type="email" placeholder="Optional"/></div>
+            <div class="field-row"><label class="field-label">Call Type</label>
+              <select class="field-input" id="lc-type">
+                <option value="sighting_report">Sighting Report</option>
+                <option value="investigation">Investigation Consultation</option>
+                <option value="membership">Membership Inquiry</option>
+                <option value="support">General Support</option>
+              </select>
+            </div>
+            <div class="field-row"><label class="field-label">Category</label>
+              <select class="field-input" id="lc-category">
+                <option value="">-- Select --</option>
+                <option>UFO / UAP / NHI</option>
+                <option>Aliens &amp; Entities</option>
+                <option>Cryptid &amp; Creature</option>
+                <option>Paranormal</option>
+                <option>Government Disclosure</option>
+                <option>Consciousness</option>
+                <option>Missing 411</option>
+                <option>Skinwalker Ranch</option>
+                <option>Other</option>
+              </select>
+            </div>
+            <div class="field-row"><label class="field-label">Location Reported</label><input class="field-input" id="lc-location" type="text" placeholder="City, State"/></div>
+            <button class="btn-sm btn-green" onclick="startLiveCall()" style="margin-top:.5rem;font-size:.72rem;padding:.6rem 1.5rem">▶ Answer Call &amp; Start Timer</button>
           </div>
-          <button class="btn-sm btn-purple" onclick="saveGAId()">Update all pages</button>
-          <div id="ga-live-status" style="display:none;margin-top:1rem;background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.2);border-radius:6px;padding:1rem">
-            <div style="font-family:var(--nav);font-size:.75rem;letter-spacing:.12em;color:var(--green);margin-bottom:.5rem">✓ GOOGLE ANALYTICS ACTIVE</div>
-            <div id="ga-live-detail" style="font-size:.88rem;color:var(--muted)">Tracking page views, events, and conversions</div>
-            <div style="margin-top:.75rem">
-              <button class="btn-sm btn-outline" onclick="window.open('https://analytics.google.com','_blank')">Open GA4 Dashboard ↗</button>
+
+          <div id="live-call-active" style="display:none">
+            <div style="display:flex;align-items:center;gap:1.5rem;margin-bottom:1rem;flex-wrap:wrap">
+              <div>
+                <div style="font-family:'Share Tech Mono',monospace;font-size:2.5rem;font-weight:700;color:#4ade80;line-height:1" id="lc-timer-display">0:00</div>
+                <div style="font-family:var(--mono);font-size:.58rem;color:var(--muted)">CALL DURATION</div>
+              </div>
+              <div style="flex:1">
+                <div style="font-size:.9rem;color:var(--text);font-weight:500" id="lc-active-name">Caller</div>
+                <div style="font-family:var(--mono);font-size:.62rem;color:var(--muted)" id="lc-active-meta"></div>
+              </div>
+              <div style="display:flex;gap:.5rem;flex-direction:column">
+                <button class="btn-sm btn-red" onclick="endLiveCall('completed')" style="padding:.5rem 1rem">■ End Call</button>
+                <button class="btn-sm btn-outline" onclick="endLiveCall('voicemail')" style="padding:.3rem .8rem;font-size:.6rem">Voicemail</button>
+              </div>
+            </div>
+            <div class="field-row"><label class="field-label">Live notes</label><textarea class="field-input" id="lc-notes" rows="3" placeholder="Type notes during the call — location, what they witnessed, key details..."></textarea></div>
+            <div class="field-row"><label class="field-label">Follow-up needed?</label>
+              <select class="field-input" id="lc-followup" style="max-width:280px">
+                <option value="">No follow-up needed</option>
+                <option value="send_report">Send them a report link</option>
+                <option value="callback">Schedule callback</option>
+                <option value="investigation">Flag for field investigation</option>
+              </select>
             </div>
           </div>
-        </div>
-      </div>
 
-      <!-- MEMBERS -->
-      <div class="panel" id="panel-members">
-        <div class="panel-header">
-          <div class="panel-title">Members</div>
-          <div class="panel-sub">All paying subscribers. Managed by Stripe webhooks.</div>
+          <div id="live-call-saved" style="display:none;padding:.75rem;text-align:center">
+            <div style="color:#4ade80;font-family:var(--mono);font-size:.72rem;margin-bottom:.5rem" id="lc-saved-msg">✓ Call logged</div>
+            <button class="btn-sm btn-outline" onclick="resetLiveCall()">+ New Call</button>
+          </div>
         </div>
-        <div class="btn-row" style="margin-bottom:1rem">
-          <button class="btn-sm btn-outline" onclick="loadMembers()">Refresh</button>
-          <button class="btn-sm btn-gold" onclick="sendDigestNow()">Send digest now</button>
-        </div>
-        <div class="status-grid" style="grid-template-columns:repeat(3,1fr)">
-          <div class="status-card"><div class="status-label">Total members</div><div class="status-value gold" id="mem-total">—</div></div>
-          <div class="status-card"><div class="status-label">Active</div><div class="status-value green" id="mem-active">—</div></div>
-          <div class="status-card"><div class="status-label">Est. MRR</div><div class="status-value" id="mem-mrr" style="color:var(--gold)">—</div></div>
-        </div>
+
+        <!-- CALL HISTORY -->
         <div class="admin-section">
-          <div class="admin-section-title">Member list <span id="mem-count" style="color:var(--muted);font-weight:400"></span></div>
-          <div id="members-list"><p style="color:var(--muted);font-size:.9rem;font-style:italic">No members yet. Configure Stripe to start accepting subscriptions.</p></div>
-        </div>
-      </div>
-
-      <!-- STRIPE -->
-
-      <!-- Signal Intelligence Panel -->
-      <div class="panel" id="panel-signal-intel">
-        <div class="panel-header">
-          <div class="panel-title">Signal Intelligence</div>
-          <div class="panel-sub">Mainstream headlines scored for hidden patterns · Truth in plain sight</div>
-        </div>
-
-        <!-- Tabs -->
-        <div style="display:flex;gap:0;border-bottom:1px solid rgba(124,58,237,.2);margin-bottom:1.25rem">
-          <button id="sig-tab-scored" onclick="sigTab('scored')" style="font-family:var(--nav);font-size:.6rem;letter-spacing:.12em;padding:.6rem 1.25rem;background:rgba(124,58,237,.15);border:none;border-bottom:2px solid var(--purple2);color:var(--purple3);cursor:pointer">SCORED SIGNALS</button>
-          <button id="sig-tab-raw" onclick="sigTab('raw')" style="font-family:var(--nav);font-size:.6rem;letter-spacing:.12em;padding:.6rem 1.25rem;background:transparent;border:none;border-bottom:2px solid transparent;color:var(--muted);cursor:pointer">RAW HEADLINES <span id="sig-raw-count" style="color:var(--gold)"></span></button>
-        </div>
-
-        <!-- Scored signals view -->
-        <div id="sig-view-scored">
-          <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:1rem;align-items:center">
-            <select id="sig-min-score" class="field-input" style="width:auto;font-size:.8rem" onchange="loadSignalIntel()">
-              <option value="4">Score 4+</option>
-              <option value="5">Score 5+</option>
-              <option value="6">Score 6+</option>
-              <option value="7">Score 7+</option>
-            </select>
-            <select id="sig-reviewed" class="field-input" style="width:auto;font-size:.8rem" onchange="loadSignalIntel()">
-              <option value="">All signals</option>
-              <option value="false">Unreviewed</option>
-              <option value="true">Reviewed</option>
-            </select>
-            <button class="btn-sm btn-purple" onclick="analyzeSignals()">🧠 Find Patterns</button>
-            <button class="btn-sm btn-outline" onclick="loadSignalIntel()">↻ Refresh</button>
-            <span id="sig-count" style="font-family:var(--mono);font-size:.7rem;color:var(--muted);margin-left:auto"></span>
+          <div class="btn-row" style="margin-bottom:1rem">
+            <span style="font-family:var(--mono);font-size:.62rem;letter-spacing:.12em;color:var(--muted)">CALL HISTORY</span>
+            <button class="btn-sm btn-outline" onclick="loadCallLog()" style="margin-left:auto">↻ Refresh</button>
+            <span id="call-count" style="font-family:var(--mono);font-size:.7rem;color:var(--muted)"></span>
           </div>
-          <div id="sig-analysis" style="display:none;background:rgba(124,58,237,.1);border:1px solid rgba(124,58,237,.3);border-radius:8px;padding:1rem;margin-bottom:1rem;font-family:'Crimson Pro',Georgia,serif;font-size:.95rem;line-height:1.6;color:var(--text)"></div>
-          <div id="signal-intel-list" style="display:flex;flex-direction:column;gap:.5rem"></div>
-        </div>
-
-        <!-- Raw headlines view -->
-        <div id="sig-view-raw" style="display:none">
-          <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:.75rem;align-items:center">
-            <input id="hl-search" class="field-input" placeholder="Search headlines..." style="flex:1;min-width:180px;font-size:.82rem" oninput="filterRawHeadlines()"/>
-            <select id="hl-src-filter" class="field-input" style="width:auto;font-size:.8rem" onchange="filterRawHeadlines()">
-              <option value="">All sources</option>
-            </select>
-            <button class="btn-sm btn-purple" onclick="loadRawHeadlines()">↻ Refresh</button>
-            <button class="btn-sm btn-gold" onclick="rawScanNow()" id="raw-scan-btn">📡 Scan RSS now</button>
-            <button class="btn-sm btn-red" onclick="if(confirm('Clear all headlines?'))api('/admin/headlines/clear','POST').then(()=>{loadRawHeadlines();toast('Cleared')})">Clear all</button>
-          </div>
-          <div style="display:flex;gap:.5rem;align-items:center;margin-bottom:.5rem;flex-wrap:wrap">
-            <span style="font-family:var(--mono);font-size:.62rem;color:var(--muted)">Strangeness weight:</span>
-            <button onclick="setHlWeight('all',this)" class="btn-sm btn-purple" style="font-size:.6rem;padding:.2rem .6rem">All</button>
-            <button onclick="setHlWeight('high',this)" class="btn-sm btn-outline" style="font-size:.6rem;padding:.2rem .6rem">🔴 High (UAP/Entity/Gov)</button>
-            <button onclick="setHlWeight('medium',this)" class="btn-sm btn-outline" style="font-size:.6rem;padding:.2rem .6rem">🟡 Medium (Cryptid/Paranormal)</button>
-            <button onclick="setHlWeight('low',this)" class="btn-sm btn-outline" style="font-size:.6rem;padding:.2rem .6rem">🟢 Low (General)</button>
-          </div>
-          <div id="hl-raw-stats" style="font-family:var(--mono);font-size:.68rem;color:var(--muted);margin-bottom:.75rem"></div>
-          <div id="hl-raw-list" style="max-height:600px;overflow-y:auto;display:flex;flex-direction:column;gap:0">
-            <div style="color:var(--muted);padding:1rem;font-size:.88rem">Click Refresh to load headlines.</div>
+          <div id="call-log-list">
+            <div style="color:var(--muted);font-size:.88rem;padding:1rem;text-align:center">Loading call log...</div>
           </div>
         </div>
       </div>
+
 
       <div class="panel" id="panel-stripe">
         <div class="panel-header">
@@ -1633,7 +1580,8 @@ function showPanel(id, btn) {
     members:              loadMembers,
     headlines:            loadHeadlines,
     'signal-intel':       loadSignalIntel,
-    'quick-generate':     function() {},  // no load needed
+    'quick-generate':     function() {},
+    'calls':              loadCallLog,
     'admin-team':         loadTeam,
     'weekly-schedule':    loadWeeklySchedule,
             'oracle-config':      loadOracleConfig,
@@ -3309,6 +3257,167 @@ document.addEventListener('DOMContentLoaded', function() {
     setTimeout(checkAllPanelStatuses, 800);
   }
 });
+
+// ── Call Log + Live Call Timer ────────────────────────────────────────────────
+var _liveCallStart   = null;
+var _liveCallTimer   = null;
+var _liveCallData    = {};
+
+function startLiveCall() {
+  var name     = document.getElementById('lc-name').value.trim();
+  var phone    = document.getElementById('lc-phone').value.trim();
+  var email    = document.getElementById('lc-email').value.trim();
+  var callType = document.getElementById('lc-type').value;
+  var category = document.getElementById('lc-category').value;
+  var location = document.getElementById('lc-location').value.trim();
+
+  _liveCallData = { caller_name: name, phone, email, call_type: callType, category, location };
+  _liveCallStart = Date.now();
+
+  document.getElementById('live-call-idle').style.display   = 'none';
+  document.getElementById('live-call-active').style.display = 'block';
+  document.getElementById('live-call-saved').style.display  = 'none';
+
+  document.getElementById('lc-active-name').textContent = name || 'Unknown caller';
+  document.getElementById('lc-active-meta').textContent =
+    (phone ? phone + '  ·  ' : '') + (category || callType.replace('_',' '));
+
+  document.getElementById('lc-notes').value = '';
+
+  _liveCallTimer = setInterval(function() {
+    var elapsed = Math.floor((Date.now() - _liveCallStart) / 1000);
+    var mins    = Math.floor(elapsed / 60);
+    var secs    = elapsed % 60;
+    var el = document.getElementById('lc-timer-display');
+    if (el) el.textContent = mins + ':' + (secs < 10 ? '0' : '') + secs;
+    // Color shifts from green → gold → red as time goes on
+    if (el) el.style.color = elapsed < 1800 ? '#4ade80' : elapsed < 3600 ? '#d4a843' : '#ef4444';
+  }, 1000);
+}
+
+async function endLiveCall(status) {
+  clearInterval(_liveCallTimer);
+  var elapsed    = _liveCallStart ? Math.floor((Date.now() - _liveCallStart) / 1000) : 0;
+  var durationMin = Math.ceil(elapsed / 60);
+  var notes      = document.getElementById('lc-notes').value.trim();
+  var followup   = document.getElementById('lc-followup').value;
+
+  var payload = Object.assign({}, _liveCallData, {
+    duration_min:   durationMin,
+    summary:        notes,
+    status:         status || 'completed',
+    follow_up:      !!followup,
+    follow_up_note: followup ? followup.replace(/_/g,' ') : '',
+    agent:          'Admin',
+  });
+
+  try {
+    var data = await api('/admin/calls', 'POST', payload);
+    document.getElementById('live-call-active').style.display = 'none';
+    document.getElementById('live-call-saved').style.display  = 'block';
+    document.getElementById('lc-saved-msg').textContent =
+      '✓ Call logged — ' + data.call.case_number + '  (' + durationMin + ' min)';
+    loadCallLog();
+  } catch(e) {
+    toast('Failed to save call: ' + e.message, 'error');
+  }
+}
+
+function resetLiveCall() {
+  _liveCallStart = null;
+  _liveCallData  = {};
+  clearInterval(_liveCallTimer);
+  document.getElementById('live-call-idle').style.display   = 'block';
+  document.getElementById('live-call-active').style.display = 'none';
+  document.getElementById('live-call-saved').style.display  = 'none';
+  document.getElementById('lc-timer-display').textContent   = '0:00';
+  ['lc-name','lc-phone','lc-email','lc-location','lc-notes'].forEach(function(id) {
+    var el = document.getElementById(id); if (el) el.value = '';
+  });
+}
+
+// ── Call Log ──────────────────────────────────────────────────────────────────
+async function loadCallLog() {
+  var listEl   = document.getElementById('call-log-list');
+  var countEl  = document.getElementById('call-count');
+  if (!listEl) return;
+  listEl.innerHTML = '<div style="color:var(--muted);font-size:.85rem;padding:1rem;text-align:center">Loading...</div>';
+  try {
+    var data  = await api('/admin/calls');
+    var calls = data.calls || [];
+    if (countEl) countEl.textContent = calls.length + ' calls logged';
+    if (!calls.length) {
+      listEl.innerHTML = '<div style="color:var(--muted);font-size:.85rem;padding:1.5rem;text-align:center;font-style:italic">No calls logged yet. Click + Log New Call to add your first entry.</div>';
+      return;
+    }
+    var statusColors = {completed:'var(--green)',voicemail:'var(--gold)',missed:'#ef4444',follow_up:'var(--purple3)'};
+    listEl.innerHTML = calls.map(function(c) {
+      var dt = c.created_at ? new Date(c.created_at).toLocaleString('en-US',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit',timeZone:'America/Denver'}) + ' MST' : '';
+      var color = statusColors[c.status] || 'var(--muted)';
+      return '<div style="padding:.75rem;border-bottom:1px solid rgba(124,58,237,.08);display:flex;gap:.75rem;align-items:flex-start">' +
+        '<div style="flex:1;min-width:0">' +
+          '<div style="display:flex;gap:.5rem;align-items:center;margin-bottom:.2rem;flex-wrap:wrap">' +
+            '<span style="font-family:var(--mono);font-size:.62rem;color:var(--gold)">' + (c.case_number||'') + '</span>' +
+            '<span style="font-size:.82rem;color:var(--text);font-weight:500">' + (c.caller_name||'Unknown caller') + '</span>' +
+            '<span style="font-family:var(--mono);font-size:.58rem;color:' + color + ';border:1px solid ' + color + ';padding:1px 6px;border-radius:3px">' + (c.status||'').toUpperCase() + '</span>' +
+          '</div>' +
+          '<div style="font-family:var(--mono);font-size:.6rem;color:var(--muted);margin-bottom:.3rem">' + dt + (c.duration_min?' · ' + c.duration_min + ' min':'') + (c.call_type?' · ' + c.call_type.replace('_',' '):'') + (c.category?' · ' + c.category:'') + '</div>' +
+          (c.location?'<div style="font-size:.78rem;color:var(--muted)">📍 ' + c.location + '</div>':'') +
+          (c.summary?'<div style="font-size:.82rem;color:var(--text);margin-top:.3rem;line-height:1.5">' + c.summary + '</div>':'') +
+          (c.follow_up_note?'<div style="font-size:.75rem;color:var(--purple3);margin-top:.25rem">↳ Follow-up: ' + c.follow_up_note + '</div>':'') +
+        '</div>' +
+        '<button onclick="deleteCall('' + c.id + '')" style="font-family:var(--mono);font-size:.6rem;padding:.25rem .5rem;background:transparent;border:1px solid rgba(239,68,68,.25);color:#f87171;border-radius:3px;cursor:pointer;flex-shrink:0">✕</button>' +
+      '</div>';
+    }).join('');
+  } catch(err) {
+    listEl.innerHTML = '<div style="color:#ef4444;padding:1rem">Failed to load: ' + err.message + '</div>';
+  }
+}
+
+function openLogCallModal() {
+  document.getElementById('log-call-modal').style.display = 'flex';
+  document.getElementById('call-save-status').style.display = 'none';
+  ['call-name','call-phone','call-email','call-location','call-summary','call-followup-note'].forEach(function(id) {
+    var el = document.getElementById(id); if (el) el.value = '';
+  });
+  var dur = document.getElementById('call-duration'); if (dur) dur.value = 0;
+}
+
+async function submitCallLog() {
+  var statusEl = document.getElementById('call-save-status');
+  var payload = {
+    caller_name:    document.getElementById('call-name').value.trim(),
+    phone:          document.getElementById('call-phone').value.trim(),
+    email:          document.getElementById('call-email').value.trim(),
+    call_type:      document.getElementById('call-type').value,
+    category:       document.getElementById('call-category').value,
+    location:       document.getElementById('call-location').value.trim(),
+    duration_min:   parseInt(document.getElementById('call-duration').value) || 0,
+    status:         document.getElementById('call-status').value,
+    summary:        document.getElementById('call-summary').value.trim(),
+    follow_up_note: document.getElementById('call-followup-note').value.trim(),
+    follow_up:      document.getElementById('call-status').value === 'follow_up',
+  };
+  try {
+    var data = await api('/admin/calls', 'POST', payload);
+    statusEl.textContent = '✓ Saved — ' + data.call.case_number;
+    statusEl.style.display = 'block';
+    setTimeout(function() {
+      document.getElementById('log-call-modal').style.display = 'none';
+      loadCallLog();
+    }, 1200);
+  } catch(e) {
+    statusEl.textContent = 'Failed: ' + e.message;
+    statusEl.style.color = '#ef4444';
+    statusEl.style.display = 'block';
+  }
+}
+
+async function deleteCall(id) {
+  if (!confirm('Delete this call record?')) return;
+  await api('/admin/calls/' + id, 'DELETE');
+  loadCallLog();
+}
 
 // ── Signal Intelligence — Tab switcher ───────────────────────────────────────
 var _sigTab = 'scored';

@@ -18,25 +18,13 @@
       --dark:#07070f; --dark2:#0d0015; --surface:#0a0018;
       --text:#e8e0ff; --muted:#9080b0;
     }
-    .map-page { height:100vh; overflow:hidden; padding-top:0; background:var(--dark); }
+    .map-page { height:100vh; overflow:hidden; padding-top:0; background:var(--dark); display:flex; flex-direction:column; }
 
-    .map-header {
-      padding: 3rem 2rem 1.5rem;
-      background: linear-gradient(to bottom, #0a0020, var(--dark));
-      border-bottom: 1px solid rgba(212,168,67,.15);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      flex-wrap: wrap;
-      gap: 1rem;
-    }
-    .map-header-left {}
-    .map-eyebrow { font-family:'Cinzel',serif; font-size:.65rem; letter-spacing:.25em; color:var(--gold); margin-bottom:.5rem; display:flex; align-items:center; gap:.6rem; }
-    .map-live-dot { width:7px; height:7px; background:#ef4444; border-radius:50%; animation:mapBlink 1.5s ease-in-out infinite; }
+    .map-eyebrow { font-family:'Cinzel',serif; font-size:.62rem; letter-spacing:.22em; color:var(--gold); margin-bottom:.3rem; display:flex; align-items:center; gap:.6rem; }
+    .map-live-dot { width:7px; height:7px; background:#ef4444; border-radius:50%; animation:mapBlink 1.5s ease-in-out infinite; flex-shrink:0; }
     @keyframes mapBlink{0%,100%{opacity:1;box-shadow:0 0 6px #ef4444}50%{opacity:.3;box-shadow:none}}
-    .map-title { font-family:'Cinzel Decorative',serif; font-size:clamp(1rem,2vw,1.4rem); font-weight:400; color:var(--text); }
+    .map-title { font-family:'Cinzel Decorative',serif; font-size:clamp(.9rem,1.8vw,1.2rem); font-weight:400; color:var(--text); line-height:1.2; }
     .map-title span { color:var(--gold2); }
-    .map-sub { font-family:'Crimson Pro',Georgia,serif; font-size:.95rem; color:var(--muted); font-style:italic; margin-top:.25rem; }
 
     /* Map overlay top bar */
     .map-overlay-top {
@@ -47,23 +35,25 @@
     }
     .map-overlay-header {
       display: flex;
-      align-items: flex-start;
+      align-items: center;
       justify-content: space-between;
-      padding: .75rem 1.25rem .5rem;
-      background: linear-gradient(to bottom, rgba(7,7,15,.92) 80%, transparent);
+      padding: .6rem 1rem .5rem;
+      background: rgba(7,7,15,.88);
+      border-bottom: 1px solid rgba(124,58,237,.12);
       pointer-events: auto;
       flex-wrap: wrap;
       gap: .5rem;
+      backdrop-filter: blur(6px);
     }
 
     /* Category filter pills */
     .map-filters {
       display: flex;
-      gap: .35rem;
+      gap: .3rem;
       flex-wrap: wrap;
-      padding: .4rem 1.25rem .6rem;
-      background: rgba(8,0,26,.85);
-      backdrop-filter: blur(4px);
+      padding: .35rem 1rem .45rem;
+      background: rgba(7,7,15,.82);
+      border-bottom: 1px solid rgba(124,58,237,.1);
       pointer-events: auto;
     }
     .map-filter-pill {
@@ -83,21 +73,22 @@
     .map-filter-pill.all { border-color:var(--gold); color:var(--gold); }
     .map-filter-pill.all.active { background:rgba(212,168,67,.1); }
 
-    /* Main layout */
+    /* Main layout — flex:1 fills remaining space after navbar */
     .map-layout {
       display: grid;
       grid-template-columns: 1fr 320px;
-      height: calc(100vh - 60px);  /* full viewport minus navbar */
-      min-height: 500px;
+      flex: 1;
+      min-height: 0;
       overflow: hidden;
     }
 
-    /* Map container — explicit height prevents Leaflet tile collapse */
+    /* Map container — position:relative allows overlay to sit on top */
     #strangeness-map {
       width: 100%;
       height: 100%;
       min-height: 500px;
       background: #07070f;
+      position: relative;
     }
 
     /* Leaflet dark override */
@@ -227,7 +218,9 @@
     }
   
   /* ── Strange Diagnosis FAB ─────────────────────────────────── */
-  40%     { box-shadow: 0 0 0 10px rgba(124,58,237,.0), 0 0 0 6px rgba(212,168,67,.3), 0 4px 20px rgba(0,0,0,.5); }
+  @keyframes diagFabPulse {
+    0%,100% { box-shadow: 0 0 0 0 rgba(124,58,237,.4), 0 0 0 0 rgba(212,168,67,.2), 0 4px 20px rgba(0,0,0,.5); }
+    40%     { box-shadow: 0 0 0 10px rgba(124,58,237,.0), 0 0 0 6px rgba(212,168,67,.3), 0 4px 20px rgba(0,0,0,.5); }
     70%     { box-shadow: 0 0 0 14px rgba(124,58,237,.0), 0 0 0 10px rgba(212,168,67,.0), 0 4px 20px rgba(0,0,0,.5); }
   }
   @keyframes diagFabShimmer {
@@ -337,7 +330,7 @@
     <a href="index.html" class="nav-logo" style="font-family:'Cinzel Decorative',serif">Strangeness <span>IS</span></a>
     <ul class="nav-links">
       <li><a href="index.html">Home</a></li>
-      <li><a href="report.html">Strangeness Report</a></li>
+      <li><a href="report.html">Reports</a></li><li><a href="blog.html">Dispatch</a></li><li><a href="faq.html">FAQ</a></li>
       <li><a href="chatbot.html">The Oracle</a></li>
       <li><a href="submit.html">Submit a Sighting</a></li>
       <li><a href="member.html">My Portal</a></li>
@@ -385,11 +378,10 @@
         <div class="sidebar-list" id="sidebar-list">
           <div style="padding:2rem;text-align:center;color:var(--muted);font-size:.9rem;font-style:italic">Loading sightings...</div>
         </div>
+        <div style="padding:.6rem 1rem;border-top:1px solid rgba(124,58,237,.1);font-family:'Share Tech Mono',monospace;font-size:.58rem;color:var(--muted);line-height:1.5">
+          Sightings reviewed by SI investigators. Verified cases marked ✓.
+        </div>
       </div>
-    </div>
-
-    <div class="map-disclaimer">
-      Sightings are reported by community members and reviewed by Strangeness IS investigators. Verified cases are marked accordingly. For entertainment and research purposes.
     </div>
   </div>
 
