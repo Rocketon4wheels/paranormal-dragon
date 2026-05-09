@@ -18,7 +18,18 @@
       --dark:#07070f; --dark2:#0d0015; --surface:#0a0018;
       --text:#e8e0ff; --muted:#9080b0;
     }
-    .map-page { height:100vh; overflow:hidden; padding-top:0; background:var(--dark); display:flex; flex-direction:column; }
+    /* Navbar is 60px fixed — map page fills below it */
+    .map-page {
+      position: fixed;
+      top: 60px;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: var(--dark);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
 
     .map-eyebrow { font-family:'Cinzel',serif; font-size:.62rem; letter-spacing:.22em; color:var(--gold); margin-bottom:.3rem; display:flex; align-items:center; gap:.6rem; }
     .map-live-dot { width:7px; height:7px; background:#ef4444; border-radius:50%; animation:mapBlink 1.5s ease-in-out infinite; flex-shrink:0; }
@@ -73,22 +84,24 @@
     .map-filter-pill.all { border-color:var(--gold); color:var(--gold); }
     .map-filter-pill.all.active { background:rgba(212,168,67,.1); }
 
-    /* Main layout — flex:1 fills remaining space after navbar */
+    /* Map layout fills all remaining space in map-page */
     .map-layout {
       display: grid;
       grid-template-columns: 1fr 320px;
       flex: 1;
+      height: 100%;
       min-height: 0;
       overflow: hidden;
     }
 
-    /* Map container — position:relative allows overlay to sit on top */
+    /* Map container — explicit height so Leaflet tiles render */
     #strangeness-map {
       width: 100%;
       height: 100%;
-      min-height: 500px;
+      min-height: 400px;
       background: #07070f;
       position: relative;
+      overflow: hidden;
     }
 
     /* Leaflet dark override */
@@ -214,7 +227,7 @@
     @media(max-width:768px) {
       .map-layout { grid-template-columns:1fr; }
       .map-sidebar { display:none; }
-      #strangeness-map { height:60vh; }
+      #strangeness-map { height:100%; min-height:400px; }
     }
   
   /* ── Strange Diagnosis FAB ─────────────────────────────────── */
@@ -434,15 +447,12 @@
 
       loadSightings();
 
-      // Force Leaflet to recalculate tile layout after DOM settles
-      setTimeout(function() {
-        map.invalidateSize();
-      }, 200);
+      // Force Leaflet to recalculate — multiple timeouts ensure tiles load
+      setTimeout(function() { map.invalidateSize(); }, 100);
+      setTimeout(function() { map.invalidateSize(); }, 400);
+      setTimeout(function() { map.invalidateSize(); }, 1000);
 
-      // Also recalculate on window resize
-      window.addEventListener('resize', function() {
-        map.invalidateSize();
-      });
+      window.addEventListener('resize', function() { map.invalidateSize(); });
     });
 
     async function loadSightings() {

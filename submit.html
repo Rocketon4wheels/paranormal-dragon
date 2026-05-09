@@ -635,6 +635,19 @@
           </div>
         </div>
 
+        <!-- File upload -->
+        <div class="field-row" id="file-upload-section">
+          <label class="field-label">Upload photos or video <span style="font-weight:400;color:var(--muted,#9080b0)">(optional — max 50MB per file, 5 files)</span></label>
+          <div id="upload-drop-zone" style="border:2px dashed rgba(124,58,237,.3);border-radius:8px;padding:1.5rem;text-align:center;cursor:pointer;transition:all .2s;background:rgba(13,0,21,.4)" onclick="document.getElementById('file-input').click()" ondragover="event.preventDefault();this.style.borderColor='var(--purple2,#a855f7)'" ondragleave="this.style.borderColor='rgba(124,58,237,.3)'" ondrop="handleFileDrop(event)">
+            <div style="font-size:2rem;margin-bottom:.5rem">📎</div>
+            <div style="font-family:'Cinzel',serif;font-size:.65rem;letter-spacing:.1em;color:var(--purple3,#c084fc);margin-bottom:.25rem">Drop files here or click to browse</div>
+            <div style="font-size:.8rem;color:var(--muted,#9080b0)">JPG, PNG, MP4, MOV, AVI, WebM — max 50MB each</div>
+          </div>
+          <input type="file" id="file-input" multiple accept="image/jpeg,image/png,image/gif,image/webp,video/mp4,video/quicktime,video/avi,video/webm,audio/mpeg,audio/wav" style="display:none" onchange="handleFileSelect(this.files)"/>
+          <div id="file-list" style="margin-top:.75rem;display:flex;flex-direction:column;gap:.4rem"></div>
+          <div id="file-error" style="font-family:'Share Tech Mono',monospace;font-size:.7rem;color:#ef4444;margin-top:.4rem;display:none"></div>
+        </div>
+
         <div class="field-row">
           <label class="field-label" for="incident-impact">How did this affect you?</label>
           <textarea class="field-textarea" id="incident-impact" style="min-height:80px" placeholder="Physical effects, emotional impact, lasting changes to your beliefs or life..."></textarea>
@@ -924,6 +937,50 @@
     }
 
     // ── Submit ────────────────────────────────────────────────
+      // ── File upload handling ──────────────────────────────────────────────────
+      var _selectedFiles = [];
+      var MAX_FILE_SIZE  = 50 * 1024 * 1024; // 50MB
+      var MAX_FILES      = 5;
+
+      function handleFileDrop(e) {
+        e.preventDefault();
+        document.getElementById('upload-drop-zone').style.borderColor = 'rgba(124,58,237,.3)';
+        handleFileSelect(e.dataTransfer.files);
+      }
+
+      function handleFileSelect(files) {
+        var errEl = document.getElementById('file-error');
+        errEl.style.display = 'none';
+        var arr = Array.from(files);
+        var errors = [];
+        arr.forEach(function(f) {
+          if (_selectedFiles.length >= MAX_FILES) { errors.push('Maximum 5 files allowed.'); return; }
+          if (f.size > MAX_FILE_SIZE) { errors.push(f.name + ' is too large (max 50MB).'); return; }
+          if (_selectedFiles.find(function(x){ return x.name===f.name&&x.size===f.size; })) return;
+          _selectedFiles.push(f);
+        });
+        if (errors.length) { errEl.textContent = errors.join(' '); errEl.style.display = 'block'; }
+        renderFileList();
+      }
+
+      function renderFileList() {
+        var listEl = document.getElementById('file-list');
+        if (!listEl) return;
+        if (!_selectedFiles.length) { listEl.innerHTML = ''; return; }
+        listEl.innerHTML = _selectedFiles.map(function(f, i) {
+          var icon = f.type.startsWith('image/') ? '🖼️' : f.type.startsWith('video/') ? '🎥' : '🎤';
+          var sizeMB = (f.size/(1024*1024)).toFixed(1);
+          return '<div style="display:flex;align-items:center;gap:.5rem;padding:.4rem .6rem;background:rgba(124,58,237,.08);border:1px solid rgba(124,58,237,.15);border-radius:4px">' +
+            '<span>' + icon + '</span>' +
+            '<span style="flex:1;font-size:.82rem;color:var(--text,#e8e0ff);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + f.name + '</span>' +
+            '<span style="font-family:monospace;font-size:.6rem;color:#9080b0">' + sizeMB + 'MB</span>' +
+            '<button type="button" onclick="removeFile(' + i + ')" style="background:none;border:none;color:#f87171;cursor:pointer;font-size:.9rem;padding:0 .2rem">✕</button>' +
+          '</div>';
+        }).join('');
+      }
+
+      function removeFile(i) { _selectedFiles.splice(i,1); renderFileList(); }
+
     async function submitReport() {
       const btn = document.getElementById('submit-btn');
       btn.disabled = true;

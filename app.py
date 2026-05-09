@@ -1590,6 +1590,15 @@ def reports_latest():
 
     return jsonify({'report': latest, 'daily_strangeness_index': daily_index})
 
+@app.route('/reports/<report_id>', methods=['GET'])
+def get_single_report(report_id):
+    """Public endpoint to fetch a single live report by ID — used by shareable links."""
+    reports = get_reports()
+    report  = next((r for r in reports if r.get('id') == report_id and r.get('status') == 'live'), None)
+    if not report:
+        return jsonify({'error': 'Report not found'}), 404
+    return jsonify({'report': report})
+
 @app.route('/reports/archive', methods=['GET'])
 def reports_archive():
     reports    = get_reports()
@@ -1612,6 +1621,66 @@ def reports_archive():
     start    = (page - 1) * per_page
     return jsonify({'reports': live[start:start + per_page], 'total': len(live),
                     'total_live': total_live, 'plan': plan, 'page': page})
+
+@app.route('/submissions/upload', methods=['POST'])
+def upload_submission_file():
+    """Upload photo/video attached to a sighting submission. Linked to member profile if token provided."""
+    import werkzeug.utils
+    UPLOADS_DIR = DATA_DIR / 'uploads'
+    UPLOADS_DIR.mkdir(exist_ok=True)
+
+    if 'file' not in request.files:
+        return jsonify({'error': 'No file provided'}), 400
+
+    f             = request.files['file']
+    submission_id = request.form.get('submission_id', 'unknown')
+
+    if not f.filename:
+        return jsonify({'error': 'Empty filename'}), 400
+
+    # Size check — 50MB
+    f.seek(0, 2)
+    size = f.tell()
+    f.seek(0)
+    if size > 50 * 1024 * 1024:
+        return jsonify({'error': 'File too large (max 50MB)'}), 400
+
+    # Allowed types
+    allowed = {'image/jpeg','image/png','image/gif','image/webp',
+               'video/mp4','video/quicktime','video/avi','video/webm',
+               'audio/mpeg','audio/wav','audio/ogg'}
+    if f.content_type not in allowed:
+        return jsonify({'error': 'File type not allowed'}), 400
+
+    safe_name  = werkzeug.utils.secure_filename(f.filename)
+    timestamp  = int(datetime.now(timezone.utc).timestamp())
+    filename   = f'{submission_id}_{timestamp}_{safe_name}'
+    file_path  = UPLOADS_DIR / filename
+    f.save(str(file_path))
+
+    file_url = f'{SITE_URL}/data/uploads/{filename}'
+
+    # Link to member profile if token provided
+    token = request.headers.get('X-Member-Token','')
+    if token:
+        member = find_member_by_token(token)
+        if member:
+            members = get_members()
+            for m in members:
+                if m.get('id') == member.get('id'):
+                    if 'media' not in m: m['media'] = []
+                    m['media'].append({
+                        'filename':      filename,
+                        'url':           file_url,
+                        'submission_id': submission_id,
+                        'uploaded_at':   datetime.now(timezone.utc).isoformat(),
+                        'size_bytes':    size,
+                        'content_type':  f.content_type,
+                    })
+                    break
+            save_json(MEMBERS_FILE, members)
+
+    return jsonify({'status': 'uploaded', 'filename': filename, 'file_url': file_url})
 
 @app.route('/submissions', methods=['POST'])
 def create_submission():

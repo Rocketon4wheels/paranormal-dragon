@@ -221,6 +221,7 @@
     <ul class="nav-links">
       <li><a href="index.html">Home</a></li>
       <li><a href="report.html" class="active">Strangeness Report</a></li>
+      <li><a href="faq.html">FAQ</a></li>
       <li><a href="chatbot.html">The Oracle</a></li>
       <li><a href="submit.html">Submit a Sighting</a></li>
       <li><a href="member.html">My Portal</a></li>
@@ -453,11 +454,31 @@
         }
         // Check for specific report in URL
         var caseParam = getUrlParam('case');
-        var startReport = caseParam
-          ? (allReports.find(function(r){ return r.id === caseParam; }) || allReports[0])
-          : allReports[0];
-        showFeatured(startReport);
-        updateMeter(startReport.strangeness_index || 6.6);
+        if (caseParam) {
+          // Try to find in loaded archive first
+          var found = allReports.find(function(r){ return r.id === caseParam; });
+          if (found) {
+            showFeatured(found);
+            updateMeter(found.strangeness_index || 6.6);
+          } else {
+            // Fetch the specific report directly if not in archive page
+            fetch(API + '/reports/' + caseParam)
+              .then(function(res){ return res.ok ? res.json() : null; })
+              .then(function(data){
+                if (data && data.report) {
+                  showFeatured(data.report);
+                  updateMeter(data.report.strangeness_index || 6.6);
+                } else {
+                  showFeatured(allReports[0]);
+                  updateMeter(allReports[0].strangeness_index || 6.6);
+                }
+              })
+              .catch(function(){ showFeatured(allReports[0]); });
+          }
+        } else {
+          showFeatured(allReports[0]);
+          updateMeter(allReports[0].strangeness_index || 6.6);
+        }
         currentPage = 1;
         renderArchive(allReports);
       } catch(err) {
@@ -467,6 +488,7 @@
     }
 
     function showFeatured(r) {
+      _featuredReport = r;  // track for share button
       document.getElementById('feat-loading').style.display = 'none';
       document.getElementById('feat-content').style.display = 'block';
       document.getElementById('feat-stamp').textContent    = r.date_label || 'Latest transmission';
@@ -576,8 +598,10 @@
       if (cat) setFilter(cat, document.querySelector(`[data-filter="${cat}"]`));
     }
 
+    var _featuredReport = null; // track which report is currently featured
+
     function shareReport() {
-      var r = allReports[0]; // current featured report
+      var r = _featuredReport || allReports[0];
       if (!r) return;
       var shareUrl = 'https://api.strangenessis.com/r/' + r.id;
       var shareText = (r.headline || 'Strangeness IS Intelligence Report');
