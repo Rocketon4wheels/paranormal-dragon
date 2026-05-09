@@ -512,7 +512,7 @@ function showDiagResult() {
           Consult The Oracle — ${cls.cta}
         </a>
         <a href="submit.html" class="diag-btn-secondary" onclick="closeDiagnosis();if(window.siTrack)siTrack('diag_report_click',{cls:'${cls.code}'})">
-          File your official strangeness report
+          File your official strange report
         </a>
         ${!isMember ? `
         <button class="diag-btn-secondary" onclick="closeDiagnosis();setTimeout(()=>{ if(window.openPricingModal)openPricingModal('oracle');else window.location.href='member.html?plan=oracle'; },300)" style="opacity:.85">

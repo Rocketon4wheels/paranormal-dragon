@@ -155,7 +155,7 @@
     <a href="index.html" class="nav-logo" style="font-family:'Cinzel Decorative',serif">Strangeness <span>IS</span></a>
     <ul class="nav-links">
       <li><a href="index.html">Home</a></li>
-      <li><a href="report.html">Strangeness Report</a></li>
+      <li><a href="report.html">Strange Report</a></li>
       <li><a href="faq.html">FAQ</a></li>
       <li><a href="chatbot.html">The Oracle</a></li>
       <li><a href="map.html">Strangeness Map</a></li>
@@ -328,7 +328,7 @@
           <div class="dash-section">
             <div class="dash-section-title">Quick Access</div>
             <a href="chatbot.html" class="dash-btn dash-btn-primary" onclick="siTrack('member_open_oracle')">🔮 Open The Oracle</a>
-            <a href="report.html" class="dash-btn dash-btn-outline">📡 Daily Strangeness Report</a>
+            <a href="report.html" class="dash-btn dash-btn-outline">📡 Daily Strange Report</a>
             <a href="map.html" class="dash-btn dash-btn-outline">🗺️ Strangeness Map</a>
             <a href="submit.html" class="dash-btn dash-btn-outline">🛸 Submit a Sighting</a>
           </div>
@@ -592,7 +592,7 @@
       if (benefits.length) {
         const el = document.getElementById('plan-benefits');
         if (el) el.innerHTML = benefits.map(b =>
-          `<span style="display:inline-block;background:rgba(124,58,237,.12);color:var(--purple3);font-family:'Cinzel',serif;font-size:.55rem;letter-spacing:.08em;padding:3px 8px;border-radius:10px;margin:2px">${b}</span>`
+          '<span style="display:inline-block;background:rgba(124,58,237,.12);color:var(--purple3);font-family:Cinzel,serif;font-size:.55rem;letter-spacing:.08em;padding:3px 8px;border-radius:10px;margin:2px">' + b + '</span>'
         ).join('');
       }
 
@@ -612,14 +612,16 @@
         document.getElementById('investigator-section').style.display = 'block';
       }
       // Show upgrade prompt for free and oracle members
-      const upgradeEl = document.getElementById('upgrade-prompt');
+      var upgradeEl = document.getElementById('upgrade-prompt');
       if (upgradeEl) {
         if (m.plan === 'free') {
           upgradeEl.style.display = 'block';
-          upgradeEl.innerHTML = '<p style="font-family:'Crimson Pro',Georgia,serif;font-size:.9rem;color:var(--muted);margin-bottom:.75rem">Upgrade to unlock unlimited Oracle access, all reports, and more.</p><a href="member.html?tab=upgrade" style="font-family:'Cinzel',serif;font-size:.65rem;letter-spacing:.1em;background:var(--purple3);color:#fff;padding:.5rem 1.25rem;border-radius:4px;text-decoration:none">View plans →</a>';
+          upgradeEl.innerHTML = '<p style="font-family:Georgia,serif;font-size:.9rem;color:var(--muted);margin-bottom:.75rem">Upgrade to unlock unlimited Oracle access, all reports, and more.</p>' +
+            '<a href="member.html?tab=upgrade" style="font-family:Cinzel,serif;font-size:.65rem;letter-spacing:.1em;background:var(--purple3);color:#fff;padding:.5rem 1.25rem;border-radius:4px;text-decoration:none">View plans →</a>';
         } else if (m.plan === 'oracle') {
           upgradeEl.style.display = 'block';
-          upgradeEl.innerHTML = '<p style="font-family:'Crimson Pro',Georgia,serif;font-size:.9rem;color:var(--muted);margin-bottom:.75rem">Upgrade to Investigator for Signal Intelligence access and live sessions.</p><a href="member.html?tab=upgrade" style="font-family:'Cinzel',serif;font-size:.65rem;letter-spacing:.1em;background:var(--purple3);color:#fff;padding:.5rem 1.25rem;border-radius:4px;text-decoration:none">Upgrade →</a>';
+          upgradeEl.innerHTML = '<p style="font-family:Georgia,serif;font-size:.9rem;color:var(--muted);margin-bottom:.75rem">Upgrade to Investigator for Signal Intelligence access and live sessions.</p>' +
+            '<a href="member.html?tab=upgrade" style="font-family:Cinzel,serif;font-size:.65rem;letter-spacing:.1em;background:var(--purple3);color:#fff;padding:.5rem 1.25rem;border-radius:4px;text-decoration:none">Upgrade →</a>';
         }
       }
     }

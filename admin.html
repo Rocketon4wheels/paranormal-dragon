@@ -284,7 +284,7 @@
         <button class="sidebar-item" onclick="showPanel('oracle-config',this)"><span class="dot"></span>Oracle Settings</button>
       </div>
       <div class="sidebar-section">
-        <span class="sidebar-label">Strangeness Report</span>
+        <span class="sidebar-label">Strange Report</span>
         <button class="sidebar-item" id="nav-quickgen" onclick="showPanel('quick-generate',this)"><span class="dot"></span>⚡ Quick Generate</button>
         <button class="sidebar-item" id="nav-reports" onclick="showPanel('reports',this)"><span class="dot"></span>All Reports</button>
         <button class="sidebar-item" onclick="showPanel('report-schedule',this)"><span class="dot"></span>Pipeline</button>
@@ -437,7 +437,7 @@
         <div class="admin-section">
           <div class="admin-section-title">Behavior</div>
           <div class="toggle-row"><div><div class="toggle-label">End each response with a question</div></div><label class="toggle"><input type="checkbox" checked/><span class="toggle-slider"></span></label></div>
-          <div class="toggle-row"><div><div class="toggle-label">Reference today's Strangeness Report</div></div><label class="toggle"><input type="checkbox" checked/><span class="toggle-slider"></span></label></div>
+          <div class="toggle-row"><div><div class="toggle-label">Reference today's Strange Report</div></div><label class="toggle"><input type="checkbox" checked/><span class="toggle-slider"></span></label></div>
           <div class="toggle-row"><div><div class="toggle-label">Suggest Oracle Portal after 2 messages</div></div><label class="toggle"><input type="checkbox" checked/><span class="toggle-slider"></span></label></div>
         </div>
         <button class="btn-sm btn-purple" onclick="saveOracleConfig()">Save to server</button>
@@ -549,7 +549,7 @@
       </div>
 
             <div class="panel" id="panel-reports">
-        <div class="panel-header"><div class="panel-title">All Reports</div><div class="panel-sub">Manage published and draft Strangeness Reports.</div></div>
+        <div class="panel-header"><div class="panel-title">All Reports</div><div class="panel-sub">Manage published and draft Strange Reports.</div></div>
         <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:1rem;align-items:center">
           <button class="btn-sm btn-purple" onclick="generateReportNow()" id="btn-gen2">Generate with pipeline</button>
           <input type="text" id="reports-search" placeholder="🔍 Search reports..." oninput="filterReportsList()" style="background:var(--dark2);border:1px solid var(--border);border-radius:5px;padding:.4rem .8rem;color:var(--text);font-family:var(--mono);font-size:.82rem;outline:none;flex:1;min-width:160px"/>
@@ -2032,7 +2032,7 @@ async function aiDraftReport() {
   if (out) { out.classList.add('visible'); out.textContent = 'Generating...'; }
   try {
     const res = await api('/admin/oracle/test', 'POST', {
-      message: 'Write a complete Strangeness Report about: ' + notes,
+      message: 'Write a complete Strange Report about: ' + notes,
       prompt: 'You are the lead investigator for Strangeness IS. Write a classified-style paranormal intelligence briefing. Headline format: [LOCATION]: [WHAT HAPPENED] — [IMPLICATION]. Include INCIDENT SUMMARY, PATTERN ANALYSIS, CROSS-REFERENCES, ANALYST ASSESSMENT. 500-700 words.'
     });
     document.getElementById('new-content').value = res.reply;
@@ -2155,7 +2155,7 @@ async function testReportPrompt() {
   if (btn) { btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Generating...'; }
   if (out) { out.classList.add('visible'); out.textContent = 'Generating report...'; }
   try {
-    const res = await api('/admin/oracle/test', 'POST', { message: 'Write a complete Strangeness Report about: ' + msg, prompt });
+    const res = await api('/admin/oracle/test', 'POST', { message: 'Write a complete Strange Report about: ' + msg, prompt });
     if (out) out.textContent = res.reply || res.error || 'No response';
   } catch(e) { if (out) out.textContent = 'Error: ' + e.message; }
   finally { if (btn) { btn.disabled = false; btn.textContent = 'Generate test report'; } }
@@ -2437,7 +2437,7 @@ async function saveSubmissionEdit(id) {
 }
 
 async function publishSubmission(id) {
-  if (!confirm('Convert this submission to a Strangeness Report draft?')) return;
+  if (!confirm('Convert this submission to a Strange Report draft?')) return;
   try { await api('/admin/submissions/' + id + '/publish', 'POST'); toast('Report draft created!','info'); loadSubmissions(); loadDashboard(); }
   catch(e) { toast('Failed: ' + e.message, 'error'); }
 }

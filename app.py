@@ -412,13 +412,16 @@ CASE NUMBER: Auto-assigned as SI-YYYY-NNNN by the system. Do not generate one yo
 HEADLINE (first line only — NO label, NO prefix, NO "HEADLINE:", NO markdown):
 [SPECIFIC REAL PLACE NAME]: [EXACTLY WHAT HAPPENED] — [WHY IT MATTERS]
 The location must be a real, specific named place. Never use "United States," "Unknown," or generic regions.
+CRITICAL: Do NOT write a headline implying a new 2026 event occurred unless a dated incident is in the supplied data. For pattern analyses and standing investigations, the headline should reflect the analytical nature: e.g. "Dulce, New Mexico: Standing Investigation File — What the Evidence Actually Shows About the Alleged Underground Base" rather than implying something happened today.
 
 STRANGENESS INDEX (second line only):
 STRANGENESS INDEX: X.X/10 — [CATEGORY]
 1.0-3.0: Likely conventional explanation | 4.0-5.9: Anomalous, worth documenting | 6.0-7.9: Strong anomaly, multiple factors | 8.0-9.0: Exceptional, major implications if verified | 9.1-10.0: Reserved for cases with physical evidence, multiple independent credible witnesses, and no viable conventional explanation
 
 INCIDENT SUMMARY (3-4 paragraphs)
-State the full date. State the exact location. Describe what happened in precise sensory sequence. Name every documented witness with their background. State official response if any. State official explanation if any. Explain precisely where the official explanation fails to account for the reported data. Every specific claim carries an epistemic label.
+CRITICAL RULE: If no specific dated incident exists in the supplied intelligence package, you MUST open with this framing: "This report is a pattern analysis of [subject] — no new dated incident has been confirmed in today's intelligence package. The following draws on documented historical cases and current disclosure context." Do NOT invent a "May X, 2026" triggering event when none exists in the source data. Do NOT open with "discussions emerged" or "reports surfaced" as a substitute for a real event.
+
+If a specific dated incident DOES exist: State the full date. State the exact location. Describe what happened in precise sensory sequence. Name every documented witness with their background. State official response if any. State official explanation if any. Explain precisely where the official explanation fails to account for the reported data. Every specific claim carries an epistemic label.
 
 PATTERN ANALYSIS (2-3 paragraphs)
 Compare against verified historical cases from the reference library above. Use ONLY cases from the library or cases present in the supplied source data. Do not cite case numbers you cannot verify. If you want to reference a NUFORC or MUFON case not in your data, instruct the investigator to search for it rather than inventing a case number.
@@ -427,7 +430,7 @@ CROSS-REFERENCES (2 paragraphs)
 Reference verified Congressional testimony (from library above), verified legislation, verified whistleblower claims. Reference regional folklore only with documented cultural attribution. Cross-reference supplied Oracle witness data if present.
 
 FIELD INVESTIGATOR ALERT (1 paragraph)
-Include: exact location with GPS if derivable from a named place, specific NUFORC/MUFON search criteria to run right now (date range, state, shape keywords), specific FOIA language targeting relevant agencies, physical evidence indicators and detection equipment, active time windows for investigation, what to document and submit to Strangeness IS.
+ALWAYS include the GPS coordinates of the primary named location — even if the specific incident site is unknown, give the coordinates of the city, town, base, park, or region as the investigative starting point. Never write "coordinates unavailable" — every named place has coordinates you can derive. Format: "Primary investigation zone: [Location Name] — approximately [XX.XXXX°N, XXX.XXXX°W]." Then include: specific NUFORC/MUFON search criteria (date range, state, shape keywords), specific FOIA request language targeting relevant agencies, physical evidence indicators and detection equipment, active time windows when phenomena were reported, what to document and submit to Strangeness IS with case reference.
 
 ANALYST ASSESSMENT (1-2 paragraphs)
 Rank competing explanations by fit to evidence. Identify the single most anomalous verified data point. State what additional evidence would confirm or rule out each explanation. Assign confidence levels to each scenario. Do not reach conclusions the evidence does not support.
@@ -439,7 +442,11 @@ STYLE RULES
 ══════════════════════════════════════════════════════════════
 Minimum 900 words. No bullet points. No markdown headers. Flowing investigative prose. Atmosphere from facts only. Never use: "shrouded in mystery," "spine-tingling," "baffling experts," "many believe," "some say," or any other tabloid or vague attribution.
 
-When source data is thin: say so directly. "The available intelligence on this case is limited to a single headline from [source] dated [date]. The following analysis is based on that limited sourcing plus documented historical patterns. Investigators should treat conclusions as preliminary pending additional sourcing."
+When source data is thin: say so directly in the first paragraph. Use this framing: "The available intelligence on this case is limited to [describe what you have]. The following analysis draws on documented historical patterns and the reference library. Investigators should treat conclusions as preliminary pending additional sourcing."
+
+When NO specific incident exists for the assigned category: Open by stating this is a pattern analysis, not an incident report. Anchor the report to the most significant VERIFIED historical case in that category from the reference library. Use today's date only to contextualize the current disclosure environment — not to imply a new event occurred. This is honest and still produces a useful investigative document.
+
+When the assigned topic is a long-running conspiracy or alleged location (Area 51, Dulce Base, Skinwalker Ranch, etc.) with no new dated incident: The report must clearly frame itself as a "Standing Investigation File" not a breaking news report. Assess the current evidence landscape, what is verified vs alleged, and give investigators specific actionable steps to advance the case.
 
 ══════════════════════════════════════════════════════════════
 SOURCE INTEGRATION
@@ -898,7 +905,7 @@ INTELLIGENCE PACKAGE:
 Sources available: {', '.join(sources_used)}
 Total RSS database: {len(load_json(HEADLINES_FILE, [])):,} headlines
 
-Write the complete Strangeness Report now. Follow all system prompt instructions exactly.{avoid_clause}"""
+Write the complete Strange Report now. Follow all system prompt instructions exactly.{avoid_clause}"""
 
     try:
         response = client.chat.completions.create(
@@ -920,7 +927,7 @@ Write the complete Strangeness Report now. Follow all system prompt instructions
             'SUBJECT:', 'SUBJECT :', 'TITLE:', 'TITLE :',
             'REPORT HEADLINE:', 'REPORT TITLE:',
         ]
-        headline = f'Strangeness Report — {datetime.now().strftime("%B %d")}'
+        headline = f'Strange Report — {datetime.now().strftime("%B %d")}'
         for line in lines[:8]:
             cleaned = line.strip().lstrip('#*—').strip()
             # Strip format label prefixes
@@ -1059,7 +1066,7 @@ Write the complete Strangeness Report now. Follow all system prompt instructions
 
 def send_report_notification(report: dict):
     subject = f'Strangeness IS — Draft report ready: {report["headline"][:60]}'
-    body    = (f'New Strangeness Report draft generated.\n\n'
+    body    = (f'New Strange Report draft generated.\n\n'
                f'Headline: {report["headline"]}\n'
                f'Strangeness Index: {report["strangeness_index"]}/10\n'
                f'Category: {report.get("category","")}\n'
