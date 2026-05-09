@@ -8,572 +8,451 @@
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cinzel:wght@400;600&family=Crimson+Pro:ital,wght@0,300;0,400;1,300&family=Share+Tech+Mono&display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="css/style.css"/>
-  <!-- Leaflet.js — free, no API key needed -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <style>
     :root {
       --purple:#7c3aed; --purple2:#a855f7; --purple3:#c084fc;
       --gold:#d4a843; --gold2:#f0c060;
-      --dark:#07070f; --dark2:#0d0015; --surface:#0a0018;
+      --dark:#07070f; --surface:#0a0018;
       --text:#e8e0ff; --muted:#9080b0;
     }
-    /* Navbar is 60px fixed — map page fills below it */
+
+    /* ── Critical: map must fill viewport ── */
+    html, body { margin:0; padding:0; height:100%; overflow:hidden; }
+
+    .navbar {
+      position: fixed; top:0; left:0; right:0; z-index:500;
+      height: 60px;
+      padding: 0 2rem;
+      display: flex; align-items:center; justify-content:space-between;
+      background: rgba(7,7,15,.95);
+      backdrop-filter: blur(8px);
+      border-bottom: 1px solid rgba(124,58,237,.15);
+    }
+    .nav-logo { font-family:'Cinzel Decorative',serif; font-size:.9rem; letter-spacing:.15em; color:var(--purple3); text-decoration:none; }
+    .nav-links { display:flex; gap:1.5rem; list-style:none; margin:0; padding:0; }
+    .nav-links a { font-family:'Cinzel',serif; font-size:.58rem; letter-spacing:.14em; color:var(--muted); text-decoration:none; transition:color .2s; }
+    .nav-links a:hover, .nav-links a.active { color:var(--purple3); }
+
+    /* ── Page wrapper sits below fixed navbar ── */
     .map-page {
       position: fixed;
-      top: 60px;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: var(--dark);
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
+      top: 60px; left: 0; right: 0; bottom: 0;
+      display: grid;
+      grid-template-rows: auto auto 1fr;
+      grid-template-columns: 1fr 300px;
     }
 
-    .map-eyebrow { font-family:'Cinzel',serif; font-size:.62rem; letter-spacing:.22em; color:var(--gold); margin-bottom:.3rem; display:flex; align-items:center; gap:.6rem; }
-    .map-live-dot { width:7px; height:7px; background:#ef4444; border-radius:50%; animation:mapBlink 1.5s ease-in-out infinite; flex-shrink:0; }
-    @keyframes mapBlink{0%,100%{opacity:1;box-shadow:0 0 6px #ef4444}50%{opacity:.3;box-shadow:none}}
-    .map-title { font-family:'Cinzel Decorative',serif; font-size:clamp(.9rem,1.8vw,1.2rem); font-weight:400; color:var(--text); line-height:1.2; }
-    .map-title span { color:var(--gold2); }
-
-    /* Map overlay top bar */
-    .map-overlay-top {
-      position: absolute;
-      top: 0; left: 0; right: 0;
-      z-index: 1000;
-      pointer-events: none;
-    }
-    .map-overlay-header {
+    /* ── Top bar ── */
+    .map-topbar {
+      grid-column: 1 / 3;
+      grid-row: 1;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: .6rem 1rem .5rem;
-      background: rgba(7,7,15,.88);
+      padding: .5rem 1rem;
+      background: rgba(7,7,15,.96);
       border-bottom: 1px solid rgba(124,58,237,.12);
-      pointer-events: auto;
       flex-wrap: wrap;
       gap: .5rem;
-      backdrop-filter: blur(6px);
+      z-index: 10;
     }
+    .map-title-wrap { display:flex; align-items:center; gap:.75rem; }
+    .map-live-dot { width:8px; height:8px; background:#ef4444; border-radius:50%; animation:blink 1.5s ease-in-out infinite; flex-shrink:0; }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.3} }
+    .map-title { font-family:'Cinzel',serif; font-size:.8rem; letter-spacing:.2em; color:var(--text); }
+    .map-actions { display:flex; gap:.5rem; }
+    .map-action-btn {
+      font-family:'Cinzel',serif; font-size:.55rem; letter-spacing:.1em;
+      padding:.35rem .85rem; border-radius:4px; text-decoration:none; transition:all .2s;
+    }
+    .map-action-btn.gold { color:var(--gold); border:1px solid rgba(212,168,67,.4); }
+    .map-action-btn.purple { color:var(--purple3); border:1px solid rgba(124,58,237,.35); }
 
-    /* Category filter pills */
+    /* ── Filter bar ── */
     .map-filters {
+      grid-column: 1 / 3;
+      grid-row: 2;
       display: flex;
-      gap: .3rem;
+      gap: .35rem;
       flex-wrap: wrap;
-      padding: .35rem 1rem .45rem;
-      background: rgba(7,7,15,.82);
+      padding: .4rem 1rem;
+      background: rgba(10,0,24,.92);
       border-bottom: 1px solid rgba(124,58,237,.1);
-      pointer-events: auto;
+      z-index: 10;
     }
-    .map-filter-pill {
-      font-family:'Cinzel',serif;
-      font-size:.55rem;
-      letter-spacing:.1em;
-      padding:.3rem .8rem;
-      border-radius:20px;
-      border: 1px solid rgba(124,58,237,.25);
-      background: transparent;
-      color: var(--muted);
-      cursor: pointer;
-      transition: all .2s;
+    .pill {
+      font-family:'Cinzel',serif; font-size:.52rem; letter-spacing:.08em;
+      padding:.28rem .75rem; border-radius:20px; cursor:pointer; transition:all .2s;
+      border:1px solid rgba(124,58,237,.2); background:transparent; color:var(--muted);
     }
-    .map-filter-pill:hover { border-color:var(--purple2); color:var(--purple3); }
-    .map-filter-pill.active { border-color:var(--purple2); background:rgba(124,58,237,.15); color:var(--purple3); }
-    .map-filter-pill.all { border-color:var(--gold); color:var(--gold); }
-    .map-filter-pill.all.active { background:rgba(212,168,67,.1); }
+    .pill:hover { border-color:var(--purple2); color:var(--purple3); }
+    .pill.active { border-color:var(--purple2); background:rgba(124,58,237,.15); color:var(--purple3); }
+    .pill.all { border-color:var(--gold); color:var(--gold); }
+    .pill.all.active { background:rgba(212,168,67,.1); border-color:var(--gold); }
 
-    /* Map layout fills all remaining space in map-page */
-    .map-layout {
-      display: grid;
-      grid-template-columns: 1fr 320px;
-      flex: 1;
-      height: 100%;
-      min-height: 0;
-      overflow: hidden;
-    }
-
-    /* Map container — explicit height so Leaflet tiles render */
-    #strangeness-map {
+    /* ── Map canvas ── */
+    #map-canvas {
+      grid-column: 1;
+      grid-row: 3;
       width: 100%;
       height: 100%;
-      min-height: 400px;
-      background: #07070f;
-      position: relative;
-      overflow: hidden;
+      /* NO overflow:hidden — kills Leaflet tiles */
+      /* NO filter on the container — apply to tiles only */
+      background: #1a1a2e;
     }
 
-    /* Leaflet dark override */
-    .leaflet-tile { filter: brightness(0.85) saturate(0.5) hue-rotate(200deg); }
-    .leaflet-container { background: #07070f; font-family: 'Crimson Pro', Georgia, serif; }
+    /* ── Leaflet customization ── */
+    /* Use a subtle filter — NOT hue-rotate which causes black tiles */
+    .leaflet-tile-pane { filter: brightness(0.9) saturate(0.7); }
+    .leaflet-container { background: #1a1a2e !important; }
+    .leaflet-control-zoom { border:1px solid rgba(124,58,237,.3) !important; }
+    .leaflet-control-zoom a {
+      background: rgba(10,0,24,.9) !important;
+      color: var(--purple3) !important;
+      border-color: rgba(124,58,237,.2) !important;
+    }
     .leaflet-popup-content-wrapper {
-      background: #0a0018;
+      background: #0a0018 !important;
       border: 1px solid rgba(124,58,237,.4);
-      border-radius: 8px;
-      color: var(--text);
-      box-shadow: 0 0 30px rgba(124,58,237,.2);
+      border-radius: 8px !important;
+      color: var(--text) !important;
+      box-shadow: 0 0 30px rgba(124,58,237,.2) !important;
     }
-    .leaflet-popup-tip { background: #0a0018; }
-    .leaflet-popup-content { margin: 0; padding: 0; }
-    .leaflet-popup-close-button { color: var(--muted) !important; font-size: 18px !important; }
+    .leaflet-popup-tip { background: #0a0018 !important; }
+    .leaflet-popup-content { margin: 0 !important; padding: 0 !important; }
+    .leaflet-popup-close-button { color: var(--muted) !important; top:8px !important; right:8px !important; }
 
-    /* Popup content */
-    .pin-popup {
-      padding: 1rem;
-      min-width: 220px;
-      max-width: 280px;
-    }
-    .pin-cat {
-      font-family:'Cinzel',serif;
-      font-size:.55rem;
-      letter-spacing:.14em;
-      color:var(--gold);
-      margin-bottom:.4rem;
-    }
-    .pin-title {
-      font-size:1rem;
-      color:var(--text);
-      font-weight:500;
-      margin-bottom:.3rem;
-      line-height:1.35;
-    }
-    .pin-meta {
-      font-family:'Share Tech Mono',monospace;
-      font-size:.65rem;
-      color:var(--muted);
-      margin-bottom:.5rem;
-    }
-    .pin-desc {
-      font-size:.88rem;
-      color:var(--muted);
-      line-height:1.6;
-      font-style:italic;
-      border-left:2px solid rgba(124,58,237,.3);
-      padding-left:.6rem;
-    }
-    .pin-status {
-      display:inline-block;
-      margin-top:.5rem;
-      font-family:'Cinzel',serif;
-      font-size:.5rem;
-      letter-spacing:.12em;
-      padding:2px 8px;
-      border-radius:10px;
-    }
-    .pin-status.verified { background:rgba(34,197,94,.12); color:#22c55e; border:1px solid rgba(34,197,94,.25); }
-    .pin-status.pending  { background:rgba(245,158,11,.1); color:#f59e0b; border:1px solid rgba(245,158,11,.25); }
+    /* ── Popup ── */
+    .pin-popup { padding:.9rem 1rem; min-width:200px; max-width:260px; }
+    .pin-cat { font-family:'Cinzel',serif; font-size:.52rem; letter-spacing:.12em; color:var(--gold); margin-bottom:.3rem; }
+    .pin-title { font-size:.95rem; color:var(--text); font-weight:500; margin-bottom:.3rem; line-height:1.35; }
+    .pin-meta { font-family:'Share Tech Mono',monospace; font-size:.6rem; color:var(--muted); margin-bottom:.45rem; line-height:1.6; }
+    .pin-desc { font-size:.82rem; color:var(--muted); line-height:1.6; font-style:italic; border-left:2px solid rgba(124,58,237,.3); padding-left:.6rem; }
+    .pin-badge { display:inline-block; margin-top:.5rem; font-family:'Cinzel',serif; font-size:.48rem; letter-spacing:.1em; padding:2px 7px; border-radius:10px; }
+    .pin-badge.v { background:rgba(34,197,94,.12); color:#22c55e; border:1px solid rgba(34,197,94,.25); }
+    .pin-badge.p { background:rgba(245,158,11,.1); color:#f59e0b; border:1px solid rgba(245,158,11,.25); }
 
-    /* Sidebar */
+    /* ── Sidebar ── */
     .map-sidebar {
+      grid-column: 2;
+      grid-row: 3;
       background: var(--surface);
-      border-left: 1px solid rgba(124,58,237,.15);
+      border-left: 1px solid rgba(124,58,237,.12);
       display: flex;
       flex-direction: column;
       overflow: hidden;
     }
-    .sidebar-header {
-      padding: 1rem 1.25rem;
-      border-bottom: 1px solid rgba(124,58,237,.15);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
+    .sidebar-hdr {
+      padding:.85rem 1rem;
+      border-bottom:1px solid rgba(124,58,237,.12);
+      display:flex; align-items:center; justify-content:space-between; flex-shrink:0;
     }
-    .sidebar-title { font-family:'Cinzel',serif; font-size:.7rem; letter-spacing:.14em; color:var(--purple3); }
-    .sidebar-count { font-family:'Share Tech Mono',monospace; font-size:.65rem; color:var(--muted); }
+    .sidebar-hdr-title { font-family:'Cinzel',serif; font-size:.65rem; letter-spacing:.12em; color:var(--purple3); }
+    .sidebar-hdr-count { font-family:'Share Tech Mono',monospace; font-size:.6rem; color:var(--muted); }
+    .sidebar-submit {
+      margin:.65rem 1rem; padding:.55rem; text-align:center;
+      background:var(--purple); color:#fff; border:none; border-radius:4px;
+      font-family:'Cinzel',serif; font-size:.58rem; letter-spacing:.1em;
+      cursor:pointer; transition:background .2s; flex-shrink:0;
+    }
+    .sidebar-submit:hover { background:var(--purple2); }
     .sidebar-list { flex:1; overflow-y:auto; }
     .sidebar-list::-webkit-scrollbar { width:3px; }
-    .sidebar-list::-webkit-scrollbar-thumb { background:var(--surface); }
-
-    .sighting-card {
-      padding: .85rem 1.25rem;
-      border-bottom: 1px solid rgba(124,58,237,.1);
-      cursor: pointer;
-      transition: background .2s;
+    .sidebar-list::-webkit-scrollbar-thumb { background:rgba(124,58,237,.2); }
+    .s-card {
+      padding:.75rem 1rem; border-bottom:1px solid rgba(124,58,237,.08);
+      cursor:pointer; transition:background .15s;
     }
-    .sighting-card:hover { background: rgba(124,58,237,.06); }
-    .sighting-card.active { background: rgba(124,58,237,.1); border-left: 2px solid var(--purple2); }
-    .sc-cat { font-family:'Cinzel',serif; font-size:.52rem; letter-spacing:.1em; color:var(--gold); margin-bottom:.25rem; }
-    .sc-title { font-size:.9rem; color:var(--text); margin-bottom:.25rem; line-height:1.35; }
-    .sc-meta { font-family:'Share Tech Mono',monospace; font-size:.58rem; color:var(--muted); }
-
-    /* Add pin button (admin only) */
-    .add-pin-btn {
-      margin: .75rem 1.25rem;
-      padding: .65rem;
-      width: calc(100% - 2.5rem);
-      background: var(--purple);
-      color: #fff;
-      border: none;
-      border-radius: 4px;
-      font-family: 'Cinzel', serif;
-      font-size: .6rem;
-      letter-spacing: .12em;
-      cursor: pointer;
-      transition: background .2s;
+    .s-card:hover { background:rgba(124,58,237,.06); }
+    .s-card.active { background:rgba(124,58,237,.1); border-left:2px solid var(--purple2); }
+    .s-cat { font-family:'Cinzel',serif; font-size:.5rem; letter-spacing:.1em; color:var(--gold); margin-bottom:.2rem; }
+    .s-title { font-size:.85rem; color:var(--text); line-height:1.3; margin-bottom:.2rem; }
+    .s-meta { font-family:'Share Tech Mono',monospace; font-size:.56rem; color:var(--muted); }
+    .sidebar-foot {
+      padding:.5rem 1rem; border-top:1px solid rgba(124,58,237,.08);
+      font-family:'Share Tech Mono',monospace; font-size:.55rem; color:var(--muted); flex-shrink:0;
     }
-    .add-pin-btn:hover { background: var(--purple2); }
 
-    /* Disclaimer -->  */
-    .map-disclaimer {
-      padding: .6rem 2rem;
-      background: #040008;
-      border-top: 1px solid rgba(124,58,237,.1);
-      font-size: .78rem;
-      color: var(--muted);
-      text-align: center;
+    /* ── Diagnosis FAB ── */
+    @keyframes fabPulse {
+      0%,100%{box-shadow:0 0 0 0 rgba(124,58,237,.4),0 4px 20px rgba(0,0,0,.5)}
+      50%{box-shadow:0 0 0 10px rgba(124,58,237,.0),0 4px 20px rgba(0,0,0,.5)}
     }
+    .diag-fab {
+      position:fixed; bottom:1.75rem; right:1.75rem; z-index:9000;
+      display:flex; align-items:center; gap:.5rem; padding:.75rem 1.35rem;
+      background:linear-gradient(135deg,#7c3aed,#d4a843,#a855f7);
+      background-size:300% 300%; color:#fff; border:none; border-radius:50px;
+      font-family:'Cinzel',serif; font-size:.6rem; letter-spacing:.14em;
+      cursor:pointer; animation:fabPulse 2.5s ease-in-out infinite;
+    }
+    .diag-fab:hover { transform:scale(1.05); }
+
+    /* ── Diagnosis Modal ── */
+    .diagnosis-overlay {
+      position:fixed; inset:0; z-index:10000;
+      background:rgba(4,3,14,.85); backdrop-filter:blur(6px);
+      display:flex; align-items:center; justify-content:center;
+      opacity:0; pointer-events:none; transition:opacity .3s; padding:1rem;
+    }
+    .diagnosis-overlay.visible { opacity:1; pointer-events:auto; }
+    .diagnosis-modal {
+      background:#0d0820; border:1px solid rgba(124,58,237,.3);
+      border-radius:14px; padding:2rem 1.75rem;
+      max-width:520px; width:100%; max-height:90vh; overflow-y:auto; position:relative;
+    }
+    .diag-close { position:absolute; top:1rem; right:1rem; background:none; border:none; color:rgba(255,255,255,.3); font-size:1.1rem; cursor:pointer; }
+    .diag-header { text-align:center; margin-bottom:1.5rem; }
+    .diag-eyebrow { font-family:'Share Tech Mono',monospace; font-size:.6rem; letter-spacing:.2em; color:rgba(124,58,237,.5); }
+    .diag-title { font-family:'Cinzel',serif; font-size:1.3rem; color:#fff; margin:.3rem 0 .25rem; }
+    .diag-sub { font-family:'Crimson Pro',Georgia,serif; font-size:.85rem; color:rgba(144,128,176,.6); font-style:italic; }
+    .diag-progress { margin-bottom:1.5rem; }
+    .diag-progress-bar-wrap { height:2px; background:rgba(124,58,237,.15); border-radius:2px; margin-bottom:.4rem; }
+    .diag-progress-bar { height:100%; background:linear-gradient(90deg,#7c3aed,#d4a843); border-radius:2px; transition:width .4s ease; }
+    .diag-progress-text { font-family:'Share Tech Mono',monospace; font-size:.6rem; color:rgba(255,255,255,.25); }
+    .diag-question { font-family:'Cinzel',serif; font-size:1rem; color:#e8e0ff; line-height:1.5; margin-bottom:.4rem; }
+    .diag-question-sub { font-family:'Crimson Pro',Georgia,serif; font-size:.82rem; color:rgba(144,128,176,.6); margin-bottom:1.1rem; font-style:italic; }
+    .diag-options { display:flex; flex-direction:column; gap:.5rem; }
+    .diag-opt { background:rgba(124,58,237,.06); border:1px solid rgba(124,58,237,.2); border-radius:8px; padding:.7rem 1rem; color:#c0b0e0; font-family:'Crimson Pro',Georgia,serif; font-size:.9rem; text-align:left; cursor:pointer; transition:all .2s; }
+    .diag-opt:hover { background:rgba(124,58,237,.15); border-color:rgba(124,58,237,.5); color:#fff; }
+    .diag-result-inner { text-align:center; }
+    .diag-type-label { font-family:'Share Tech Mono',monospace; font-size:.6rem; letter-spacing:.15em; color:rgba(255,255,255,.3); margin-bottom:.25rem; }
+    .diag-type { font-family:'Cinzel',serif; font-size:1.4rem; margin:.2rem 0 .75rem; }
+    .diag-desc { font-family:'Crimson Pro',Georgia,serif; font-size:.92rem; color:#9080b0; line-height:1.75; margin:.75rem 0; }
+    .diag-score-row { display:flex; gap:1rem; align-items:center; margin:1rem 0; justify-content:center; }
+    .diag-score-block { text-align:center; min-width:80px; }
+    .diag-phenom-block { flex:1; text-align:left; padding-left:1rem; border-left:1px solid rgba(124,58,237,.2); max-width:240px; }
+    .diag-file-header { text-align:left; }
+    .diag-actions { display:flex; flex-direction:column; gap:.6rem; margin-top:1.25rem; }
+    .diag-btn-primary { display:block; padding:.85rem 1.5rem; text-align:center; background:linear-gradient(135deg,#7c3aed,#a855f7); color:#fff; border:none; border-radius:8px; font-family:'Cinzel',serif; font-size:.65rem; letter-spacing:.1em; cursor:pointer; text-decoration:none; }
+    .diag-btn-secondary { display:block; padding:.7rem 1.5rem; text-align:center; background:rgba(124,58,237,.08); border:1px solid rgba(124,58,237,.25); color:#9080b0; border-radius:8px; font-family:'Cinzel',serif; font-size:.62rem; cursor:pointer; text-decoration:none; }
 
     @media(max-width:768px) {
-      .map-layout { grid-template-columns:1fr; }
+      .map-page { grid-template-columns: 1fr; }
       .map-sidebar { display:none; }
-      #strangeness-map { height:100%; min-height:400px; }
+      #map-canvas { grid-column:1; }
     }
-  
-  /* ── Strange Diagnosis FAB ─────────────────────────────────── */
-  @keyframes diagFabPulse {
-    0%,100% { box-shadow: 0 0 0 0 rgba(124,58,237,.4), 0 0 0 0 rgba(212,168,67,.2), 0 4px 20px rgba(0,0,0,.5); }
-    40%     { box-shadow: 0 0 0 10px rgba(124,58,237,.0), 0 0 0 6px rgba(212,168,67,.3), 0 4px 20px rgba(0,0,0,.5); }
-    70%     { box-shadow: 0 0 0 14px rgba(124,58,237,.0), 0 0 0 10px rgba(212,168,67,.0), 0 4px 20px rgba(0,0,0,.5); }
-  }
-  @keyframes diagFabShimmer {
-    0%,100% { background-position: 0% 50%; }
-    50%     { background-position: 100% 50%; }
-  }
-  .diag-fab {
-    position:fixed; bottom:1.75rem; right:1.75rem; z-index:9000;
-    display:flex; align-items:center; gap:.5rem;
-    padding:.75rem 1.35rem;
-    background: linear-gradient(135deg, #7c3aed, #d4a843, #a855f7, #d4a843, #7c3aed);
-    background-size: 300% 300%;
-    color:#fff; border:none; border-radius:50px;
-    font-family:'Cinzel',serif; font-size:.6rem; letter-spacing:.14em;
-    cursor:pointer; white-space:nowrap;
-    animation: diagFabPulse 2.5s ease-in-out infinite, diagFabShimmer 4s ease infinite;
-    text-shadow: 0 1px 3px rgba(0,0,0,.4);
-  }
-  .diag-fab:hover { transform: scale(1.05); transition: transform .2s; }
-  /* ── Diagnosis Modal ────────────────────────────────────────── */
-  .diagnosis-overlay {
-    position:fixed; inset:0; z-index:10000;
-    background:rgba(4,3,14,.85); backdrop-filter:blur(6px);
-    display:flex; align-items:center; justify-content:center;
-    opacity:0; pointer-events:none; transition:opacity .3s;
-    padding:1rem;
-  }
-  .diagnosis-overlay.visible { opacity:1; pointer-events:auto; }
-  .diagnosis-modal {
-    background:#0d0820; border:1px solid rgba(124,58,237,.3);
-    border-radius:14px; padding:2rem 1.75rem;
-    max-width:520px; width:100%; max-height:90vh; overflow-y:auto;
-    position:relative;
-  }
-  .diag-close {
-    position:absolute; top:1rem; right:1rem;
-    background:none; border:none; color:rgba(255,255,255,.3);
-    font-size:1.1rem; cursor:pointer; line-height:1;
-  }
-  .diag-close:hover { color:#fff; }
-  .diag-header { text-align:center; margin-bottom:1.5rem; }
-  .diag-eyebrow { font-family:'Share Tech Mono',monospace; font-size:.6rem; letter-spacing:.2em; color:rgba(124,58,237,.5); }
-  .diag-title { font-family:'Cinzel',serif; font-size:1.3rem; color:#fff; margin:.3rem 0 .25rem; }
-  .diag-sub { font-family:'Crimson Pro',Georgia,serif; font-size:.85rem; color:rgba(144,128,176,.6); font-style:italic; }
-  .diag-progress { margin-bottom:1.5rem; }
-  .diag-progress-bar-wrap { height:2px; background:rgba(124,58,237,.15); border-radius:2px; margin-bottom:.4rem; }
-  .diag-progress-bar { height:100%; background:linear-gradient(90deg,#7c3aed,#d4a843); border-radius:2px; transition:width .4s ease; }
-  .diag-progress-text { font-family:'Share Tech Mono',monospace; font-size:.6rem; color:rgba(255,255,255,.25); letter-spacing:.1em; }
-  .diag-question { font-family:'Cinzel',serif; font-size:1rem; color:#e8e0ff; line-height:1.5; margin-bottom:.4rem; }
-  .diag-question-sub { font-family:'Crimson Pro',Georgia,serif; font-size:.82rem; color:rgba(144,128,176,.6); margin-bottom:1.1rem; font-style:italic; }
-  .diag-options { display:flex; flex-direction:column; gap:.5rem; }
-  .diag-opt {
-    background:rgba(124,58,237,.06); border:1px solid rgba(124,58,237,.2);
-    border-radius:8px; padding:.7rem 1rem; color:#c0b0e0;
-    font-family:'Crimson Pro',Georgia,serif; font-size:.9rem;
-    text-align:left; cursor:pointer; transition:all .2s;
-  }
-  .diag-opt:hover { background:rgba(124,58,237,.15); border-color:rgba(124,58,237,.5); color:#fff; }
-  .diag-result-inner { text-align:center; }
-  .diag-type-label { font-family:'Share Tech Mono',monospace; font-size:.6rem; letter-spacing:.15em; color:rgba(255,255,255,.3); margin-bottom:.25rem; }
-  .diag-type { font-family:'Cinzel',serif; font-size:1.4rem; margin:.2rem 0 .75rem; }
-  .diag-desc { font-family:'Crimson Pro',Georgia,serif; font-size:.92rem; color:#9080b0; line-height:1.75; margin:.75rem 0; }
-  .diag-score-row { display:flex; gap:1rem; align-items:center; margin:1rem 0; justify-content:center; }
-  .diag-score-block { text-align:center; min-width:80px; }
-  .diag-phenom-block { flex:1; text-align:left; padding-left:1rem; border-left:1px solid rgba(124,58,237,.2); max-width:240px; }
-  .diag-file-header { text-align:left; }
-  .diag-code { margin-bottom:.1rem; }
-  .diag-actions { display:flex; flex-direction:column; gap:.6rem; margin-top:1.25rem; }
-  .diag-btn-primary {
-    display:block; padding:.85rem 1.5rem; text-align:center;
-    background:linear-gradient(135deg,#7c3aed,#a855f7);
-    color:#fff; border:none; border-radius:8px;
-    font-family:'Cinzel',serif; font-size:.65rem; letter-spacing:.1em;
-    cursor:pointer; text-decoration:none; transition:opacity .2s;
-  }
-  .diag-btn-primary:hover { opacity:.85; }
-  .diag-btn-secondary {
-    display:block; padding:.7rem 1.5rem; text-align:center;
-    background:rgba(124,58,237,.08); border:1px solid rgba(124,58,237,.25);
-    color:#9080b0; border-radius:8px;
-    font-family:'Cinzel',serif; font-size:.62rem; letter-spacing:.08em;
-    cursor:pointer; text-decoration:none; transition:all .2s;
-  }
-  .diag-btn-secondary:hover { background:rgba(124,58,237,.15); color:#c0b0e0; }
-
   </style>
-  <!-- Open Graph / Social sharing -->
   <meta property="og:type" content="website"/>
-  <meta property="og:site_name" content="Strangeness IS"/>
-  <meta property="og:url" content="https://strangenessis.com/map.html"/>
   <meta property="og:title" content="Strangeness Map — Live Sightings Worldwide"/>
-  <meta property="og:description" content="Live map of verified paranormal sightings, UAP encounters, cryptid reports, and unexplained phenomena worldwide."/>
+  <meta property="og:description" content="Live map of verified paranormal sightings, UAP encounters, cryptid reports worldwide."/>
   <meta property="og:image" content="https://strangenessis.com/assets/images/dragon-hero.jpg"/>
   <meta name="twitter:card" content="summary_large_image"/>
-  <meta name="twitter:site" content="@strangenessis"/>
-  <meta name="description" content="Live map of verified paranormal sightings, UAP encounters, cryptid reports, and unexplained phenomena worldwide."/>
-  <!-- PWA -->
-  <link rel="manifest" href="/manifest.json"/>
-  <meta name="theme-color" content="#07070f"/>
-  <!-- Google Analytics 4 — replace G-742MFLQHE5 with your real Measurement ID -->
-  <meta name="ga-id" content="G-742MFLQHE5"/>
   <script src="js/analytics.js" defer></script>
 </head>
 <body>
 
   <nav class="navbar" id="navbar">
-    <a href="index.html" class="nav-logo" style="font-family:'Cinzel Decorative',serif">Strangeness <span>IS</span></a>
+    <a href="index.html" class="nav-logo">Strangeness <span style="color:var(--gold2)">IS</span></a>
     <ul class="nav-links">
       <li><a href="index.html">Home</a></li>
-      <li><a href="report.html">Strangeness Report</a></li><li><a href="faq.html">FAQ</a></li>
+      <li><a href="report.html">Strangeness Report</a></li>
+      <li><a href="faq.html">FAQ</a></li>
       <li><a href="chatbot.html">The Oracle</a></li>
-      <li><a href="map.html" style="color:var(--purple3)">Strangeness Map</a></li><li><a href="submit.html">Submit a Sighting</a></li>
+      <li><a href="map.html" class="active">Strangeness Map</a></li>
+      <li><a href="submit.html">Submit a Sighting</a></li>
       <li><a href="member.html">My Portal</a></li>
     </ul>
   </nav>
 
   <div class="map-page">
-    <!-- Map layout fills full viewport below navbar -->
-    <div class="map-layout">
-      <!-- Map -->
-      <div id="strangeness-map">
-        <!-- Overlay: title + filters float over the map -->
-        <div class="map-overlay-top">
-          <div class="map-overlay-header">
-            <div>
-              <div class="map-eyebrow"><span class="map-live-dot"></span>Live intelligence network</div>
-              <h1 class="map-title">Strangeness <span>Map</span></h1>
-            </div>
-            <div style="display:flex;gap:.5rem;flex-wrap:wrap;align-items:center">
-              <a href="submit.html" style="font-family:'Cinzel',serif;font-size:.58rem;letter-spacing:.12em;color:var(--gold2);border:1px solid rgba(212,168,67,.4);padding:.45rem 1rem;border-radius:4px;text-decoration:none;background:rgba(7,7,15,.8)">+ Submit Sighting</a>
-              <a href="chatbot.html" style="font-family:'Cinzel',serif;font-size:.58rem;letter-spacing:.12em;color:var(--purple3);border:1px solid rgba(124,58,237,.35);padding:.45rem 1rem;border-radius:4px;text-decoration:none;background:rgba(7,7,15,.8)">Ask Oracle</a>
-            </div>
-          </div>
-          <!-- Category filters -->
-          <div class="map-filters">
-            <button class="map-filter-pill all active" data-filter="all" onclick="filterMap('all',this)">All</button>
-            <button class="map-filter-pill" data-filter="ufo" onclick="filterMap('ufo',this)">🛸 UFO/UAP</button>
-            <button class="map-filter-pill" data-filter="aliens" onclick="filterMap('aliens',this)">👽 Aliens</button>
-            <button class="map-filter-pill" data-filter="cryptids" onclick="filterMap('cryptids',this)">🦶 Cryptids</button>
-            <button class="map-filter-pill" data-filter="paranormal" onclick="filterMap('paranormal',this)">👻 Paranormal</button>
-            <button class="map-filter-pill" data-filter="consciousness" onclick="filterMap('consciousness',this)">🧠 Consciousness</button>
-            <button class="map-filter-pill" data-filter="government" onclick="filterMap('government',this)">🏛️ Gov</button>
-            <button class="map-filter-pill" data-filter="phenomena" onclick="filterMap('phenomena',this)">🌀 Phenomena</button>
-          </div>
-        </div>
-      </div>
 
-      <!-- Sidebar -->
-      <div class="map-sidebar">
-        <div class="sidebar-header">
-          <span class="sidebar-title">Recent Sightings</span>
-          <span class="sidebar-count" id="sighting-count">Loading...</span>
-        </div>
-        <button class="add-pin-btn" onclick="window.location.href='submit.html'">+ Submit Your Sighting</button>
-        <div class="sidebar-list" id="sidebar-list">
-          <div style="padding:2rem;text-align:center;color:var(--muted);font-size:.9rem;font-style:italic">Loading sightings...</div>
-        </div>
-        <div style="padding:.6rem 1rem;border-top:1px solid rgba(124,58,237,.1);font-family:'Share Tech Mono',monospace;font-size:.58rem;color:var(--muted);line-height:1.5">
-          Sightings reviewed by SI investigators. Verified cases marked ✓.
-        </div>
+    <!-- Top bar -->
+    <div class="map-topbar">
+      <div class="map-title-wrap">
+        <span class="map-live-dot"></span>
+        <span class="map-title">STRANGENESS MAP</span>
+        <span id="pin-count" style="font-family:'Share Tech Mono',monospace;font-size:.6rem;color:var(--muted)"></span>
+      </div>
+      <div class="map-actions">
+        <a href="submit.html" class="map-action-btn gold">+ Submit Sighting</a>
+        <a href="chatbot.html" class="map-action-btn purple">Ask Oracle</a>
       </div>
     </div>
+
+    <!-- Filter bar -->
+    <div class="map-filters">
+      <button class="pill all active" onclick="filterMap('all',this)">All Sightings</button>
+      <button class="pill" onclick="filterMap('ufo',this)">🛸 UFO/UAP</button>
+      <button class="pill" onclick="filterMap('aliens',this)">👽 Aliens</button>
+      <button class="pill" onclick="filterMap('cryptids',this)">🦶 Cryptids</button>
+      <button class="pill" onclick="filterMap('paranormal',this)">👻 Paranormal</button>
+      <button class="pill" onclick="filterMap('consciousness',this)">🧠 Consciousness</button>
+      <button class="pill" onclick="filterMap('government',this)">🏛️ Government</button>
+      <button class="pill" onclick="filterMap('phenomena',this)">🌀 Phenomena</button>
+    </div>
+
+    <!-- Map canvas — NO overflow:hidden, NO filter on this element -->
+    <div id="map-canvas"></div>
+
+    <!-- Sidebar -->
+    <div class="map-sidebar">
+      <div class="sidebar-hdr">
+        <span class="sidebar-hdr-title">Recent Sightings</span>
+        <span class="sidebar-hdr-count" id="sidebar-count">—</span>
+      </div>
+      <button class="sidebar-submit" onclick="location.href='submit.html'">+ Submit Your Sighting</button>
+      <div class="sidebar-list" id="sidebar-list">
+        <div style="padding:2rem;text-align:center;color:var(--muted);font-size:.88rem;font-style:italic">Loading sightings...</div>
+      </div>
+      <div class="sidebar-foot">Verified cases marked ✓ · Reviewed by SI investigators</div>
+    </div>
+
   </div>
 
   <script>
     const API = 'https://api.strangenessis.com';
 
-    // Category config
-    const CAT_CONFIG = {
-      ufo:         { color: '#7c3aed', label: '🛸 UFO/UAP',        emoji: '🛸' },
-      aliens:      { color: '#a855f7', label: '👽 Aliens',          emoji: '👽' },
-      cryptids:    { color: '#22c55e', label: '🦶 Cryptids',        emoji: '🦶' },
-      paranormal:  { color: '#60a5fa', label: '👻 Paranormal',      emoji: '👻' },
-      consciousness:{ color:'#2dd4bf', label: '🧠 Consciousness',   emoji: '🧠' },
-      government:  { color: '#f59e0b', label: '🏛️ Government',      emoji: '🏛️' },
-      technology:  { color: '#ef4444', label: '⚡ Technology',       emoji: '⚡' },
-      phenomena:   { color: '#d4a843', label: '🌀 Phenomena',        emoji: '🌀' },
-      secret:      { color: '#6366f1', label: '🔒 Secret Programs', emoji: '🔒' },
-      earth:       { color: '#84cc16', label: '🌍 Earth Changes',   emoji: '🌍' },
-      other:       { color: '#9080b0', label: '❓ Unknown',          emoji: '❓' },
+    const CAT = {
+      ufo:          { color:'#7c3aed', emoji:'🛸', label:'UFO / UAP' },
+      aliens:       { color:'#a855f7', emoji:'👽', label:'Aliens' },
+      cryptids:     { color:'#22c55e', emoji:'🦶', label:'Cryptids' },
+      paranormal:   { color:'#60a5fa', emoji:'👻', label:'Paranormal' },
+      consciousness:{ color:'#2dd4bf', emoji:'🧠', label:'Consciousness' },
+      government:   { color:'#f59e0b', emoji:'🏛️', label:'Government' },
+      technology:   { color:'#ef4444', emoji:'⚡', label:'Technology' },
+      phenomena:    { color:'#d4a843', emoji:'🌀', label:'Phenomena' },
+      other:        { color:'#9080b0', emoji:'❓', label:'Unknown' },
     };
 
-    // No demo sightings — map shows only real verified pins from the admin
+    let map, markers, allPins = [], activeFilter = 'all', activeCard = null;
 
-    let map, markersLayer, allSightings = [], activeFilter = 'all';
-    let activeCard = null;
-
-    // Initialize map
-    window.addEventListener('DOMContentLoaded', () => {
-      window.addEventListener('scroll', () => {
-        document.getElementById('navbar').classList.toggle('scrolled', window.scrollY > 60);
-      });
-
-      // Init Leaflet map centered on continental US
-      map = L.map('strangeness-map', {
+    window.addEventListener('DOMContentLoaded', function() {
+      // Init map — OpenStreetMap tiles, no API key, always works
+      map = L.map('map-canvas', {
         center: [39.5, -98.35],
         zoom: 4,
         zoomControl: true,
-        attributionControl: false,
+        attributionControl: true,
       });
 
-      // Dark tile layer
-      L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_matter_no_labels/{z}/{x}/{y}{r}.png', {
-        subdomains: 'abcd',
-        maxZoom: 19,
-      }).addTo(map);
+      // Primary: CartoDB dark (no labels, clean)
+      var cartoDark = L.tileLayer(
+        'https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png',
+        { subdomains:'abcd', maxZoom:19, attribution:'&copy; <a href="https://carto.com/">CARTO</a>' }
+      );
 
-      L.control.attribution({ prefix: '' }).addTo(map);
+      // Fallback: OpenStreetMap (always works)
+      var osm = L.tileLayer(
+        'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+        { maxZoom:19, attribution:'&copy; OpenStreetMap contributors' }
+      );
 
-      markersLayer = L.layerGroup().addTo(map);
+      // Try CartoDB first, fall back to OSM if tiles fail
+      cartoDark.addTo(map);
+      cartoDark.on('tileerror', function() {
+        map.removeLayer(cartoDark);
+        osm.addTo(map);
+      });
 
-      loadSightings();
+      markers = L.layerGroup().addTo(map);
+      loadPins();
 
-      // Force Leaflet to recalculate — multiple timeouts ensure tiles load
-      setTimeout(function() { map.invalidateSize(); }, 100);
-      setTimeout(function() { map.invalidateSize(); }, 400);
-      setTimeout(function() { map.invalidateSize(); }, 1000);
+      // Staggered invalidateSize calls to ensure tiles render
+      [100, 300, 600, 1200].forEach(function(t) {
+        setTimeout(function() { map.invalidateSize(false); }, t);
+      });
 
-      window.addEventListener('resize', function() { map.invalidateSize(); });
+      window.addEventListener('resize', function() { map.invalidateSize(false); });
     });
 
-    async function loadSightings() {
+    async function loadPins() {
       try {
-        // Pull verified pins from the admin-managed pin store
-        const res = await fetch(`${API}/map/pins`);
+        var res = await fetch(API + '/map/pins');
         if (res.ok) {
-          const data = await res.json();
-          const pins = data.pins || [];
-          // Map pin format to sighting format
-          allSightings = pins.map(p => ({
-            id: p.id, category: p.category, title: p.title,
-            location: p.location, lat: p.lat, lng: p.lng,
-            date: p.date, witnesses: p.witnesses, desc: p.desc,
-            verified: p.verified, case_number: p.case_number || p.id.slice(-6),
-          }));
-        } else {
-          allSightings = [];
+          var data = await res.json();
+          allPins = (data.pins || []).filter(function(p) { return p.lat && p.lng; });
         }
-      } catch {
-        allSightings = [];
-      }
-      renderMap(allSightings);
-      renderSidebar(allSightings);
+      } catch(e) { allPins = []; }
+      renderPins(allPins);
+      renderSidebar(allPins);
+      var countEl = document.getElementById('pin-count');
+      if (countEl) countEl.textContent = '(' + allPins.length + ' verified incidents)';
     }
 
-    function makeIcon(category) {
-      const cfg   = CAT_CONFIG[category] || CAT_CONFIG.other;
-      const color = cfg.color;
-      const emoji = cfg.emoji;
+    function makeIcon(cat) {
+      var cfg = CAT[cat] || CAT.other;
       return L.divIcon({
         className: '',
-        html: `<div style="
-          width:32px;height:32px;
-          background:${color};
-          border:2px solid rgba(255,255,255,.3);
-          border-radius:50%;
-          display:flex;align-items:center;justify-content:center;
-          font-size:14px;
-          box-shadow:0 0 12px ${color}88, 0 2px 8px rgba(0,0,0,.6);
-          cursor:pointer;
-          transition:transform .2s;
-        ">${emoji}</div>`,
-        iconSize: [32, 32],
-        iconAnchor: [16, 16],
-        popupAnchor: [0, -18],
+        html: '<div style="width:34px;height:34px;background:' + cfg.color + ';border:2px solid rgba(255,255,255,.4);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:15px;box-shadow:0 0 14px ' + cfg.color + '99,0 2px 8px rgba(0,0,0,.7);cursor:pointer">' + cfg.emoji + '</div>',
+        iconSize: [34, 34],
+        iconAnchor: [17, 17],
+        popupAnchor: [0, -20],
       });
     }
 
-    function renderMap(sightings) {
-      markersLayer.clearLayers();
-      sightings.forEach(s => {
-        if (!s.lat || !s.lng) return;
-        const cfg    = CAT_CONFIG[s.category] || CAT_CONFIG.other;
-        const marker = L.marker([s.lat, s.lng], { icon: makeIcon(s.category) });
-        const popup  = L.popup({ closeButton: true, className: '' }).setContent(`
-          <div class="pin-popup">
-            <div class="pin-cat">${cfg.emoji} ${cfg.label} · CASE #${s.case_number || s.id}</div>
-            <div class="pin-title">${s.title}</div>
-            <div class="pin-meta">📍 ${s.location} · 📅 ${s.date} · 👥 ${s.witnesses || 1} witness${s.witnesses > 1 ? 'es' : ''}</div>
-            <div class="pin-desc">${s.desc || s.description?.slice(0,180) || ''}</div>
-            <span class="pin-status ${s.verified ? 'verified' : 'pending'}">${s.verified ? '✓ Verified' : 'Pending review'}</span>
-          </div>
-        `);
-        marker.bindPopup(popup);
-        marker.on('click', () => highlightCard(s.id));
-        markersLayer.addLayer(marker);
+    function renderPins(pins) {
+      markers.clearLayers();
+      pins.forEach(function(p) {
+        var cfg = CAT[p.category] || CAT.other;
+        var m = L.marker([p.lat, p.lng], { icon: makeIcon(p.category) });
+        m.bindPopup(L.popup({ maxWidth:280, className:'' }).setContent(
+          '<div class="pin-popup">' +
+          '<div class="pin-cat">' + cfg.emoji + ' ' + cfg.label + (p.case_number ? ' &middot; ' + p.case_number : '') + '</div>' +
+          '<div class="pin-title">' + (p.title || 'Unclassified Incident') + '</div>' +
+          '<div class="pin-meta">📍 ' + (p.location || 'Location classified') +
+            (p.date ? ' &middot; 📅 ' + p.date : '') +
+            (p.strangeness_index ? ' &middot; SI: ' + p.strangeness_index + '/10' : '') + '</div>' +
+          (p.description ? '<div class="pin-desc">' + (p.description.slice(0,200)) + '...</div>' : '') +
+          '<div><span class="pin-badge ' + (p.verified ? 'v' : 'p') + '">' + (p.verified ? '✓ Verified' : 'Pending review') + '</span></div>' +
+          '</div>'
+        ));
+        m.on('click', function() { highlightCard(p.id); });
+        markers.addLayer(m);
       });
     }
 
-    function renderSidebar(sightings) {
-      document.getElementById('sighting-count').textContent = `${sightings.length} sightings`;
-      const listEl = document.getElementById('sidebar-list');
-      if (!sightings.length) {
-        listEl.innerHTML = '<div style="padding:2rem;text-align:center;color:var(--muted);font-size:.9rem;font-style:italic">No sightings in this category yet.</div>';
+    function renderSidebar(pins) {
+      var countEl = document.getElementById('sidebar-count');
+      if (countEl) countEl.textContent = pins.length + ' sightings';
+      var list = document.getElementById('sidebar-list');
+      if (!pins.length) {
+        list.innerHTML = '<div style="padding:2rem;text-align:center;color:var(--muted);font-size:.88rem;font-style:italic">No verified sightings in this category yet.<br><br><a href="submit.html" style="color:var(--purple3)">Submit yours →</a></div>';
         return;
       }
-      listEl.innerHTML = sightings.map(s => {
-        const cfg = CAT_CONFIG[s.category] || CAT_CONFIG.other;
-        return `<div class="sighting-card" id="card-${s.id}" onclick="selectSighting('${s.id}', ${s.lat}, ${s.lng})">
-          <div class="sc-cat">${cfg.emoji} ${cfg.label}</div>
-          <div class="sc-title">${s.title}</div>
-          <div class="sc-meta">📍 ${s.location} · ${s.date}</div>
-        </div>`;
+      list.innerHTML = pins.map(function(p) {
+        var cfg = CAT[p.category] || CAT.other;
+        return '<div class="s-card" id="card-' + p.id + '" onclick="selectPin(\'' + p.id + '\',' + p.lat + ',' + p.lng + ')">' +
+          '<div class="s-cat">' + cfg.emoji + ' ' + cfg.label + '</div>' +
+          '<div class="s-title">' + (p.title || 'Unclassified Incident') + '</div>' +
+          '<div class="s-meta">📍 ' + (p.location || '—') + (p.date ? ' &middot; ' + p.date : '') + '</div>' +
+        '</div>';
       }).join('');
     }
 
     function filterMap(filter, btn) {
       activeFilter = filter;
-      document.querySelectorAll('.map-filter-pill').forEach(p => p.classList.remove('active'));
+      document.querySelectorAll('.pill').forEach(function(p) { p.classList.remove('active'); });
       if (btn) btn.classList.add('active');
-      const filtered = filter === 'all'
-        ? allSightings
-        : allSightings.filter(s => s.category === filter);
-      renderMap(filtered);
+      var filtered = filter === 'all' ? allPins : allPins.filter(function(p) { return p.category === filter; });
+      renderPins(filtered);
       renderSidebar(filtered);
     }
 
-    function selectSighting(id, lat, lng) {
-      if (activeCard) document.getElementById('card-' + activeCard)?.classList.remove('active');
-      activeCard = id;
-      document.getElementById('card-' + id)?.classList.add('active');
-      if (lat && lng) {
-        map.setView([lat, lng], 8, { animate: true, duration: 1 });
-        // Open the popup
-        markersLayer.eachLayer(layer => {
-          if (layer.getLatLng && Math.abs(layer.getLatLng().lat - lat) < 0.01) {
-            layer.openPopup();
-          }
-        });
+    function selectPin(id, lat, lng) {
+      if (activeCard) {
+        var old = document.getElementById('card-' + activeCard);
+        if (old) old.classList.remove('active');
       }
+      activeCard = id;
+      var card = document.getElementById('card-' + id);
+      if (card) { card.classList.add('active'); card.scrollIntoView({ behavior:'smooth', block:'nearest' }); }
+      map.setView([lat, lng], 8, { animate:true });
+      markers.eachLayer(function(layer) {
+        if (layer.getLatLng && Math.abs(layer.getLatLng().lat - lat) < 0.001) layer.openPopup();
+      });
     }
 
     function highlightCard(id) {
-      if (activeCard) document.getElementById('card-' + activeCard)?.classList.remove('active');
-      activeCard = id;
-      const card = document.getElementById('card-' + id);
-      if (card) {
-        card.classList.add('active');
-        card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      if (activeCard) {
+        var old = document.getElementById('card-' + activeCard);
+        if (old) old.classList.remove('active');
       }
+      activeCard = id;
+      var card = document.getElementById('card-' + id);
+      if (card) { card.classList.add('active'); card.scrollIntoView({ behavior:'smooth', block:'nearest' }); }
     }
   </script>
 
