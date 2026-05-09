@@ -503,6 +503,23 @@ def get_sessions():   return load_json(SESSIONS_FILE, {})
 def get_analytics():  return load_json(ANALYTICS_FILE, {'page_views': {}, 'events': []})
 def get_pins():       return load_json(PINS_FILE, [])
 
+def normalize_pin_category(cat):
+    """Map any category string to a short map key."""
+    if not cat: return 'other'
+    c = cat.lower()
+    if any(k in c for k in ['ufo','uap','nhi','orb','craft','saucer','aerial','nimitz','plasma']): return 'ufo'
+    if any(k in c for k in ['alien','entity','extraterr','non-human','biologic','contact','abduct','nde','afterlife']): return 'aliens'
+    if any(k in c for k in ['cryptid','bigfoot','sasquatch','creature','mothman','dogman','skinwalker','chupacabra','animal mutilation']): return 'cryptids'
+    if any(k in c for k in ['paranormal','ghost','haunting','spirit','poltergeist','demon','apparition','evp','electronic voice']): return 'paranormal'
+    if any(k in c for k in ['consciousness','remote view','psychic','astral','telepathy','mandela','simulation','dimension','time slip']): return 'consciousness'
+    if any(k in c for k in ['government','disclosure','whistleblower','classified','scif','congress','military','secret space','coverup','conspiracy']): return 'government'
+    if any(k in c for k in ['technology','advanced','fusion','teleport','propulsion','energy']): return 'technology'
+    if any(k in c for k in ['earth','disaster','weather','haarp','missing 411','missing','phenomena','unexplained','ancient','history','folklore']): return 'phenomena'
+    # Short key pass-through
+    short_keys = {'ufo','aliens','cryptids','paranormal','consciousness','government','technology','phenomena','other'}
+    if c in short_keys: return c
+    return 'other'
+
 def audit_log(action: str, details: dict = None):
     """Log admin actions for audit trail. Recovers from JSON corruption automatically."""
     try:
@@ -1016,7 +1033,7 @@ Write the complete Strangeness Report now. Follow all system prompt instructions
                             'report_id':   r['id'],
                             'case_number': r['case_number'],
                             'title':       r['headline'][:80],
-                            'category':    r['category'],
+                            'category':    normalize_pin_category(r['category']),
                             'description': r['summary'][:200],
                             'location':    r['primary_location'],
                             'lat':         r['lat'],
@@ -1751,7 +1768,14 @@ def create_submission():
 @app.route('/map/pins', methods=['GET'])
 def public_pins():
     pins     = get_pins()
-    verified = [p for p in pins if p.get('verified', False)]
+    # Only return sighting reports (not auto-pinned intel reports) + normalize categories
+    verified = []
+    for p in pins:
+        if not p.get('verified', False):
+            continue
+        p_out = dict(p)
+        p_out['category'] = normalize_pin_category(p.get('category',''))
+        verified.append(p_out)
     return jsonify({'pins': verified})
 
 @app.route('/register', methods=['POST'])
