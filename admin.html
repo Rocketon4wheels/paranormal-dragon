@@ -3366,7 +3366,7 @@ async function loadCallLog() {
           (c.summary?'<div style="font-size:.82rem;color:var(--text);margin-top:.3rem;line-height:1.5">' + c.summary + '</div>':'') +
           (c.follow_up_note?'<div style="font-size:.75rem;color:var(--purple3);margin-top:.25rem">↳ Follow-up: ' + c.follow_up_note + '</div>':'') +
         '</div>' +
-        '<button onclick="deleteCall('' + c.id + '')" style="font-family:var(--mono);font-size:.6rem;padding:.25rem .5rem;background:transparent;border:1px solid rgba(239,68,68,.25);color:#f87171;border-radius:3px;cursor:pointer;flex-shrink:0">✕</button>' +
+        '<button onclick="deleteCall(\'' + c.id + '\')" style="font-family:var(--mono);font-size:.6rem;padding:.25rem .5rem;background:transparent;border:1px solid rgba(239,68,68,.25);color:#f87171;border-radius:3px;cursor:pointer;flex-shrink:0">✕</button>' +
       '</div>';
     }).join('');
   } catch(err) {
