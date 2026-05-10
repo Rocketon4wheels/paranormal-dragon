@@ -308,8 +308,9 @@
         
         
         <button class="sidebar-item" onclick="showPanel('members',this)"><span class="dot"></span>Members</button>
-        <button class="sidebar-item" onclick="showPanel('headlines',this)"><span class="dot"></span>Headline Database</button>
         <button class="sidebar-item" onclick="showPanel('signal-intel',this)"><span class="dot"></span>Signal Intelligence</button>
+        <button class="sidebar-item" onclick="showPanel('members',this)"><span class="dot"></span>Members</button>
+        <button class="sidebar-item" onclick="showPanel('believer-agent',this)"><span class="dot"></span>🤝 Believer Agent</button>
         <button class="sidebar-item" onclick="showPanel('stripe',this)"><span class="dot"></span>Stripe Setup</button>
         <button class="sidebar-item" onclick="showPanel('tawk',this)"><span class="dot"></span>Live Chat</button>
                 <button class="sidebar-item" onclick="showPanel('seo',this)"><span class="dot"></span>SEO &amp; Meta</button>
@@ -1124,7 +1125,171 @@ SMTP_PASS=abcdabcdabcdabcd</div>
       </div>
 
 
-      <div class="panel" id="panel-stripe">
+      <!-- SIGNAL INTELLIGENCE PANEL -->
+      <div class="panel" id="panel-signal-intel">
+        <div class="panel-header">
+          <div class="panel-title">Signal Intelligence</div>
+          <div class="panel-sub">Mainstream headlines scored for hidden patterns · Truth in plain sight</div>
+        </div>
+
+        <!-- Tabs -->
+        <div style="display:flex;gap:0;border-bottom:1px solid rgba(124,58,237,.2);margin-bottom:1.25rem">
+          <button id="sig-tab-scored" onclick="sigTab('scored')" style="font-family:var(--nav);font-size:.6rem;letter-spacing:.12em;padding:.6rem 1.25rem;background:rgba(124,58,237,.15);border:none;border-bottom:2px solid var(--purple2);color:var(--purple3);cursor:pointer">SCORED SIGNALS</button>
+          <button id="sig-tab-raw" onclick="sigTab('raw')" style="font-family:var(--nav);font-size:.6rem;letter-spacing:.12em;padding:.6rem 1.25rem;background:transparent;border:none;border-bottom:2px solid transparent;color:var(--muted);cursor:pointer">RAW HEADLINES <span id="sig-raw-count" style="color:var(--gold)"></span></button>
+        </div>
+
+        <!-- Scored signals view -->
+        <div id="sig-view-scored">
+          <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:1rem;align-items:center">
+            <select id="sig-min-score" class="field-input" style="width:auto;font-size:.8rem" onchange="loadSignalIntel()">
+              <option value="4">Score 4+</option>
+              <option value="5">Score 5+</option>
+              <option value="6">Score 6+</option>
+              <option value="7">Score 7+</option>
+            </select>
+            <select id="sig-reviewed" class="field-input" style="width:auto;font-size:.8rem" onchange="loadSignalIntel()">
+              <option value="">All signals</option>
+              <option value="false">Unreviewed</option>
+              <option value="true">Reviewed</option>
+            </select>
+            <button class="btn-sm btn-purple" onclick="analyzeSignals()">🧠 Find Patterns</button>
+            <button class="btn-sm btn-outline" onclick="loadSignalIntel()">↻ Refresh</button>
+            <span id="sig-count" style="font-family:var(--mono);font-size:.7rem;color:var(--muted);margin-left:auto"></span>
+          </div>
+          <div id="sig-analysis" style="display:none;background:rgba(124,58,237,.1);border:1px solid rgba(124,58,237,.3);border-radius:8px;padding:1rem;margin-bottom:1rem;font-size:.95rem;line-height:1.6;color:var(--text)"></div>
+          <div id="signal-intel-list" style="display:flex;flex-direction:column;gap:.5rem"></div>
+        </div>
+
+        <!-- Raw headlines view -->
+        <div id="sig-view-raw" style="display:none">
+          <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:.75rem;align-items:center">
+            <input id="hl-search" class="field-input" placeholder="Search headlines..." style="flex:1;min-width:180px;font-size:.82rem" oninput="filterRawHeadlines()"/>
+            <select id="hl-src-filter" class="field-input" style="width:auto;font-size:.8rem" onchange="filterRawHeadlines()">
+              <option value="">All sources</option>
+            </select>
+            <button class="btn-sm btn-purple" onclick="loadRawHeadlines()">↻ Refresh</button>
+            <button class="btn-sm btn-purple" onclick="rawScanNow()" id="raw-scan-btn" style="background:rgba(212,168,67,.15);border-color:var(--gold);color:var(--gold)">📡 Scan RSS</button>
+            <button class="btn-sm btn-red" onclick="if(confirm('Clear all headlines?'))api('/admin/headlines/clear','POST').then(function(){loadRawHeadlines();toast('Cleared')})">Clear all</button>
+          </div>
+          <div style="display:flex;gap:.5rem;align-items:center;margin-bottom:.5rem;flex-wrap:wrap">
+            <span style="font-family:var(--mono);font-size:.62rem;color:var(--muted)">Strangeness weight:</span>
+            <button onclick="setHlWeight('all',this)" class="btn-sm btn-purple" style="font-size:.6rem;padding:.2rem .6rem">All</button>
+            <button onclick="setHlWeight('high',this)" class="btn-sm btn-outline" style="font-size:.6rem;padding:.2rem .6rem">🔴 High</button>
+            <button onclick="setHlWeight('medium',this)" class="btn-sm btn-outline" style="font-size:.6rem;padding:.2rem .6rem">🟡 Medium</button>
+            <button onclick="setHlWeight('low',this)" class="btn-sm btn-outline" style="font-size:.6rem;padding:.2rem .6rem">🟢 Low</button>
+          </div>
+          <div id="hl-raw-stats" style="font-family:var(--mono);font-size:.68rem;color:var(--muted);margin-bottom:.75rem"></div>
+          <div id="hl-raw-list" style="max-height:600px;overflow-y:auto;display:flex;flex-direction:column;gap:0">
+            <div style="color:var(--muted);padding:1rem;font-size:.88rem">Click Refresh to load headlines.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- MEMBERS PANEL -->
+      <div class="panel" id="panel-members">
+        <div class="panel-header">
+          <div class="panel-title">Members</div>
+          <div class="panel-sub">All member accounts, plans, and activity.</div>
+        </div>
+        <div class="admin-section">
+          <div class="btn-row" style="margin-bottom:1rem">
+            <button class="btn-sm btn-outline" onclick="loadMembers()">↻ Refresh</button>
+            <span id="member-total" style="font-family:var(--mono);font-size:.7rem;color:var(--muted);margin-left:auto"></span>
+          </div>
+          <div id="members-list">
+            <div style="color:var(--muted);font-size:.88rem;padding:1rem;text-align:center">Loading...</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- BELIEVER AGENT PANEL -->
+      <div class="panel" id="panel-believer-agent">
+        <div class="panel-header">
+          <div class="panel-title">🤝 Believer Agent</div>
+          <div class="panel-sub">Live Oracle interface for investigator calls. Saves intelligence directly to member profiles.</div>
+        </div>
+
+        <div class="admin-section" style="border-bottom:1px solid rgba(124,58,237,.1);margin-bottom:1.25rem;padding-bottom:1.25rem">
+          <div style="font-family:var(--mono);font-size:.6rem;letter-spacing:.12em;color:var(--purple3);margin-bottom:.75rem">STEP 1 — IDENTIFY CALLER</div>
+          <div class="field-row">
+            <label class="field-label">Member email or name</label>
+            <div style="display:flex;gap:.5rem">
+              <input class="field-input" type="text" id="ba-member-search" placeholder="Search by email or name..." style="flex:1" onkeydown="if(event.key===String.fromCharCode(13))lookupMember()"/>
+              <button class="btn-sm btn-purple" onclick="lookupMember()">Look up</button>
+            </div>
+          </div>
+          <div id="ba-member-result" style="display:none;background:rgba(124,58,237,.08);border:1px solid rgba(124,58,237,.2);border-radius:6px;padding:.85rem;margin-top:.5rem">
+            <div style="font-family:var(--mono);font-size:.6rem;color:var(--muted);margin-bottom:.25rem" id="ba-member-case"></div>
+            <div style="font-size:.9rem;color:var(--text);font-weight:500" id="ba-member-name"></div>
+            <div style="font-family:var(--mono);font-size:.62rem;color:var(--muted)" id="ba-member-plan"></div>
+            <div style="font-family:var(--mono);font-size:.6rem;color:var(--gold);margin-top:.35rem" id="ba-member-history"></div>
+          </div>
+          <div id="ba-no-member" style="display:none;font-size:.82rem;color:var(--muted);margin-top:.5rem;font-style:italic">No member found — session saves as anonymous.</div>
+        </div>
+
+        <div class="admin-section" style="border-bottom:1px solid rgba(124,58,237,.1);margin-bottom:1.25rem;padding-bottom:1.25rem">
+          <div style="font-family:var(--mono);font-size:.6rem;letter-spacing:.12em;color:var(--purple3);margin-bottom:.75rem">STEP 2 — ORACLE INTERFACE</div>
+          <div id="ba-chat-log" style="background:#07070f;border:1px solid rgba(124,58,237,.15);border-radius:6px;padding:.85rem;min-height:200px;max-height:350px;overflow-y:auto;font-size:.88rem;line-height:1.75;color:var(--muted);margin-bottom:.75rem">
+            <div style="font-style:italic;color:rgba(144,128,176,.5)">Oracle standing by...</div>
+          </div>
+          <div style="display:flex;gap:.5rem">
+            <textarea class="field-input" id="ba-oracle-input" rows="2" placeholder="Describe the caller account or ask Oracle... (Enter to send, Shift+Enter for newline)" style="flex:1;resize:none" onkeydown="if(event.key===String.fromCharCode(13)&&!event.shiftKey){event.preventDefault();sendToOracle();}"></textarea>
+            <div style="display:flex;flex-direction:column;gap:.35rem">
+              <button class="btn-sm btn-purple" onclick="sendToOracle()" id="ba-send-btn" style="white-space:nowrap">Ask Oracle</button>
+              <button class="btn-sm btn-outline" onclick="clearOracleChat()" style="font-size:.58rem">Clear</button>
+            </div>
+          </div>
+          <div id="ba-oracle-thinking" style="display:none;font-family:var(--mono);font-size:.62rem;color:var(--muted);margin-top:.35rem">Oracle analyzing...</div>
+        </div>
+
+        <div class="admin-section">
+          <div style="font-family:var(--mono);font-size:.6rem;letter-spacing:.12em;color:var(--purple3);margin-bottom:.75rem">STEP 3 — SAVE TO MEMBER PROFILE</div>
+          <div class="field-row">
+            <label class="field-label">Investigation notes</label>
+            <textarea class="field-input" id="ba-save-notes" rows="4" placeholder="Key details from the call — location, phenomenon, dates, physical evidence, Oracle findings..."></textarea>
+          </div>
+          <div class="field-row">
+            <label class="field-label">Classification</label>
+            <select class="field-input" id="ba-classification" style="max-width:280px">
+              <option value="Delta">Delta — Initiate</option>
+              <option value="Gamma">Gamma — Sensitive</option>
+              <option value="Beta" selected>Beta — Observer</option>
+              <option value="Alpha">Alpha — Witness</option>
+              <option value="Omega">Omega — Experiencer</option>
+            </select>
+          </div>
+          <div class="field-row">
+            <label class="field-label">Primary phenomenon</label>
+            <select class="field-input" id="ba-category" style="max-width:280px">
+              <option value="ufo">🛸 UFO / UAP / NHI</option>
+              <option value="aliens">👽 Aliens &amp; Entities</option>
+              <option value="cryptids">🦶 Cryptid &amp; Creature</option>
+              <option value="paranormal">👻 Paranormal</option>
+              <option value="government">🏛️ Government Disclosure</option>
+              <option value="consciousness">🧠 Consciousness / Psychic</option>
+              <option value="phenomena">🌀 Unexplained Phenomena</option>
+              <option value="other">❓ Other</option>
+            </select>
+          </div>
+          <div class="field-row">
+            <label class="field-label">Follow-up action</label>
+            <select class="field-input" id="ba-followup" style="max-width:280px">
+              <option value="">No follow-up needed</option>
+              <option value="callback">Schedule callback</option>
+              <option value="field_investigation">Flag for field investigation</option>
+              <option value="upgrade_offer">Offer plan upgrade</option>
+              <option value="report_link">Send relevant report link</option>
+            </select>
+          </div>
+          <div class="btn-row" style="margin-top:1rem">
+            <button class="btn-sm btn-purple" onclick="saveToMemberProfile()" id="ba-save-btn">Save to Member Profile + Log Call</button>
+            <button class="btn-sm btn-outline" onclick="resetBelieverAgent()">Reset Session</button>
+          </div>
+          <div id="ba-save-status" style="font-family:var(--mono);font-size:.72rem;color:var(--green);margin-top:.6rem;display:none"></div>
+        </div>
+      </div>
+
+            <div class="panel" id="panel-stripe">
         <div class="panel-header">
           <div class="panel-title">Stripe Payments</div>
           <div class="panel-sub">Accept Oracle, Investigator, and Chronicler subscriptions.</div>
@@ -1226,36 +1391,7 @@ sudo systemctl restart strangeness</div></div>
       </div>
 
       <!-- HEADLINE DATABASE -->
-      <div class="panel" id="panel-headlines">
-        <div class="panel-header">
-          <div class="panel-title">Headline Database</div>
-          <div class="panel-sub">Rolling 30-day store of RSS headlines used as AI context. Auto-refreshes every 6 hours.</div>
-        </div>
-        <div class="status-grid" style="grid-template-columns:repeat(3,1fr)">
-          <div class="status-card"><div class="status-label">Total headlines</div><div class="status-value gold" id="hl-total">—</div></div>
-          <div class="status-card"><div class="status-label">Sources active</div><div class="status-value purple" id="hl-sources">—</div></div>
-          <div class="status-card"><div class="status-label">Last fetched</div><div class="status-value" id="hl-last" style="font-size:1rem">—</div></div>
-        </div>
-        <div class="admin-section">
-          <div class="admin-section-title">Actions</div>
-          <div class="btn-row">
-            <button class="btn-sm btn-purple" onclick="fetchHeadlinesNow()">↺ Fetch RSS now</button>
-            <button class="btn-sm btn-outline" onclick="loadHeadlines()">Refresh view</button>
-            <button class="btn-sm btn-red" onclick="clearHeadlines()">Clear all</button>
-          </div>
-          <div id="hl-fetch-result" style="margin-top:.5rem;font-family:var(--mono);font-size:.78rem;color:var(--green)"></div>
-        </div>
-        <div class="admin-section">
-          <div class="admin-section-title">Filter by source</div>
-          <div id="hl-source-filters" style="display:flex;gap:.35rem;flex-wrap:wrap;margin-bottom:.75rem"></div>
-        </div>
-        <div class="admin-section">
-          <div class="admin-section-title">Headlines <span id="hl-count" style="color:var(--muted);font-weight:400"></span></div>
-          <div id="headlines-list" style="max-height:500px;overflow-y:auto">
-            <div style="color:var(--muted);font-size:.9rem">Loading...</div>
-          </div>
-        </div>
-      </div>
+      
 
       </div>
 
@@ -3626,6 +3762,285 @@ async function analyzeSignals() {
   }
 }
 
+
+
+// ── Signal Intelligence tabs ──────────────────────────────────────────────────
+var _sigTab = 'scored';
+var _rawHeadlines = [];
+var _hlWeight = 'all';
+var HIGH_KWS = ['ufo','uap','nhi','alien','extraterr','non-human','biologic','disclosure','whistleblower','classified','grusch','elizondo','gallaudet','congress','testimony','pentagon','aaro','nimitz','retrieval','ultraterrestrial','pastor briefing','biologics'];
+var MED_KWS  = ['cryptid','bigfoot','paranormal','ghost','haunting','mothman','skinwalker','dogman','poltergeist','missing 411','remote viewing','cattle mutilation','mandela'];
+
+function sigTab(tab) {
+  _sigTab = tab;
+  var sv = document.getElementById('sig-view-scored');
+  var rv = document.getElementById('sig-view-raw');
+  var st = document.getElementById('sig-tab-scored');
+  var rt = document.getElementById('sig-tab-raw');
+  if (sv) sv.style.display = tab === 'scored' ? 'block' : 'none';
+  if (rv) rv.style.display = tab === 'raw'    ? 'block' : 'none';
+  if (st) { st.style.background = tab==='scored'?'rgba(124,58,237,.15)':'transparent'; st.style.borderBottomColor = tab==='scored'?'var(--purple2)':'transparent'; st.style.color = tab==='scored'?'var(--purple3)':'var(--muted)'; }
+  if (rt) { rt.style.background = tab==='raw'?'rgba(124,58,237,.15)':'transparent'; rt.style.borderBottomColor = tab==='raw'?'var(--purple2)':'transparent'; rt.style.color = tab==='raw'?'var(--purple3)':'var(--muted)'; }
+  if (tab === 'raw' && _rawHeadlines.length === 0) loadRawHeadlines();
+}
+
+function getHeadlineWeight(h) {
+  var t = (h.title || '').toLowerCase();
+  if (HIGH_KWS.some(function(k){return t.includes(k);})) return 'high';
+  if (MED_KWS.some(function(k){return t.includes(k);})) return 'medium';
+  return 'low';
+}
+
+function setHlWeight(w, btn) {
+  _hlWeight = w;
+  var btns = document.querySelectorAll('#sig-view-raw .btn-sm');
+  btns.forEach(function(b){ b.className = b === btn ? 'btn-sm btn-purple' : 'btn-sm btn-outline'; b.style.fontSize='.6rem'; b.style.padding='.2rem .6rem'; });
+  filterRawHeadlines();
+}
+
+async function loadRawHeadlines() {
+  var listEl = document.getElementById('hl-raw-list');
+  var statsEl = document.getElementById('hl-raw-stats');
+  var srcSel  = document.getElementById('hl-src-filter');
+  if (!listEl) return;
+  listEl.innerHTML = '<div style="color:var(--muted);padding:1rem">Loading...</div>';
+  try {
+    var data = await api('/admin/headlines?limit=500');
+    _rawHeadlines = data.headlines || [];
+    var total = data.total || 0;
+    var sources = data.sources || [];
+    var cntEl = document.getElementById('sig-raw-count');
+    if (cntEl) cntEl.textContent = '(' + total + ')';
+    if (srcSel) {
+      srcSel.innerHTML = '<option value="">All sources (' + total + ')</option>' +
+        sources.map(function(s){return '<option value="'+s+'">'+s+'</option>';}).join('');
+    }
+    if (statsEl) statsEl.textContent = total.toLocaleString() + ' headlines stored · showing 500 · ' + sources.length + ' sources active';
+    filterRawHeadlines();
+  } catch(e) {
+    listEl.innerHTML = '<div style="color:#ef4444;padding:1rem">Failed: ' + e.message + '</div>';
+  }
+}
+
+function filterRawHeadlines() {
+  var listEl    = document.getElementById('hl-raw-list');
+  var search    = (document.getElementById('hl-search') ? document.getElementById('hl-search').value : '').toLowerCase();
+  var srcFilter = document.getElementById('hl-src-filter') ? document.getElementById('hl-src-filter').value : '';
+  if (!listEl) return;
+  var filtered = _rawHeadlines.filter(function(h) {
+    var title = (h.title||'').toLowerCase();
+    var src   = (h.source||'');
+    return (!srcFilter || src === srcFilter) &&
+           (!search || title.includes(search) || src.toLowerCase().includes(search)) &&
+           (_hlWeight === 'all' || getHeadlineWeight(h) === _hlWeight);
+  });
+  if (!filtered.length) {
+    listEl.innerHTML = '<div style="color:var(--muted);padding:1rem;font-style:italic">No headlines match.</div>';
+    return;
+  }
+  function cleanTitle(h) { var t=h.title||''; var p=(h.source||'')+': '; return t.startsWith(p)?t.slice(p.length):t; }
+  listEl.innerHTML = filtered.map(function(h) {
+    var dt = (h.fetched_at||'').slice(0,10);
+    var tm = h.fetched_at ? new Date(h.fetched_at).toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',timeZone:'America/Denver'}) : '';
+    return '<div style="padding:.45rem .5rem;border-bottom:1px solid rgba(124,58,237,.07);display:flex;gap:.6rem;align-items:flex-start">' +
+      '<div style="font-family:var(--mono);font-size:.6rem;color:var(--muted);white-space:nowrap;min-width:72px">' + dt + '<br>' + tm + '</div>' +
+      '<div style="flex:1;min-width:0"><div style="font-size:.85rem;color:var(--text);line-height:1.4">' + cleanTitle(h) + '</div>' +
+      '<div style="font-family:var(--mono);font-size:.6rem;color:var(--purple3)">' + (h.source||'') + '</div></div>' +
+    '</div>';
+  }).join('');
+}
+
+async function rawScanNow() {
+  var btn = document.getElementById('raw-scan-btn');
+  if (btn) { btn.textContent = 'Scanning...'; btn.disabled = true; }
+  try {
+    await api('/admin/headlines/fetch', 'POST');
+    toast('Scan started — refreshing in 45 seconds', 'info');
+    setTimeout(function(){ loadRawHeadlines(); if(btn){btn.textContent='📡 Scan RSS';btn.disabled=false;} }, 45000);
+  } catch(e) { toast('Scan failed: '+e.message,'error'); if(btn){btn.textContent='📡 Scan RSS';btn.disabled=false;} }
+}
+
+async function loadSignalIntel() {
+  var minScore = document.getElementById('sig-min-score') ? document.getElementById('sig-min-score').value : 4;
+  var reviewed = document.getElementById('sig-reviewed') ? document.getElementById('sig-reviewed').value : '';
+  var listEl   = document.getElementById('signal-intel-list');
+  var countEl  = document.getElementById('sig-count');
+  if (!listEl) return;
+  listEl.innerHTML = '<p style="color:var(--muted);font-size:.85rem">Loading signals...</p>';
+  try {
+    var url = '/admin/signal-intel?min_score=' + minScore + (reviewed ? '&reviewed=' + reviewed : '');
+    var data = await api(url);
+    var items = data.signals || data.headlines || [];
+    if (countEl) countEl.textContent = '(' + items.length + ' signals)';
+    var cntEl = document.getElementById('sig-raw-count');
+    api('/admin/headlines?limit=1').then(function(d){ if(cntEl&&d.total) cntEl.textContent='('+d.total.toLocaleString()+')'; }).catch(function(){});
+    if (!items.length) { listEl.innerHTML = '<p style="color:var(--muted);font-size:.85rem">No signals at this threshold.</p>'; return; }
+    listEl.innerHTML = items.map(function(s) {
+      return '<div style="padding:.65rem;background:var(--surface);border:1px solid rgba(124,58,237,.12);border-radius:6px;margin-bottom:.5rem">' +
+        '<div style="display:flex;justify-content:space-between;margin-bottom:.3rem">' +
+          '<span style="font-family:var(--mono);font-size:.62rem;color:var(--gold)">Score: ' + (s.score||s.signal_score||'?') + '</span>' +
+          '<span style="font-family:var(--mono);font-size:.6rem;color:var(--muted)">' + (s.source||'') + '</span>' +
+        '</div>' +
+        '<div style="font-size:.88rem;color:var(--text)">' + (s.title||s.headline||'') + '</div>' +
+      '</div>';
+    }).join('');
+  } catch(e) { listEl.innerHTML = '<p style="color:#ef4444">Failed: '+e.message+'</p>'; }
+}
+
+async function analyzeSignals() {
+  var el = document.getElementById('sig-analysis');
+  if (!el) return;
+  el.style.display = 'block';
+  el.textContent = 'Oracle analyzing signal patterns...';
+  try {
+    var data = await api('/admin/oracle/analyze-signals', 'POST', {});
+    el.textContent = data.analysis || 'No patterns identified.';
+  } catch(e) { el.textContent = 'Analysis failed: ' + e.message; }
+}
+
+// ── Members panel ─────────────────────────────────────────────────────────────
+async function loadMembers() {
+  var listEl  = document.getElementById('members-list');
+  var totalEl = document.getElementById('member-total');
+  if (!listEl) return;
+  listEl.innerHTML = '<div style="color:var(--muted);font-size:.88rem;padding:1rem;text-align:center">Loading...</div>';
+  try {
+    var data    = await api('/admin/members');
+    var members = data.members || [];
+    if (totalEl) totalEl.textContent = members.length + ' members';
+    if (!members.length) { listEl.innerHTML = '<div style="color:var(--muted);padding:1rem;text-align:center;font-style:italic">No members yet.</div>'; return; }
+    var planColors = {oracle:'var(--purple3)',investigator:'var(--gold)',chronicler:'#4ade80',free:'var(--muted)'};
+    listEl.innerHTML = members.map(function(m) {
+      var color = planColors[m.plan] || 'var(--muted)';
+      return '<div style="padding:.65rem .75rem;border-bottom:1px solid rgba(124,58,237,.08);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.5rem">' +
+        '<div>' +
+          '<div style="font-size:.88rem;color:var(--text)">' + (m.name||'—') + '</div>' +
+          '<div style="font-family:var(--mono);font-size:.6rem;color:var(--muted)">' + (m.email||'') + (m.case_number?' · '+m.case_number:'') + '</div>' +
+        '</div>' +
+        '<div style="font-family:var(--mono);font-size:.62rem;color:'+color+';border:1px solid '+color+';padding:2px 8px;border-radius:10px">' + (m.plan||'free').toUpperCase() + '</div>' +
+      '</div>';
+    }).join('');
+  } catch(e) { listEl.innerHTML = '<div style="color:#ef4444;padding:1rem">Failed: '+e.message+'</div>'; }
+}
+
+// ── Believer Agent ────────────────────────────────────────────────────────────
+var _baCurrentMember = null;
+var _baChatHistory   = [];
+
+async function lookupMember() {
+  var query = document.getElementById('ba-member-search') ? document.getElementById('ba-member-search').value.trim() : '';
+  if (!query) return;
+  try {
+    var data    = await api('/admin/members');
+    var members = data.members || [];
+    var found   = members.find(function(m) {
+      return (m.email||'').toLowerCase().includes(query.toLowerCase()) ||
+             (m.name||'').toLowerCase().includes(query.toLowerCase());
+    });
+    if (found) {
+      _baCurrentMember = found;
+      document.getElementById('ba-member-result').style.display = 'block';
+      document.getElementById('ba-no-member').style.display = 'none';
+      document.getElementById('ba-member-case').textContent = found.case_number || '';
+      document.getElementById('ba-member-name').textContent = found.name + ' — ' + found.email;
+      document.getElementById('ba-member-plan').textContent = (found.plan||'free').toUpperCase() + ' · Member since ' + (found.created_at||'').slice(0,10);
+      document.getElementById('ba-member-history').textContent = (found.oracle_intel||[]).length + ' Oracle sessions · ' + (found.calls||[]).length + ' calls';
+    } else {
+      _baCurrentMember = null;
+      document.getElementById('ba-member-result').style.display = 'none';
+      document.getElementById('ba-no-member').style.display = 'block';
+    }
+  } catch(e) { toast('Lookup failed: '+e.message,'error'); }
+}
+
+async function sendToOracle() {
+  var inputEl = document.getElementById('ba-oracle-input');
+  var chatLog = document.getElementById('ba-chat-log');
+  var thinkEl = document.getElementById('ba-oracle-thinking');
+  var sendBtn = document.getElementById('ba-send-btn');
+  var message = inputEl ? inputEl.value.trim() : '';
+  if (!message) return;
+  var userDiv = document.createElement('div');
+  userDiv.style.cssText = 'margin-bottom:.75rem;padding:.5rem .75rem;background:rgba(124,58,237,.08);border-radius:4px;border-left:2px solid var(--purple2)';
+  userDiv.innerHTML = '<span style="font-family:var(--mono);font-size:.58rem;color:var(--purple3)">AGENT</span><br>' + message;
+  chatLog.appendChild(userDiv);
+  chatLog.scrollTop = chatLog.scrollHeight;
+  inputEl.value = '';
+  _baChatHistory.push({role:'user',content:message});
+  if (sendBtn) sendBtn.disabled = true;
+  if (thinkEl) thinkEl.style.display = 'block';
+  var ctx = _baCurrentMember ? 'CALLER: '+_baCurrentMember.name+' ('+_baCurrentMember.plan+', case '+(_baCurrentMember.case_number||'none')+')' : 'Anonymous caller.';
+  try {
+    var res = await api('/admin/oracle/test','POST',{message:message,history:_baChatHistory.slice(-8),context:ctx});
+    var reply = (res.response||res.content||res.message||'').trim();
+    _baChatHistory.push({role:'assistant',content:reply});
+    var notesEl = document.getElementById('ba-save-notes');
+    if (notesEl) notesEl.value = notesEl.value ? notesEl.value+'\n\n[Oracle] '+reply : '[Oracle] '+reply;
+    var oDiv = document.createElement('div');
+    oDiv.style.cssText = 'margin-bottom:.75rem;padding:.5rem .75rem;background:rgba(212,168,67,.06);border-radius:4px;border-left:2px solid var(--gold)';
+    oDiv.innerHTML = '<span style="font-family:var(--mono);font-size:.58rem;color:var(--gold)">ORACLE</span><br>' + reply.replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    chatLog.appendChild(oDiv);
+    chatLog.scrollTop = chatLog.scrollHeight;
+  } catch(e) { toast('Oracle error: '+e.message,'error'); }
+  finally { if(sendBtn)sendBtn.disabled=false; if(thinkEl)thinkEl.style.display='none'; }
+}
+
+function clearOracleChat() {
+  _baChatHistory = [];
+  var cl = document.getElementById('ba-chat-log');
+  if (cl) cl.innerHTML = '<div style="font-style:italic;color:rgba(144,128,176,.5)">Oracle standing by...</div>';
+}
+
+async function saveToMemberProfile() {
+  var notes    = document.getElementById('ba-save-notes') ? document.getElementById('ba-save-notes').value.trim() : '';
+  var classif  = document.getElementById('ba-classification') ? document.getElementById('ba-classification').value : 'Beta';
+  var category = document.getElementById('ba-category') ? document.getElementById('ba-category').value : 'other';
+  var followup = document.getElementById('ba-followup') ? document.getElementById('ba-followup').value : '';
+  var statusEl = document.getElementById('ba-save-status');
+  var saveBtn  = document.getElementById('ba-save-btn');
+  if (!notes) { toast('Add investigation notes before saving','info'); return; }
+  if (saveBtn) saveBtn.disabled = true;
+  try {
+    var callPayload = {
+      caller_name: _baCurrentMember ? _baCurrentMember.name : 'Anonymous',
+      email:       _baCurrentMember ? _baCurrentMember.email : '',
+      member_id:   _baCurrentMember ? _baCurrentMember.id : '',
+      plan:        _baCurrentMember ? _baCurrentMember.plan : '',
+      call_type:   'investigation', category:category, summary:notes,
+      follow_up:   !!followup, follow_up_note:followup?followup.replace(/_/g,' '):'',
+      status:'completed', agent:'Believer Agent',
+    };
+    var callData = await api('/admin/calls','POST',callPayload);
+    var caseNum  = callData.call ? callData.call.case_number : '';
+    if (_baCurrentMember) {
+      var intel = {
+        member_id: _baCurrentMember.id, phenomenon_category: category,
+        key_details: notes.slice(0,500), classification: classif,
+        oracle_analysis: _baChatHistory.filter(function(m){return m.role==='assistant';}).map(function(m){return m.content;}).join(' | ').slice(0,2000),
+        locations:[], credibility_signals:[classif],
+        call_case_number: caseNum, timestamp: new Date().toISOString(),
+      };
+      await api('/admin/oracle/intel','POST',intel);
+    }
+    if (statusEl) { statusEl.textContent = '✓ Saved' + (caseNum?' — '+caseNum:'') + (_baCurrentMember?' · '+_baCurrentMember.name:''); statusEl.style.display='block'; }
+    toast('Session saved','success');
+    loadCallLog();
+  } catch(e) {
+    if (statusEl) { statusEl.textContent='Error: '+e.message; statusEl.style.color='#ef4444'; statusEl.style.display='block'; }
+    toast('Save failed: '+e.message,'error');
+  } finally { if(saveBtn) saveBtn.disabled=false; }
+}
+
+function resetBelieverAgent() {
+  _baCurrentMember = null; _baChatHistory = [];
+  var els = ['ba-member-search','ba-save-notes'];
+  els.forEach(function(id){ var el=document.getElementById(id); if(el) el.value=''; });
+  var res = document.getElementById('ba-member-result'); if(res) res.style.display='none';
+  var nm  = document.getElementById('ba-no-member');     if(nm)  nm.style.display='none';
+  var ss  = document.getElementById('ba-save-status');   if(ss)  ss.style.display='none';
+  clearOracleChat();
+  toast('Session reset','info');
+}
 </script>
 </body>
 </html>

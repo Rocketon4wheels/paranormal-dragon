@@ -233,7 +233,7 @@
       <span class="live-dot"></span>
       Published by our investigative team · Updated daily
     </div>
-    <h1 class="page-title">The Strangeness <span>Report</span></h1>
+    <h1 class="page-title">The Strange <span>Report</span></h1>
     <p class="page-sub">Daily intelligence briefings from the edge of the known world.</p>
   </div>
 
@@ -579,7 +579,12 @@
       if (el) el.classList.add('active');
       showFeatured(allReports[idx]);
       updateMeter(allReports[idx].strangeness_index || 6.6);
-      window.scrollTo({top:0,behavior:'smooth'});
+      // Scroll to featured report section, not page top
+      var featEl = document.getElementById('featured-report') || document.querySelector('.featured-report') || document.getElementById('feat-content');
+      if (featEl) {
+        var offset = featEl.getBoundingClientRect().top + window.scrollY - 80;
+        window.scrollTo({top: Math.max(0, offset), behavior: 'smooth'});
+      }
     }
 
     function setFilter(filter, btn) {
