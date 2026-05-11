@@ -1043,121 +1043,140 @@ SMTP_PASS=abcdabcdabcdabcd</div>
       <div class="panel" id="panel-investigator-hub">
         <div class="panel-header">
           <div class="panel-title">📞 Investigator Hub</div>
-          <div class="panel-sub">Live Oracle co-pilot for calls · Auto-saves to member profile · Full call history</div>
+          <div class="panel-sub">Live Oracle co-pilot for calls · Saves to member profile · Full call history</div>
         </div>
 
         <!-- TABS -->
-        <div style="display:flex;gap:0;border-bottom:1px solid rgba(124,58,237,.2);margin-bottom:1.25rem">
+        <div style="display:flex;gap:0;border-bottom:1px solid rgba(124,58,237,.2);margin-bottom:1.5rem">
           <button id="hub-tab-live" onclick="hubTab('live')" style="font-family:var(--nav);font-size:.6rem;letter-spacing:.12em;padding:.6rem 1.25rem;background:rgba(34,197,94,.12);border:none;border-bottom:2px solid #4ade80;color:#4ade80;cursor:pointer">▶ LIVE CALL</button>
           <button id="hub-tab-history" onclick="hubTab('history')" style="font-family:var(--nav);font-size:.6rem;letter-spacing:.12em;padding:.6rem 1.25rem;background:transparent;border:none;border-bottom:2px solid transparent;color:var(--muted);cursor:pointer">CALL HISTORY</button>
         </div>
 
-        <!-- LIVE CALL TAB -->
+        <!-- ═══ LIVE CALL TAB ═══ -->
         <div id="hub-view-live">
 
-          <!-- Step 1: Identify caller -->
-          <div class="admin-section" style="background:rgba(34,197,94,.04);border:1px solid rgba(34,197,94,.15);border-radius:8px;padding:1rem;margin-bottom:1.25rem">
-            <div style="font-family:var(--mono);font-size:.58rem;letter-spacing:.12em;color:#4ade80;margin-bottom:.75rem">STEP 1 — IDENTIFY CALLER</div>
+          <!-- CALLER IDENTIFICATION — email first, auto-detect -->
+          <div class="admin-section" style="background:rgba(34,197,94,.04);border:1px solid rgba(34,197,94,.18);border-radius:8px;padding:1.1rem;margin-bottom:1rem">
 
-            <!-- Live call timer state -->
-            <div id="hub-idle">
+            <!-- EMAIL ROW — primary lookup field -->
+            <div style="display:flex;gap:.6rem;align-items:flex-end;margin-bottom:.85rem">
+              <div style="flex:1">
+                <label class="field-label" style="color:#4ade80;font-size:.6rem;letter-spacing:.12em">CALLER EMAIL <span style="font-weight:400;color:var(--muted)">(type to auto-detect member)</span></label>
+                <input class="field-input" id="lc-email" type="email" placeholder="caller@email.com — profile loads automatically" style="margin-top:.25rem" oninput="autoLookupMember(this.value)"/>
+              </div>
+              <!-- Member badge — appears when matched -->
+              <div id="hub-member-badge" style="display:none;padding:.5rem .85rem;border-radius:6px;background:rgba(124,58,237,.15);border:1px solid rgba(124,58,237,.35);flex-shrink:0">
+                <div style="font-family:var(--mono);font-size:.58rem;color:var(--purple3)" id="hub-badge-name"></div>
+                <div style="font-family:var(--mono);font-size:.55rem;color:var(--muted)" id="hub-badge-plan"></div>
+                <div style="font-family:var(--mono);font-size:.55rem;color:var(--gold)" id="hub-badge-case"></div>
+              </div>
+              <!-- No member indicator -->
+              <div id="hub-no-member" style="display:none;padding:.5rem .85rem;border-radius:6px;background:rgba(212,168,67,.08);border:1px solid rgba(212,168,67,.2);flex-shrink:0">
+                <div style="font-family:var(--mono);font-size:.58rem;color:var(--gold)">Anonymous</div>
+                <div style="font-family:var(--mono);font-size:.55rem;color:var(--muted)">Not a member</div>
+              </div>
+            </div>
+
+            <!-- OPTIONAL FIELDS — collapse until email typed -->
+            <div id="hub-optional-fields" style="display:none">
               <div style="display:grid;grid-template-columns:1fr 1fr;gap:.5rem;margin-bottom:.5rem">
-                <div class="field-row" style="margin:0"><label class="field-label">Name</label><input class="field-input" id="lc-name" type="text" placeholder="Full name or Unknown"/></div>
-                <div class="field-row" style="margin:0"><label class="field-label">Phone</label><input class="field-input" id="lc-phone" type="tel" placeholder="(555) 555-5555"/></div>
+                <div><label class="field-label">Name <span style="color:var(--muted);font-weight:400">(optional)</span></label><input class="field-input" id="lc-name" type="text" placeholder="Full name" style="margin-top:.2rem"/></div>
+                <div><label class="field-label">Phone <span style="color:var(--muted);font-weight:400">(optional)</span></label><input class="field-input" id="lc-phone" type="tel" placeholder="(555) 555-5555" style="margin-top:.2rem"/></div>
               </div>
-              <div class="field-row"><label class="field-label">Email <span style="font-weight:400;color:var(--muted)">(links to member profile if matched)</span></label>
-                <div style="display:flex;gap:.5rem">
-                  <input class="field-input" id="lc-email" type="email" placeholder="Optional" style="flex:1" oninput="autoLookupMember(this.value)"/>
-                  <div id="hub-member-badge" style="display:none;font-family:var(--mono);font-size:.6rem;padding:.3rem .7rem;border-radius:4px;background:rgba(124,58,237,.15);color:var(--purple3);border:1px solid rgba(124,58,237,.3);white-space:nowrap;align-self:center"></div>
-                </div>
-              </div>
-              <div style="display:grid;grid-template-columns:1fr 1fr;gap:.5rem;margin-bottom:.75rem">
-                <div class="field-row" style="margin:0"><label class="field-label">Call Type</label>
-                  <select class="field-input" id="lc-type">
+              <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:.5rem">
+                <div><label class="field-label">Call Type</label>
+                  <select class="field-input" id="lc-type" style="margin-top:.2rem">
                     <option value="sighting_report">Sighting Report</option>
-                    <option value="investigation">Investigation Consultation</option>
-                    <option value="membership">Membership Inquiry</option>
-                    <option value="support">General Support</option>
+                    <option value="investigation">Investigation</option>
+                    <option value="membership">Membership</option>
+                    <option value="support">Support</option>
                   </select>
                 </div>
-                <div class="field-row" style="margin:0"><label class="field-label">Category</label>
-                  <select class="field-input" id="lc-category">
+                <div><label class="field-label">Category</label>
+                  <select class="field-input" id="lc-category" style="margin-top:.2rem">
                     <option value="">-- Select --</option>
-                    <option value="ufo">🛸 UFO / UAP / NHI</option>
-                    <option value="aliens">👽 Aliens &amp; Entities</option>
-                    <option value="cryptids">🦶 Cryptid &amp; Creature</option>
+                    <option value="ufo">🛸 UFO / UAP</option>
+                    <option value="cryptids">🦶 Cryptid / Lycan</option>
+                    <option value="aliens">👽 Aliens</option>
                     <option value="paranormal">👻 Paranormal</option>
-                    <option value="government">🏛️ Government Disclosure</option>
+                    <option value="government">🏛️ Disclosure</option>
                     <option value="consciousness">🧠 Consciousness</option>
                     <option value="phenomena">🌀 Phenomena</option>
                     <option value="other">❓ Other</option>
                   </select>
                 </div>
+                <div><label class="field-label">Location</label>
+                  <input class="field-input" id="lc-location" type="text" placeholder="City, State" style="margin-top:.2rem"/>
+                </div>
               </div>
-              <div class="field-row"><label class="field-label">Location Reported</label><input class="field-input" id="lc-location" type="text" placeholder="City, State"/></div>
-              <button class="btn-sm btn-green" onclick="startLiveCall()" style="font-size:.72rem;padding:.6rem 1.5rem">▶ Answer Call &amp; Start Timer</button>
             </div>
 
-            <!-- Active call state -->
-            <div id="hub-active" style="display:none">
-              <div style="display:flex;align-items:center;gap:1.5rem;margin-bottom:1rem;flex-wrap:wrap">
-                <div style="text-align:center">
-                  <div style="font-family:'Share Tech Mono',monospace;font-size:2.4rem;font-weight:700;color:#4ade80;line-height:1" id="lc-timer-display">0:00</div>
-                  <div style="font-family:var(--mono);font-size:.55rem;color:var(--muted)">LIVE</div>
+            <!-- CALL CONTROL ROW -->
+            <div style="display:flex;align-items:center;gap:.75rem;margin-top:.85rem;flex-wrap:wrap">
+              <!-- Start button -->
+              <button id="hub-start-btn" onclick="startLiveCall()" style="font-family:var(--nav);font-size:.68rem;letter-spacing:.1em;padding:.6rem 1.5rem;background:rgba(34,197,94,.2);border:1px solid rgba(34,197,94,.5);color:#4ade80;border-radius:6px;cursor:pointer;transition:all .2s" disabled>
+                ▶ Start Call
+              </button>
+
+              <!-- TIMER — always visible once call starts, own dedicated block -->
+              <div id="hub-timer-block" style="display:none;background:#07070f;border:1px solid rgba(34,197,94,.3);border-radius:8px;padding:.4rem 1rem;display:none;align-items:center;gap:.75rem">
+                <div>
+                  <div style="font-family:'Share Tech Mono',monospace;font-size:2rem;font-weight:700;color:#4ade80;line-height:1;letter-spacing:.05em" id="lc-timer-display">0:00</div>
+                  <div style="font-family:var(--mono);font-size:.52rem;color:var(--muted);letter-spacing:.1em">CALL DURATION</div>
                 </div>
-                <div style="flex:1">
-                  <div style="font-size:.9rem;color:var(--text);font-weight:500" id="lc-active-name"></div>
-                  <div style="font-family:var(--mono);font-size:.6rem;color:var(--muted)" id="lc-active-meta"></div>
-                </div>
-                <div style="display:flex;gap:.4rem;flex-direction:column">
-                  <button class="btn-sm btn-red" onclick="endLiveCall('completed')" style="padding:.5rem 1rem">■ End Call</button>
-                  <button class="btn-sm btn-outline" onclick="endLiveCall('voicemail')" style="padding:.3rem .8rem;font-size:.6rem">Voicemail</button>
+                <div style="display:flex;flex-direction:column;gap:.3rem">
+                  <button onclick="endLiveCall('completed')" style="font-family:var(--nav);font-size:.58rem;letter-spacing:.1em;padding:.4rem .9rem;background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.4);color:#f87171;border-radius:4px;cursor:pointer">■ End Call</button>
+                  <button onclick="endLiveCall('voicemail')" style="font-family:var(--nav);font-size:.55rem;padding:.3rem .7rem;background:transparent;border:1px solid rgba(255,255,255,.1);color:var(--muted);border-radius:4px;cursor:pointer">Voicemail</button>
                 </div>
               </div>
-              <div class="field-row"><label class="field-label">Follow-up</label>
-                <select class="field-input" id="lc-followup" style="max-width:260px">
-                  <option value="">No follow-up needed</option>
+
+              <!-- Saved confirmation -->
+              <div id="hub-saved" style="display:none;padding:.4rem .85rem;background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.3);border-radius:6px">
+                <div style="font-family:var(--mono);font-size:.65rem;color:#4ade80" id="lc-saved-msg">✓ Call logged</div>
+              </div>
+
+              <!-- Follow-up (shown during active call) -->
+              <div id="hub-followup-wrap" style="display:none;flex:1;min-width:160px">
+                <select class="field-input" id="lc-followup" style="font-size:.78rem">
+                  <option value="">No follow-up</option>
                   <option value="callback">Schedule callback</option>
                   <option value="field_investigation">Flag for field investigation</option>
                   <option value="upgrade_offer">Offer plan upgrade</option>
                   <option value="send_report">Send report link</option>
                 </select>
               </div>
-            </div>
 
-            <!-- Saved state -->
-            <div id="hub-saved" style="display:none;text-align:center;padding:.75rem">
-              <div style="color:#4ade80;font-family:var(--mono);font-size:.72rem;margin-bottom:.5rem" id="lc-saved-msg">✓ Call logged</div>
-              <button class="btn-sm btn-outline" onclick="resetLiveCall()">+ New Call</button>
+              <!-- New call button (shown after saved) -->
+              <button id="hub-new-btn" onclick="resetLiveCall()" style="display:none;font-family:var(--nav);font-size:.6rem;letter-spacing:.1em;padding:.45rem 1rem;background:transparent;border:1px solid rgba(124,58,237,.35);color:var(--purple3);border-radius:4px;cursor:pointer">+ New Call</button>
             </div>
           </div>
 
-          <!-- Step 2: Oracle co-pilot -->
-          <div class="admin-section" style="border-bottom:1px solid rgba(124,58,237,.1);margin-bottom:1.25rem;padding-bottom:1.25rem">
-            <div style="font-family:var(--mono);font-size:.58rem;letter-spacing:.12em;color:var(--purple3);margin-bottom:.75rem">STEP 2 — ORACLE CO-PILOT</div>
-            <div id="ba-chat-log" style="background:#07070f;border:1px solid rgba(124,58,237,.15);border-radius:6px;padding:.85rem;min-height:160px;max-height:300px;overflow-y:auto;font-size:.88rem;line-height:1.75;color:var(--muted);margin-bottom:.6rem">
-              <div style="font-style:italic;color:rgba(144,128,176,.4)">Oracle standing by — describe the caller experience to begin analysis...</div>
+          <!-- ORACLE CO-PILOT -->
+          <div class="admin-section" style="border-bottom:1px solid rgba(124,58,237,.1);margin-bottom:1rem;padding-bottom:1rem">
+            <div style="font-family:var(--mono);font-size:.58rem;letter-spacing:.12em;color:var(--purple3);margin-bottom:.6rem">ORACLE CO-PILOT <span style="color:var(--muted);font-weight:400;font-size:.55rem">— structured investigative response mode</span></div>
+            <div id="ba-chat-log" style="background:#07070f;border:1px solid rgba(124,58,237,.12);border-radius:6px;padding:.75rem;min-height:180px;max-height:320px;overflow-y:auto;font-size:.85rem;line-height:1.7;color:var(--muted);margin-bottom:.6rem;font-family:'Crimson Pro',Georgia,serif">
+              <div style="font-style:italic;color:rgba(144,128,176,.35);font-size:.82rem">Oracle standing by — describe the caller experience for structured case assessment...</div>
             </div>
             <div style="display:flex;gap:.5rem">
-              <textarea class="field-input" id="ba-oracle-input" rows="2" placeholder="Describe what the caller is reporting — Oracle will cross-reference cases and suggest follow-up questions... (Enter to send)" style="flex:1;resize:none" onkeydown="if(event.key===String.fromCharCode(13)&&!event.shiftKey){event.preventDefault();sendToOracle();}"></textarea>
-              <div style="display:flex;flex-direction:column;gap:.35rem">
+              <textarea class="field-input" id="ba-oracle-input" rows="2" placeholder="Describe what the caller is reporting — Oracle gives case assessment, follow-up questions, and cross-references immediately. (Enter to send, Shift+Enter for new line)" style="flex:1;resize:none;font-size:.85rem" onkeydown="if(event.key===String.fromCharCode(13)&&!event.shiftKey){event.preventDefault();sendToOracle();}"></textarea>
+              <div style="display:flex;flex-direction:column;gap:.3rem">
                 <button class="btn-sm btn-purple" onclick="sendToOracle()" id="ba-send-btn" style="white-space:nowrap">Ask Oracle</button>
-                <button class="btn-sm btn-outline" onclick="clearOracleChat()" style="font-size:.58rem">Clear</button>
+                <button class="btn-sm btn-outline" onclick="clearOracleChat()" style="font-size:.55rem">Clear</button>
               </div>
             </div>
-            <div id="ba-oracle-thinking" style="display:none;font-family:var(--mono);font-size:.62rem;color:var(--muted);margin-top:.35rem">Oracle analyzing...</div>
+            <div id="ba-oracle-thinking" style="display:none;font-family:var(--mono);font-size:.6rem;color:var(--muted);margin-top:.3rem;animation:pulse 1s ease-in-out infinite">Oracle analyzing...</div>
           </div>
 
-          <!-- Step 3: Save notes -->
+          <!-- SAVE TO PROFILE -->
           <div class="admin-section">
-            <div style="font-family:var(--mono);font-size:.58rem;letter-spacing:.12em;color:var(--purple3);margin-bottom:.75rem">STEP 3 — SAVE TO MEMBER PROFILE</div>
+            <div style="font-family:var(--mono);font-size:.58rem;letter-spacing:.12em;color:var(--purple3);margin-bottom:.6rem">SAVE TO MEMBER PROFILE</div>
             <div class="field-row">
-              <label class="field-label">Investigation notes <span style="font-weight:400;color:var(--muted)">(auto-filled from Oracle — edit freely)</span></label>
-              <textarea class="field-input" id="ba-save-notes" rows="4" placeholder="Key details — location, phenomenon, dates, physical evidence, Oracle findings..."></textarea>
+              <label class="field-label">Investigation notes <span style="color:var(--muted);font-weight:400">(auto-filled from Oracle responses)</span></label>
+              <textarea class="field-input" id="ba-save-notes" rows="4" placeholder="Oracle analysis, caller details, key observations..."></textarea>
             </div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:.5rem">
-              <div class="field-row" style="margin:0"><label class="field-label">Classification</label>
-                <select class="field-input" id="ba-classification">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:.5rem;margin-bottom:.75rem">
+              <div><label class="field-label">Classification</label>
+                <select class="field-input" id="ba-classification" style="margin-top:.2rem">
                   <option value="Delta">Delta — Initiate</option>
                   <option value="Gamma">Gamma — Sensitive</option>
                   <option value="Beta" selected>Beta — Observer</option>
@@ -1165,8 +1184,8 @@ SMTP_PASS=abcdabcdabcdabcd</div>
                   <option value="Omega">Omega — Experiencer</option>
                 </select>
               </div>
-              <div class="field-row" style="margin:0"><label class="field-label">Follow-up action</label>
-                <select class="field-input" id="ba-followup-save">
+              <div><label class="field-label">Follow-up action</label>
+                <select class="field-input" id="ba-followup-save" style="margin-top:.2rem">
                   <option value="">No follow-up</option>
                   <option value="callback">Schedule callback</option>
                   <option value="field_investigation">Flag for field investigation</option>
@@ -1174,12 +1193,13 @@ SMTP_PASS=abcdabcdabcdabcd</div>
                 </select>
               </div>
             </div>
-            <div class="btn-row" style="margin-top:.75rem">
-              <button class="btn-sm btn-purple" onclick="saveToMemberProfile()" id="ba-save-btn">💾 Save to Member Profile + Log Call</button>
-              <button class="btn-sm btn-outline" onclick="resetBelieverAgent()">Reset</button>
+            <div class="btn-row">
+              <button class="btn-sm btn-purple" onclick="saveToMemberProfile()" id="ba-save-btn">💾 Save to Profile + Log Call</button>
+              <button class="btn-sm btn-outline" onclick="resetBelieverAgent()">Reset Session</button>
             </div>
-            <div id="ba-save-status" style="font-family:var(--mono);font-size:.72rem;color:var(--green);margin-top:.6rem;display:none"></div>
+            <div id="ba-save-status" style="font-family:var(--mono);font-size:.7rem;color:var(--green);margin-top:.5rem;display:none"></div>
           </div>
+
         </div>
 
         <!-- CALL HISTORY TAB -->
@@ -1189,13 +1209,11 @@ SMTP_PASS=abcdabcdabcdabcd</div>
             <span id="call-count" style="font-family:var(--mono);font-size:.7rem;color:var(--muted);margin-left:auto"></span>
           </div>
           <div id="call-log-list">
-            <div style="color:var(--muted);font-size:.88rem;padding:1rem;text-align:center">Loading call log...</div>
+            <div style="color:var(--muted);font-size:.88rem;padding:1rem;text-align:center">Loading...</div>
           </div>
         </div>
 
       </div>
-
-      <!-- SIGNAL INTELLIGENCE PANEL -->
       <div class="panel" id="panel-signal-intel">
         <div class="panel-header">
           <div class="panel-title">Signal Intelligence</div>
@@ -3391,11 +3409,26 @@ var _baCurrentMember = null;
 
 function autoLookupMember(email) {
   clearTimeout(_autoLookupTimer);
-  if (!email || email.length < 5 || !email.includes('@')) {
-    document.getElementById('hub-member-badge').style.display = 'none';
+  var optFields  = document.getElementById('hub-optional-fields');
+  var startBtn   = document.getElementById('hub-start-btn');
+  var badge      = document.getElementById('hub-member-badge');
+  var noBadge    = document.getElementById('hub-no-member');
+
+  // Show optional fields as soon as email has content
+  if (email && email.length > 0) {
+    if (optFields) optFields.style.display = 'block';
+    if (startBtn)  startBtn.disabled = false;
+  } else {
+    if (optFields) optFields.style.display = 'none';
+    if (startBtn)  startBtn.disabled = true;
+    if (badge)     badge.style.display = 'none';
+    if (noBadge)   noBadge.style.display = 'none';
     _baCurrentMember = null;
     return;
   }
+
+  // Debounce member lookup
+  if (!email.includes('@') || email.length < 5) return;
   _autoLookupTimer = setTimeout(async function() {
     try {
       var data    = await api('/admin/members');
@@ -3403,17 +3436,25 @@ function autoLookupMember(email) {
       var found   = members.find(function(m) {
         return (m.email||'').toLowerCase() === email.toLowerCase();
       });
-      var badge = document.getElementById('hub-member-badge');
-      if (found && badge) {
+      if (found) {
         _baCurrentMember = found;
-        badge.style.display = 'flex';
-        badge.textContent   = found.name + ' · ' + (found.plan||'free').toUpperCase();
+        if (badge) {
+          badge.style.display = 'block';
+          var n = document.getElementById('hub-badge-name');
+          var p = document.getElementById('hub-badge-plan');
+          var c = document.getElementById('hub-badge-case');
+          if (n) n.textContent = found.name || found.email;
+          if (p) p.textContent = (found.plan||'free').toUpperCase() + ' member';
+          if (c) c.textContent = found.case_number || '';
+        }
+        if (noBadge) noBadge.style.display = 'none';
       } else {
         _baCurrentMember = null;
-        if (badge) badge.style.display = 'none';
+        if (badge)   badge.style.display = 'none';
+        if (noBadge) noBadge.style.display = 'block';
       }
     } catch(e) {}
-  }, 600);
+  }, 500);
 }
 
 // ── Call Log + Live Call Timer ────────────────────────────────────────────────
@@ -3422,43 +3463,59 @@ var _liveCallTimer   = null;
 var _liveCallData    = {};
 
 function startLiveCall() {
-  var name     = document.getElementById('lc-name').value.trim();
-  var phone    = document.getElementById('lc-phone').value.trim();
-  var email    = document.getElementById('lc-email').value.trim();
-  var callType = document.getElementById('lc-type').value;
-  var category = document.getElementById('lc-category').value;
-  var location = document.getElementById('lc-location').value.trim();
+  var name     = (document.getElementById('lc-name')     || {value:''}).value.trim();
+  var phone    = (document.getElementById('lc-phone')    || {value:''}).value.trim();
+  var email    = (document.getElementById('lc-email')    || {value:''}).value.trim();
+  var callType = (document.getElementById('lc-type')     || {value:'sighting_report'}).value;
+  var category = (document.getElementById('lc-category') || {value:''}).value;
+  var location = (document.getElementById('lc-location') || {value:''}).value.trim();
 
-  _liveCallData = { caller_name: name, phone, email, call_type: callType, category, location };
+  _liveCallData  = {
+    caller_name: name || (_baCurrentMember ? _baCurrentMember.name : 'Unknown'),
+    phone: phone, email: email, call_type: callType, category: category, location: location
+  };
   _liveCallStart = Date.now();
 
-  document.getElementById('live-call-idle').style.display   = 'none';
-  document.getElementById('live-call-active').style.display = 'block';
-  document.getElementById('live-call-saved').style.display  = 'none';
+  var startBtn   = document.getElementById('hub-start-btn');
+  var timerBlock = document.getElementById('hub-timer-block');
+  var followWrap = document.getElementById('hub-followup-wrap');
+  var savedBlock = document.getElementById('hub-saved');
+  var newBtn     = document.getElementById('hub-new-btn');
 
-  document.getElementById('lc-active-name').textContent = name || 'Unknown caller';
-  document.getElementById('lc-active-meta').textContent =
-    (phone ? phone + '  ·  ' : '') + (category || callType.replace('_',' '));
+  if (startBtn)   startBtn.style.display   = 'none';
+  if (timerBlock) timerBlock.style.cssText += ';display:flex!important';
+  if (followWrap) followWrap.style.display = 'flex';
+  if (savedBlock) savedBlock.style.display = 'none';
+  if (newBtn)     newBtn.style.display     = 'none';
 
-  document.getElementById('lc-notes').value = '';
-
+  clearInterval(_liveCallTimer);
   _liveCallTimer = setInterval(function() {
     var elapsed = Math.floor((Date.now() - _liveCallStart) / 1000);
     var mins    = Math.floor(elapsed / 60);
     var secs    = elapsed % 60;
     var el = document.getElementById('lc-timer-display');
-    if (el) el.textContent = mins + ':' + (secs < 10 ? '0' : '') + secs;
-    // Color shifts from green → gold → red as time goes on
-    if (el) el.style.color = elapsed < 1800 ? '#4ade80' : elapsed < 3600 ? '#d4a843' : '#ef4444';
+    if (el) {
+      el.textContent = mins + ':' + (secs < 10 ? '0' : '') + secs;
+      el.style.color = elapsed < 1800 ? '#4ade80' : elapsed < 3600 ? '#d4a843' : '#ef4444';
+    }
   }, 1000);
+  toast('Call started', 'info');
 }
 
 async function endLiveCall(status) {
   clearInterval(_liveCallTimer);
-  var elapsed    = _liveCallStart ? Math.floor((Date.now() - _liveCallStart) / 1000) : 0;
+  var elapsed     = _liveCallStart ? Math.floor((Date.now() - _liveCallStart) / 1000) : 0;
   var durationMin = Math.ceil(elapsed / 60);
-  var notes      = document.getElementById('lc-notes').value.trim();
-  var followup   = document.getElementById('lc-followup').value;
+  var notes       = document.getElementById('ba-save-notes') ? document.getElementById('ba-save-notes').value.trim() : '';
+  var followup    = document.getElementById('lc-followup') ? document.getElementById('lc-followup').value : '';
+
+  // Hide timer, show saved state
+  var timerBlock = document.getElementById('hub-timer-block');
+  var followWrap = document.getElementById('hub-followup-wrap');
+  var savedBlock = document.getElementById('hub-saved');
+  var newBtn     = document.getElementById('hub-new-btn');
+  if (timerBlock) timerBlock.style.display = 'none';
+  if (followWrap) followWrap.style.display = 'none';
 
   var payload = Object.assign({}, _liveCallData, {
     duration_min:   durationMin,
@@ -3484,12 +3541,28 @@ async function endLiveCall(status) {
 function resetLiveCall() {
   _liveCallStart = null;
   _liveCallData  = {};
+  _baCurrentMember = null;
   clearInterval(_liveCallTimer);
-  document.getElementById('live-call-idle').style.display   = 'block';
-  document.getElementById('live-call-active').style.display = 'none';
-  document.getElementById('live-call-saved').style.display  = 'none';
-  document.getElementById('lc-timer-display').textContent   = '0:00';
-  ['lc-name','lc-phone','lc-email','lc-location','lc-notes'].forEach(function(id) {
+  // Reset display
+  var startBtn   = document.getElementById('hub-start-btn');
+  var timerBlock = document.getElementById('hub-timer-block');
+  var followWrap = document.getElementById('hub-followup-wrap');
+  var savedBlock = document.getElementById('hub-saved');
+  var newBtn     = document.getElementById('hub-new-btn');
+  var badge      = document.getElementById('hub-member-badge');
+  var noBadge    = document.getElementById('hub-no-member');
+  var optFields  = document.getElementById('hub-optional-fields');
+  if (startBtn)   { startBtn.style.display = 'inline-block'; startBtn.disabled = true; }
+  if (timerBlock) timerBlock.style.display = 'none';
+  if (followWrap) followWrap.style.display = 'none';
+  if (savedBlock) savedBlock.style.display = 'none';
+  if (newBtn)     newBtn.style.display     = 'none';
+  if (badge)      badge.style.display      = 'none';
+  if (noBadge)    noBadge.style.display    = 'none';
+  if (optFields)  optFields.style.display  = 'none';
+  var timerEl = document.getElementById('lc-timer-display');
+  if (timerEl) { timerEl.textContent = '0:00'; timerEl.style.color = '#4ade80'; }
+  ['lc-name','lc-phone','lc-email','lc-location'].forEach(function(id) {
     var el = document.getElementById(id); if (el) el.value = '';
   });
 }
