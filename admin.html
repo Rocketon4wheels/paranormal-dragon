@@ -625,9 +625,12 @@
 
             <div class="panel" id="panel-reports">
         <div class="panel-header"><div class="panel-title">All Reports</div><div class="panel-sub">Manage published and draft Strange Reports.</div></div>
-        <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:1rem;align-items:center">
-          <button class="btn-sm btn-purple" onclick="generateReportNow()" id="btn-gen2">Generate with pipeline</button>
-          <input type="text" id="reports-search" placeholder="🔍 Search reports..." oninput="filterReportsList()" style="background:var(--dark2);border:1px solid var(--border);border-radius:5px;padding:.4rem .8rem;color:var(--text);font-family:var(--mono);font-size:.82rem;outline:none;flex:1;min-width:160px"/>
+        <!-- Search + filter row -->
+        <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:.6rem;align-items:center">
+          <input type="text" id="reports-search"
+            placeholder="🔍 Search headline, case number (SI-2026-0045), tags..."
+            oninput="filterReportsList()"
+            style="background:var(--dark2);border:1px solid var(--border);border-radius:5px;padding:.45rem .85rem;color:var(--text);font-family:var(--mono);font-size:.82rem;outline:none;flex:1;min-width:200px"/>
           <select id="reports-cat-filter" onchange="filterReportsList()" style="background:var(--dark2);border:1px solid var(--border);border-radius:5px;padding:.4rem .6rem;color:var(--muted);font-family:var(--mono);font-size:.78rem;outline:none">
             <option value="">All categories</option>
             <option value="ufo">🛸 UFO/UAP</option><option value="aliens">👽 Aliens</option>
@@ -639,11 +642,31 @@
             <option value="">All status</option>
             <option value="live">Live only</option><option value="draft">Drafts only</option>
           </select>
-          <button class="btn-sm btn-outline" onclick="loadReports()">Refresh</button>
         </div>
-        <div class="admin-section">
-          <div class="admin-section-title">Reports <span id="reports-count" style="color:var(--muted);font-weight:400"></span></div>
-          <ul class="report-list" id="reports-list"><li style="color:var(--muted);font-size:.9rem;padding:.5rem 0">Loading...</li></ul>
+
+        <!-- Action row -->
+        <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:1rem;align-items:center">
+          <button class="btn-sm btn-purple" onclick="generateReportNow()" id="btn-gen2">⚡ Generate</button>
+          <button class="btn-sm btn-outline" onclick="loadReports()">↻ Refresh</button>
+          <button class="btn-sm btn-outline" onclick="toggleShowAll()" id="btn-show-all"
+            style="border-color:rgba(212,168,67,.4);color:var(--gold)"
+            title="Show all reports without pagination — useful for bulk review">
+            📋 Show All
+          </button>
+          <button class="btn-sm btn-outline" onclick="downloadAllReports()" id="btn-download-reports"
+            style="border-color:rgba(34,197,94,.35);color:#4ade80"
+            title="Download all live reports as a text file for review">
+            ⬇ Download All Reports
+          </button>
+          <span id="reports-count" style="font-family:var(--mono);font-size:.7rem;color:var(--muted);margin-left:auto"></span>
+        </div>
+
+        <div class="admin-section" style="padding:0">
+          <ul class="report-list" id="reports-list" style="margin:0">
+            <li style="color:var(--muted);font-size:.9rem;padding:.5rem">Loading...</li>
+          </ul>
+          <!-- Pagination -->
+          <div id="reports-pagination" style="display:flex;gap:.4rem;flex-wrap:wrap;padding:.75rem;border-top:1px solid rgba(124,58,237,.08);align-items:center"></div>
         </div>
       </div>
 
@@ -2247,21 +2270,140 @@ async function aiDraftReport() {
   }
 }
 
+// ── Reports list — search, filter, paginate, show-all, download ──────────────
+var _reportsPage    = 1;
+var _reportsPerPage = 25;
+var _reportsShowAll = false;
+var _filteredReports = [];
+
 function filterReportsList() {
-  const sq     = (document.getElementById('reports-search')?.value||'').toLowerCase();
-  const cat    = document.getElementById('reports-cat-filter')?.value||'';
-  const status = document.getElementById('reports-status-filter')?.value||'';
-  const filtered = allReports.filter(r => {
-    const matchQ = !sq || (r.headline||'').toLowerCase().includes(sq) || (r.tags||[]).some(t=>t.includes(sq));
-    const matchC = !cat || (r.tags||[]).includes(cat);
-    const matchS = !status || r.status === status;
+  var sq     = ((document.getElementById('reports-search') || {}).value || '').toLowerCase().trim();
+  var cat    = ((document.getElementById('reports-cat-filter') || {}).value || '');
+  var status = ((document.getElementById('reports-status-filter') || {}).value || '');
+
+  _filteredReports = allReports.filter(function(r) {
+    // Search matches headline, case number, tags, location, content snippet
+    var matchQ = !sq ||
+      (r.headline||'').toLowerCase().includes(sq) ||
+      (r.case_number||'').toLowerCase().includes(sq) ||
+      (r.id||'').toLowerCase().includes(sq) ||
+      (r.primary_location||'').toLowerCase().includes(sq) ||
+      (r.tags||[]).some(function(t){ return t.toLowerCase().includes(sq); }) ||
+      (r.content||'').toLowerCase().slice(0,500).includes(sq);
+    var matchC = !cat || (r.category||'').toLowerCase().includes(cat) ||
+                 (r.tags||[]).includes(cat);
+    var matchS = !status || r.status === status;
     return matchQ && matchC && matchS;
   });
-  const listEl = document.getElementById('reports-list');
-  const countEl = document.getElementById('reports-count');
-  if (countEl) countEl.textContent = '(' + filtered.length + ' of ' + allReports.length + ')';
-  if (listEl) listEl.innerHTML = filtered.map(r => reportItem(r)).join('') ||
-    '<li style="color:var(--muted);font-size:.9rem;padding:.5rem 0">No reports match your filter.</li>';
+
+  var countEl = document.getElementById('reports-count');
+  if (countEl) countEl.textContent = '(' + _filteredReports.length + ' of ' + allReports.length + ' reports)';
+
+  _reportsPage = 1;
+  renderReportsPage();
+}
+
+function renderReportsPage() {
+  var listEl     = document.getElementById('reports-list');
+  var pageDiv    = document.getElementById('reports-pagination');
+  if (!listEl) return;
+
+  var toShow = _reportsShowAll
+    ? _filteredReports
+    : _filteredReports.slice((_reportsPage-1)*_reportsPerPage, _reportsPage*_reportsPerPage);
+
+  listEl.innerHTML = toShow.length
+    ? toShow.map(function(r){ return reportItem(r); }).join('')
+    : '<li style="color:var(--muted);font-size:.9rem;padding:.75rem">No reports match. Try a different search.</li>';
+
+  // Pagination controls
+  if (pageDiv) {
+    if (_reportsShowAll || _filteredReports.length <= _reportsPerPage) {
+      pageDiv.style.display = 'none';
+    } else {
+      pageDiv.style.display = 'flex';
+      var totalPages = Math.ceil(_filteredReports.length / _reportsPerPage);
+      var btns = '';
+      btns += '<span style="font-family:var(--mono);font-size:.65rem;color:var(--muted);margin-right:.25rem">Page ' + _reportsPage + ' of ' + totalPages + '</span>';
+      if (_reportsPage > 1) {
+        btns += '<button onclick="reportsGoPage(' + (_reportsPage-1) + ')" class="btn-sm btn-outline" style="font-size:.6rem;padding:.25rem .6rem">← Prev</button>';
+      }
+      // Page number buttons (show up to 7 pages around current)
+      var start = Math.max(1, _reportsPage-3);
+      var end   = Math.min(totalPages, _reportsPage+3);
+      for (var p = start; p <= end; p++) {
+        var active = p === _reportsPage ? 'background:rgba(124,58,237,.2);color:var(--purple3);border-color:var(--purple2)' : '';
+        btns += '<button onclick="reportsGoPage(' + p + ')" class="btn-sm btn-outline" style="font-size:.6rem;padding:.25rem .5rem;min-width:28px;' + active + '">' + p + '</button>';
+      }
+      if (_reportsPage < totalPages) {
+        btns += '<button onclick="reportsGoPage(' + (_reportsPage+1) + ')" class="btn-sm btn-outline" style="font-size:.6rem;padding:.25rem .6rem">Next →</button>';
+      }
+      pageDiv.innerHTML = btns;
+    }
+  }
+}
+
+function reportsGoPage(p) {
+  _reportsPage = p;
+  renderReportsPage();
+  // Scroll report list to top
+  var listEl = document.getElementById('reports-list');
+  if (listEl) listEl.scrollIntoView({behavior:'smooth', block:'start'});
+}
+
+function toggleShowAll() {
+  _reportsShowAll = !_reportsShowAll;
+  var btn = document.getElementById('btn-show-all');
+  if (btn) {
+    btn.textContent = _reportsShowAll ? '📋 Paginate' : '📋 Show All';
+    btn.style.background = _reportsShowAll ? 'rgba(212,168,67,.12)' : 'transparent';
+  }
+  renderReportsPage();
+}
+
+function downloadAllReports() {
+  var btn = document.getElementById('btn-download-reports');
+  if (btn) { btn.textContent = '⏳ Building...'; btn.disabled = true; }
+
+  var source = _filteredReports.length && _filteredReports.length < allReports.length
+    ? _filteredReports : allReports;
+
+  var live = source.filter(function(r){ return r.status === 'live'; });
+  var draft = source.filter(function(r){ return r.status !== 'live'; });
+
+  var lines = [
+    'STRANGENESS IS — REPORT ARCHIVE DOWNLOAD',
+    'Generated: ' + new Date().toLocaleString('en-US', {timeZone:'America/Denver'}),
+    'Live: ' + live.length + '  |  Draft: ' + draft.length + '  |  Total: ' + source.length,
+    '='.repeat(80),
+    '',
+  ];
+
+  source.forEach(function(r) {
+    lines.push('### ' + (r.case_number||r.id||'?') + ' — ' + (r.headline||'No headline'));
+    lines.push('SI: ' + (r.strangeness_index||'?') + '/10 | Status: ' + (r.status||'?').toUpperCase() + ' | ' + (r.date_label||''));
+    lines.push('Category: ' + (r.category||'Unknown') + ' | Location: ' + (r.primary_location||'—'));
+    lines.push('Tags: ' + (r.tags||[]).join(', '));
+    lines.push('');
+    lines.push(r.content || '[No content]');
+    lines.push('');
+    lines.push('-'.repeat(80));
+    lines.push('');
+  });
+
+  var text = lines.join('\n');
+  var blob = new Blob([text], {type: 'text/plain'});
+  var url  = URL.createObjectURL(blob);
+  var a    = document.createElement('a');
+  a.href     = url;
+  a.download = 'strangeness-is-reports-' + new Date().toISOString().slice(0,10) + '.txt';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+
+  if (btn) { btn.textContent = '⬇ Download All Reports'; btn.disabled = false; }
+  toast('Downloaded ' + source.length + ' reports', 'success');
 }
 
 // ── Oracle Prompt — Investigator Mode ────────────────────────
