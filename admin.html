@@ -309,7 +309,7 @@
         
         <button class="sidebar-item" onclick="showPanel('members',this)"><span class="dot"></span>Members</button>
         <button class="sidebar-item" onclick="showPanel('signal-intel',this)"><span class="dot"></span>Signal Intelligence</button>
-        <button class="sidebar-item" onclick="showPanel('members',this)"><span class="dot"></span>Members</button>
+
 
         <button class="sidebar-item" onclick="showPanel('stripe',this)"><span class="dot"></span>Stripe Setup</button>
         <button class="sidebar-item" onclick="showPanel('tawk',this)"><span class="dot"></span>Live Chat</button>
@@ -1195,7 +1195,70 @@ SMTP_PASS=abcdabcdabcdabcd</div>
 
       </div>
 
-      <div class="panel" id="panel-stripe">
+      <!-- SIGNAL INTELLIGENCE PANEL -->
+      <div class="panel" id="panel-signal-intel">
+        <div class="panel-header">
+          <div class="panel-title">Signal Intelligence</div>
+          <div class="panel-sub">Mainstream headlines scored for hidden patterns · 7,000+ active headlines</div>
+        </div>
+        <div style="display:flex;gap:0;border-bottom:1px solid rgba(124,58,237,.2);margin-bottom:1.25rem">
+          <button id="sig-tab-scored" onclick="sigTab('scored')" style="font-family:var(--nav);font-size:.6rem;letter-spacing:.12em;padding:.6rem 1.25rem;background:rgba(124,58,237,.15);border:none;border-bottom:2px solid var(--purple2);color:var(--purple3);cursor:pointer">SCORED SIGNALS</button>
+          <button id="sig-tab-raw" onclick="sigTab('raw')" style="font-family:var(--nav);font-size:.6rem;letter-spacing:.12em;padding:.6rem 1.25rem;background:transparent;border:none;border-bottom:2px solid transparent;color:var(--muted);cursor:pointer">RAW HEADLINES <span id="sig-raw-count" style="color:var(--gold)"></span></button>
+        </div>
+        <div id="sig-view-scored">
+          <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:1rem;align-items:center">
+            <select id="sig-min-score" class="field-input" style="width:auto;font-size:.8rem" onchange="loadSignalIntel()">
+              <option value="4">Score 4+</option><option value="5">Score 5+</option>
+              <option value="6">Score 6+</option><option value="7">Score 7+</option>
+            </select>
+            <button class="btn-sm btn-purple" onclick="analyzeSignals()">🧠 Find Patterns</button>
+            <button class="btn-sm btn-outline" onclick="loadSignalIntel()">↻ Refresh</button>
+            <span id="sig-count" style="font-family:var(--mono);font-size:.7rem;color:var(--muted);margin-left:auto"></span>
+          </div>
+          <div id="sig-analysis" style="display:none;background:rgba(124,58,237,.1);border:1px solid rgba(124,58,237,.3);border-radius:8px;padding:1rem;margin-bottom:1rem;font-size:.95rem;line-height:1.6;color:var(--text)"></div>
+          <div id="signal-intel-list" style="display:flex;flex-direction:column;gap:.5rem"></div>
+        </div>
+        <div id="sig-view-raw" style="display:none">
+          <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:.75rem;align-items:center">
+            <input id="hl-search" class="field-input" placeholder="Search headlines..." style="flex:1;min-width:180px;font-size:.82rem" oninput="filterRawHeadlines()"/>
+            <select id="hl-src-filter" class="field-input" style="width:auto;font-size:.8rem" onchange="filterRawHeadlines()">
+              <option value="">All sources</option>
+            </select>
+            <button class="btn-sm btn-purple" onclick="loadRawHeadlines()">↻ Refresh</button>
+            <button class="btn-sm btn-purple" onclick="rawScanNow()" id="raw-scan-btn" style="background:rgba(212,168,67,.15);border-color:var(--gold);color:var(--gold)">📡 Scan RSS</button>
+          </div>
+          <div style="display:flex;gap:.5rem;align-items:center;margin-bottom:.5rem;flex-wrap:wrap">
+            <span style="font-family:var(--mono);font-size:.62rem;color:var(--muted)">Strangeness weight:</span>
+            <button onclick="setHlWeight('all',this)" class="btn-sm btn-purple" style="font-size:.6rem;padding:.2rem .6rem">All</button>
+            <button onclick="setHlWeight('high',this)" class="btn-sm btn-outline" style="font-size:.6rem;padding:.2rem .6rem">🔴 High</button>
+            <button onclick="setHlWeight('medium',this)" class="btn-sm btn-outline" style="font-size:.6rem;padding:.2rem .6rem">🟡 Medium</button>
+            <button onclick="setHlWeight('low',this)" class="btn-sm btn-outline" style="font-size:.6rem;padding:.2rem .6rem">🟢 Low</button>
+          </div>
+          <div id="hl-raw-stats" style="font-family:var(--mono);font-size:.68rem;color:var(--muted);margin-bottom:.75rem"></div>
+          <div id="hl-raw-list" style="max-height:600px;overflow-y:auto;display:flex;flex-direction:column;gap:0">
+            <div style="color:var(--muted);padding:1rem;font-size:.88rem">Click Refresh to load headlines.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- MEMBERS PANEL -->
+      <div class="panel" id="panel-members">
+        <div class="panel-header">
+          <div class="panel-title">Members</div>
+          <div class="panel-sub">All member accounts, plans, and activity.</div>
+        </div>
+        <div class="admin-section">
+          <div class="btn-row" style="margin-bottom:1rem">
+            <button class="btn-sm btn-outline" onclick="loadMembers()">↻ Refresh</button>
+            <span id="member-total" style="font-family:var(--mono);font-size:.7rem;color:var(--muted);margin-left:auto"></span>
+          </div>
+          <div id="members-list">
+            <div style="color:var(--muted);font-size:.88rem;padding:1rem;text-align:center">Loading members...</div>
+          </div>
+        </div>
+      </div>
+
+            <div class="panel" id="panel-stripe">
         <div class="panel-header">
           <div class="panel-title">Stripe Payments</div>
           <div class="panel-sub">Accept Oracle, Investigator, and Chronicler subscriptions.</div>
@@ -3931,7 +3994,7 @@ async function sendToOracle() {
   var ctx = _baCurrentMember ? 'CALLER: '+_baCurrentMember.name+' ('+_baCurrentMember.plan+', case '+(_baCurrentMember.case_number||'none')+')' : 'Anonymous caller.';
   try {
     var res = await api('/admin/oracle/test','POST',{message:message,history:_baChatHistory.slice(-8),context:ctx});
-    var reply = (res.response||res.content||res.message||'').trim();
+    var reply = (res.reply||res.response||res.content||res.message||'').trim();
     _baChatHistory.push({role:'assistant',content:reply});
     var notesEl = document.getElementById('ba-save-notes');
     if (notesEl) notesEl.value = notesEl.value ? notesEl.value+'\n\n[Oracle] '+reply : '[Oracle] '+reply;

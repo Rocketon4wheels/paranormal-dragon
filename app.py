@@ -412,7 +412,7 @@ CASE NUMBER: Auto-assigned as SI-YYYY-NNNN by the system. Do not generate one yo
 HEADLINE (first line only — NO label, NO prefix, NO "HEADLINE:", NO markdown):
 [SPECIFIC REAL PLACE NAME]: [EXACTLY WHAT HAPPENED] — [WHY IT MATTERS]
 The location must be a real, specific named place. Never use "United States," "Unknown," or generic regions.
-CRITICAL: Do NOT write a headline implying a new 2026 event occurred unless a dated incident is in the supplied data. For pattern analyses and standing investigations, the headline should reflect the analytical nature: e.g. "Dulce, New Mexico: Standing Investigation File — What the Evidence Actually Shows About the Alleged Underground Base" rather than implying something happened today.
+CRITICAL: Do NOT write a headline implying a new 2026 event occurred unless a dated incident is in the supplied data. For pattern analyses, the headline should reflect the analytical nature. However: "Standing Investigation File" should be used SPARINGLY — only for long-running location-specific cases (Dulce, Area 51, Skinwalker Ranch). For most topics, find a specific historical case, date, and location to anchor the report even if it is not from today. A report about UFO/UAP should pick ONE documented encounter to analyze in depth — not generate a generic overview.
 
 STRANGENESS INDEX (second line only):
 STRANGENESS INDEX: X.X/10 — [CATEGORY]
@@ -775,9 +775,9 @@ def generate_report() -> dict | None:
 
     # Headlines are collected every 15 min by the scheduler — no scan needed here
 
-    # Category rotation
+    # Category rotation — exclude last 15 to prevent same-day repeats
     last_cats = config.get('last_categories', [])
-    available = [c for c in ALL_REPORT_CATEGORIES if c not in last_cats[-5:]]
+    available = [c for c in ALL_REPORT_CATEGORIES if c not in last_cats[-15:]]
     if not available:
         available = ALL_REPORT_CATEGORIES
     chosen_category = config.get('forced_category') or random.choice(available)
@@ -862,15 +862,23 @@ def generate_report() -> dict | None:
     if not source_data:
         source_data = ['No live sources — generate a compelling report based on paranormal patterns and historical precedents.']
 
-    # Avoid repeating recent headlines
-    recent_reports = get_reports()[:20]
+    # Avoid repeating recent reports — applies to ALL generations
+    # Scheduled reports use category rotation for primary diversity
+    # The avoid clause adds headline-level diversity on top
+    recent_reports = get_reports()[:30]
     recent_headlines = [r.get('headline', '') for r in recent_reports if r.get('headline')]
     avoid_clause = ''
     if recent_headlines:
+        # For scheduled reports: use last 15 headlines (softer constraint, category rotation is primary)
+        # For manual/quick-generate: use last 25 headlines (harder constraint)
+        trigger = config.get('forced_category') or config.get('forced_topic')
+        headline_limit = 25 if trigger else 15
         avoid_clause = (
-            f'\n\nCRITICAL: DO NOT repeat or closely resemble these recent reports:\n'
-            + '\n'.join(f'  - {h}' for h in recent_headlines[:10])
-            + '\nChoose a DIFFERENT specific angle, location, or incident.'
+            f'\n\nANTI-DUPLICATE RULE: These {min(len(recent_headlines), headline_limit)} reports were recently published. '
+            f'DO NOT write about the same subject, location, or specific incident as any of these. '
+            f'Find a DIFFERENT case, location, and angle within your assigned category:\n'
+            + '\n'.join(f'  - {h}' for h in recent_headlines[:headline_limit])
+            + '\n\nChoose a different geographic region, different historical case, or different sub-topic.'
         )
 
     import zoneinfo
@@ -893,7 +901,12 @@ def generate_report() -> dict | None:
         stored_topic['forced_topic'] = None
         save_json(CONFIG_FILE, stored_topic)
 
+    # Add time-based seed to force topic diversity even within same category
+    import hashlib
+    time_seed = hashlib.md5(f"{chosen_category}{datetime.now().strftime('%Y%m%d%H%M')}".encode()).hexdigest()[:8]
+
     user_prompt = f"""Today is {today}. Assigned category: {chosen_category}{topic_clause}
+Generation seed: {time_seed} — use this to anchor on a unique angle not covered in recent reports.
 
 SYSTEM NOTE: This report will be auto-assigned case number SI-{datetime.now().strftime('%Y')}-XXXX by the platform. Do not include a case number in your output.
 
@@ -2440,16 +2453,29 @@ def admin_test_oracle():
     message = data.get('message', 'Tell me something strange.')
     prompt  = data.get('prompt') or get_config().get('oracle_prompt') or ORACLE_SYSTEM_PROMPT
     try:
+        # Build messages with optional history (for Believer Agent)
+        history = data.get('history', [])
+        context = data.get('context', '')
+        system_content = prompt
+        if context:
+            system_content = prompt + '\n\nSESSION CONTEXT: ' + context
+        msgs = [{'role': 'system', 'content': system_content}]
+        # Add conversation history
+        for h in history[-10:]:
+            role = h.get('role', 'user')
+            if role in ('user', 'assistant'):
+                msgs.append({'role': role, 'content': h.get('content', '')})
+        # If last message is from assistant or history is empty, add current message
+        if not msgs or msgs[-1]['role'] != 'user':
+            msgs.append({'role': 'user', 'content': message})
         response = client.chat.completions.create(
-            model='gpt-4o-mini',
-            messages=[
-                {'role': 'system', 'content': prompt},
-                {'role': 'user',   'content': message},
-            ],
-            max_tokens=400,
-            temperature=0.85,
+            model='gpt-4o',
+            messages=msgs,
+            max_tokens=800,
+            temperature=0.8,
         )
-        return jsonify({'reply': response.choices[0].message.content.strip()})
+        reply = response.choices[0].message.content.strip()
+        return jsonify({'reply': reply, 'response': reply, 'content': reply})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
