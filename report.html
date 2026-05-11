@@ -539,7 +539,7 @@
         const date  = r.date_label || new Date(r.published_at||r.created_at).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
         const tags  = (r.tags||[]).slice(0,4).map(t=>`<span class="ac-tag">${t}</span>`).join('');
         const isFirst = i===0 && currentPage===1 && activeFilter==='all';
-        return `<div class="archive-card${isFirst?' active':''}" onclick="selectReport(${allReports.indexOf(r)},this)">
+        return `<div class="archive-card${isFirst?' active':''}" onclick="window.open('https://api.strangenessis.com/r/'+r.id,'_blank')">
           <div class="ac-meta"><span class="ac-date">${emoji} ${date}</span><span class="ac-index">${r.strangeness_index}/10</span></div>
           <div class="ac-headline">${r.headline}</div>
           <div class="ac-tags">${tags}</div>

@@ -274,7 +274,7 @@
         <span class="sidebar-label">Overview</span>
         <button class="sidebar-item active" onclick="showPanel('dashboard',this)"><span class="dot"></span>Dashboard</button>
         <button class="sidebar-item" onclick="showPanel('crm',this)"><span class="dot"></span>CRM</button>
-        <button class="sidebar-item" id="nav-calls" onclick="showPanel('calls',this)"><span class="dot"></span>📞 Call Log</button>
+        <button class="sidebar-item" id="nav-investigator-hub" onclick="showPanel('investigator-hub',this)"><span class="dot"></span>📞 Investigator Hub</button>
       </div>
       <div class="sidebar-section">
         <span class="sidebar-label">The Oracle</span>
@@ -310,7 +310,7 @@
         <button class="sidebar-item" onclick="showPanel('members',this)"><span class="dot"></span>Members</button>
         <button class="sidebar-item" onclick="showPanel('signal-intel',this)"><span class="dot"></span>Signal Intelligence</button>
         <button class="sidebar-item" onclick="showPanel('members',this)"><span class="dot"></span>Members</button>
-        <button class="sidebar-item" onclick="showPanel('believer-agent',this)"><span class="dot"></span>🤝 Believer Agent</button>
+
         <button class="sidebar-item" onclick="showPanel('stripe',this)"><span class="dot"></span>Stripe Setup</button>
         <button class="sidebar-item" onclick="showPanel('tawk',this)"><span class="dot"></span>Live Chat</button>
                 <button class="sidebar-item" onclick="showPanel('seo',this)"><span class="dot"></span>SEO &amp; Meta</button>
@@ -1039,257 +1039,163 @@ SMTP_PASS=abcdabcdabcdabcd</div>
 
       <!-- CRM - redirects to crm.html -->
       <!-- CALL LOG PANEL -->
-      <div class="panel" id="panel-calls">
+            <!-- INVESTIGATOR HUB — Believer Agent + Call Log combined -->
+      <div class="panel" id="panel-investigator-hub">
         <div class="panel-header">
-          <div class="panel-title">📞 Call Log</div>
-          <div class="panel-sub">Every call logged, case-numbered, and linked to member CRM. Start a live call to begin timing.</div>
+          <div class="panel-title">📞 Investigator Hub</div>
+          <div class="panel-sub">Live Oracle co-pilot for calls · Auto-saves to member profile · Full call history</div>
         </div>
 
-        <!-- LIVE CALL WORKFLOW -->
-        <div class="admin-section" style="background:rgba(34,197,94,.05);border:1px solid rgba(34,197,94,.2);border-radius:8px;margin-bottom:1.5rem">
-          <div style="font-family:var(--mono);font-size:.62rem;letter-spacing:.12em;color:#4ade80;margin-bottom:1rem">LIVE CALL</div>
-          <div id="live-call-idle" style="">
-            <p style="font-size:.88rem;color:var(--muted);margin-bottom:1rem">When a call comes in — fill in the details and start the timer. The log saves automatically when you end the call.</p>
-            <div class="field-row"><label class="field-label">Caller Name</label><input class="field-input" id="lc-name" type="text" placeholder="Full name or Unknown"/></div>
-            <div class="field-row"><label class="field-label">Phone</label><input class="field-input" id="lc-phone" type="tel" placeholder="(555) 555-5555"/></div>
-            <div class="field-row"><label class="field-label">Email <span style="font-weight:400;color:var(--muted)">(links to member profile)</span></label><input class="field-input" id="lc-email" type="email" placeholder="Optional"/></div>
-            <div class="field-row"><label class="field-label">Call Type</label>
-              <select class="field-input" id="lc-type">
-                <option value="sighting_report">Sighting Report</option>
-                <option value="investigation">Investigation Consultation</option>
-                <option value="membership">Membership Inquiry</option>
-                <option value="support">General Support</option>
-              </select>
+        <!-- TABS -->
+        <div style="display:flex;gap:0;border-bottom:1px solid rgba(124,58,237,.2);margin-bottom:1.25rem">
+          <button id="hub-tab-live" onclick="hubTab('live')" style="font-family:var(--nav);font-size:.6rem;letter-spacing:.12em;padding:.6rem 1.25rem;background:rgba(34,197,94,.12);border:none;border-bottom:2px solid #4ade80;color:#4ade80;cursor:pointer">▶ LIVE CALL</button>
+          <button id="hub-tab-history" onclick="hubTab('history')" style="font-family:var(--nav);font-size:.6rem;letter-spacing:.12em;padding:.6rem 1.25rem;background:transparent;border:none;border-bottom:2px solid transparent;color:var(--muted);cursor:pointer">CALL HISTORY</button>
+        </div>
+
+        <!-- LIVE CALL TAB -->
+        <div id="hub-view-live">
+
+          <!-- Step 1: Identify caller -->
+          <div class="admin-section" style="background:rgba(34,197,94,.04);border:1px solid rgba(34,197,94,.15);border-radius:8px;padding:1rem;margin-bottom:1.25rem">
+            <div style="font-family:var(--mono);font-size:.58rem;letter-spacing:.12em;color:#4ade80;margin-bottom:.75rem">STEP 1 — IDENTIFY CALLER</div>
+
+            <!-- Live call timer state -->
+            <div id="hub-idle">
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:.5rem;margin-bottom:.5rem">
+                <div class="field-row" style="margin:0"><label class="field-label">Name</label><input class="field-input" id="lc-name" type="text" placeholder="Full name or Unknown"/></div>
+                <div class="field-row" style="margin:0"><label class="field-label">Phone</label><input class="field-input" id="lc-phone" type="tel" placeholder="(555) 555-5555"/></div>
+              </div>
+              <div class="field-row"><label class="field-label">Email <span style="font-weight:400;color:var(--muted)">(links to member profile if matched)</span></label>
+                <div style="display:flex;gap:.5rem">
+                  <input class="field-input" id="lc-email" type="email" placeholder="Optional" style="flex:1" oninput="autoLookupMember(this.value)"/>
+                  <div id="hub-member-badge" style="display:none;font-family:var(--mono);font-size:.6rem;padding:.3rem .7rem;border-radius:4px;background:rgba(124,58,237,.15);color:var(--purple3);border:1px solid rgba(124,58,237,.3);white-space:nowrap;align-self:center"></div>
+                </div>
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:.5rem;margin-bottom:.75rem">
+                <div class="field-row" style="margin:0"><label class="field-label">Call Type</label>
+                  <select class="field-input" id="lc-type">
+                    <option value="sighting_report">Sighting Report</option>
+                    <option value="investigation">Investigation Consultation</option>
+                    <option value="membership">Membership Inquiry</option>
+                    <option value="support">General Support</option>
+                  </select>
+                </div>
+                <div class="field-row" style="margin:0"><label class="field-label">Category</label>
+                  <select class="field-input" id="lc-category">
+                    <option value="">-- Select --</option>
+                    <option value="ufo">🛸 UFO / UAP / NHI</option>
+                    <option value="aliens">👽 Aliens &amp; Entities</option>
+                    <option value="cryptids">🦶 Cryptid &amp; Creature</option>
+                    <option value="paranormal">👻 Paranormal</option>
+                    <option value="government">🏛️ Government Disclosure</option>
+                    <option value="consciousness">🧠 Consciousness</option>
+                    <option value="phenomena">🌀 Phenomena</option>
+                    <option value="other">❓ Other</option>
+                  </select>
+                </div>
+              </div>
+              <div class="field-row"><label class="field-label">Location Reported</label><input class="field-input" id="lc-location" type="text" placeholder="City, State"/></div>
+              <button class="btn-sm btn-green" onclick="startLiveCall()" style="font-size:.72rem;padding:.6rem 1.5rem">▶ Answer Call &amp; Start Timer</button>
             </div>
-            <div class="field-row"><label class="field-label">Category</label>
-              <select class="field-input" id="lc-category">
-                <option value="">-- Select --</option>
-                <option>UFO / UAP / NHI</option>
-                <option>Aliens &amp; Entities</option>
-                <option>Cryptid &amp; Creature</option>
-                <option>Paranormal</option>
-                <option>Government Disclosure</option>
-                <option>Consciousness</option>
-                <option>Missing 411</option>
-                <option>Skinwalker Ranch</option>
-                <option>Other</option>
-              </select>
+
+            <!-- Active call state -->
+            <div id="hub-active" style="display:none">
+              <div style="display:flex;align-items:center;gap:1.5rem;margin-bottom:1rem;flex-wrap:wrap">
+                <div style="text-align:center">
+                  <div style="font-family:'Share Tech Mono',monospace;font-size:2.4rem;font-weight:700;color:#4ade80;line-height:1" id="lc-timer-display">0:00</div>
+                  <div style="font-family:var(--mono);font-size:.55rem;color:var(--muted)">LIVE</div>
+                </div>
+                <div style="flex:1">
+                  <div style="font-size:.9rem;color:var(--text);font-weight:500" id="lc-active-name"></div>
+                  <div style="font-family:var(--mono);font-size:.6rem;color:var(--muted)" id="lc-active-meta"></div>
+                </div>
+                <div style="display:flex;gap:.4rem;flex-direction:column">
+                  <button class="btn-sm btn-red" onclick="endLiveCall('completed')" style="padding:.5rem 1rem">■ End Call</button>
+                  <button class="btn-sm btn-outline" onclick="endLiveCall('voicemail')" style="padding:.3rem .8rem;font-size:.6rem">Voicemail</button>
+                </div>
+              </div>
+              <div class="field-row"><label class="field-label">Follow-up</label>
+                <select class="field-input" id="lc-followup" style="max-width:260px">
+                  <option value="">No follow-up needed</option>
+                  <option value="callback">Schedule callback</option>
+                  <option value="field_investigation">Flag for field investigation</option>
+                  <option value="upgrade_offer">Offer plan upgrade</option>
+                  <option value="send_report">Send report link</option>
+                </select>
+              </div>
             </div>
-            <div class="field-row"><label class="field-label">Location Reported</label><input class="field-input" id="lc-location" type="text" placeholder="City, State"/></div>
-            <button class="btn-sm btn-green" onclick="startLiveCall()" style="margin-top:.5rem;font-size:.72rem;padding:.6rem 1.5rem">▶ Answer Call &amp; Start Timer</button>
+
+            <!-- Saved state -->
+            <div id="hub-saved" style="display:none;text-align:center;padding:.75rem">
+              <div style="color:#4ade80;font-family:var(--mono);font-size:.72rem;margin-bottom:.5rem" id="lc-saved-msg">✓ Call logged</div>
+              <button class="btn-sm btn-outline" onclick="resetLiveCall()">+ New Call</button>
+            </div>
           </div>
 
-          <div id="live-call-active" style="display:none">
-            <div style="display:flex;align-items:center;gap:1.5rem;margin-bottom:1rem;flex-wrap:wrap">
-              <div>
-                <div style="font-family:'Share Tech Mono',monospace;font-size:2.5rem;font-weight:700;color:#4ade80;line-height:1" id="lc-timer-display">0:00</div>
-                <div style="font-family:var(--mono);font-size:.58rem;color:var(--muted)">CALL DURATION</div>
-              </div>
-              <div style="flex:1">
-                <div style="font-size:.9rem;color:var(--text);font-weight:500" id="lc-active-name">Caller</div>
-                <div style="font-family:var(--mono);font-size:.62rem;color:var(--muted)" id="lc-active-meta"></div>
-              </div>
-              <div style="display:flex;gap:.5rem;flex-direction:column">
-                <button class="btn-sm btn-red" onclick="endLiveCall('completed')" style="padding:.5rem 1rem">■ End Call</button>
-                <button class="btn-sm btn-outline" onclick="endLiveCall('voicemail')" style="padding:.3rem .8rem;font-size:.6rem">Voicemail</button>
+          <!-- Step 2: Oracle co-pilot -->
+          <div class="admin-section" style="border-bottom:1px solid rgba(124,58,237,.1);margin-bottom:1.25rem;padding-bottom:1.25rem">
+            <div style="font-family:var(--mono);font-size:.58rem;letter-spacing:.12em;color:var(--purple3);margin-bottom:.75rem">STEP 2 — ORACLE CO-PILOT</div>
+            <div id="ba-chat-log" style="background:#07070f;border:1px solid rgba(124,58,237,.15);border-radius:6px;padding:.85rem;min-height:160px;max-height:300px;overflow-y:auto;font-size:.88rem;line-height:1.75;color:var(--muted);margin-bottom:.6rem">
+              <div style="font-style:italic;color:rgba(144,128,176,.4)">Oracle standing by — describe the caller experience to begin analysis...</div>
+            </div>
+            <div style="display:flex;gap:.5rem">
+              <textarea class="field-input" id="ba-oracle-input" rows="2" placeholder="Describe what the caller is reporting — Oracle will cross-reference cases and suggest follow-up questions... (Enter to send)" style="flex:1;resize:none" onkeydown="if(event.key===String.fromCharCode(13)&&!event.shiftKey){event.preventDefault();sendToOracle();}"></textarea>
+              <div style="display:flex;flex-direction:column;gap:.35rem">
+                <button class="btn-sm btn-purple" onclick="sendToOracle()" id="ba-send-btn" style="white-space:nowrap">Ask Oracle</button>
+                <button class="btn-sm btn-outline" onclick="clearOracleChat()" style="font-size:.58rem">Clear</button>
               </div>
             </div>
-            <div class="field-row"><label class="field-label">Live notes</label><textarea class="field-input" id="lc-notes" rows="3" placeholder="Type notes during the call — location, what they witnessed, key details..."></textarea></div>
-            <div class="field-row"><label class="field-label">Follow-up needed?</label>
-              <select class="field-input" id="lc-followup" style="max-width:280px">
-                <option value="">No follow-up needed</option>
-                <option value="send_report">Send them a report link</option>
-                <option value="callback">Schedule callback</option>
-                <option value="investigation">Flag for field investigation</option>
-              </select>
-            </div>
+            <div id="ba-oracle-thinking" style="display:none;font-family:var(--mono);font-size:.62rem;color:var(--muted);margin-top:.35rem">Oracle analyzing...</div>
           </div>
 
-          <div id="live-call-saved" style="display:none;padding:.75rem;text-align:center">
-            <div style="color:#4ade80;font-family:var(--mono);font-size:.72rem;margin-bottom:.5rem" id="lc-saved-msg">✓ Call logged</div>
-            <button class="btn-sm btn-outline" onclick="resetLiveCall()">+ New Call</button>
+          <!-- Step 3: Save notes -->
+          <div class="admin-section">
+            <div style="font-family:var(--mono);font-size:.58rem;letter-spacing:.12em;color:var(--purple3);margin-bottom:.75rem">STEP 3 — SAVE TO MEMBER PROFILE</div>
+            <div class="field-row">
+              <label class="field-label">Investigation notes <span style="font-weight:400;color:var(--muted)">(auto-filled from Oracle — edit freely)</span></label>
+              <textarea class="field-input" id="ba-save-notes" rows="4" placeholder="Key details — location, phenomenon, dates, physical evidence, Oracle findings..."></textarea>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:.5rem">
+              <div class="field-row" style="margin:0"><label class="field-label">Classification</label>
+                <select class="field-input" id="ba-classification">
+                  <option value="Delta">Delta — Initiate</option>
+                  <option value="Gamma">Gamma — Sensitive</option>
+                  <option value="Beta" selected>Beta — Observer</option>
+                  <option value="Alpha">Alpha — Witness</option>
+                  <option value="Omega">Omega — Experiencer</option>
+                </select>
+              </div>
+              <div class="field-row" style="margin:0"><label class="field-label">Follow-up action</label>
+                <select class="field-input" id="ba-followup-save">
+                  <option value="">No follow-up</option>
+                  <option value="callback">Schedule callback</option>
+                  <option value="field_investigation">Flag for field investigation</option>
+                  <option value="upgrade_offer">Offer upgrade</option>
+                </select>
+              </div>
+            </div>
+            <div class="btn-row" style="margin-top:.75rem">
+              <button class="btn-sm btn-purple" onclick="saveToMemberProfile()" id="ba-save-btn">💾 Save to Member Profile + Log Call</button>
+              <button class="btn-sm btn-outline" onclick="resetBelieverAgent()">Reset</button>
+            </div>
+            <div id="ba-save-status" style="font-family:var(--mono);font-size:.72rem;color:var(--green);margin-top:.6rem;display:none"></div>
           </div>
         </div>
 
-        <!-- CALL HISTORY -->
-        <div class="admin-section">
+        <!-- CALL HISTORY TAB -->
+        <div id="hub-view-history" style="display:none">
           <div class="btn-row" style="margin-bottom:1rem">
-            <span style="font-family:var(--mono);font-size:.62rem;letter-spacing:.12em;color:var(--muted)">CALL HISTORY</span>
-            <button class="btn-sm btn-outline" onclick="loadCallLog()" style="margin-left:auto">↻ Refresh</button>
-            <span id="call-count" style="font-family:var(--mono);font-size:.7rem;color:var(--muted)"></span>
+            <button class="btn-sm btn-outline" onclick="loadCallLog()">↻ Refresh</button>
+            <span id="call-count" style="font-family:var(--mono);font-size:.7rem;color:var(--muted);margin-left:auto"></span>
           </div>
           <div id="call-log-list">
             <div style="color:var(--muted);font-size:.88rem;padding:1rem;text-align:center">Loading call log...</div>
           </div>
         </div>
+
       </div>
 
-
-      <!-- SIGNAL INTELLIGENCE PANEL -->
-      <div class="panel" id="panel-signal-intel">
-        <div class="panel-header">
-          <div class="panel-title">Signal Intelligence</div>
-          <div class="panel-sub">Mainstream headlines scored for hidden patterns · Truth in plain sight</div>
-        </div>
-
-        <!-- Tabs -->
-        <div style="display:flex;gap:0;border-bottom:1px solid rgba(124,58,237,.2);margin-bottom:1.25rem">
-          <button id="sig-tab-scored" onclick="sigTab('scored')" style="font-family:var(--nav);font-size:.6rem;letter-spacing:.12em;padding:.6rem 1.25rem;background:rgba(124,58,237,.15);border:none;border-bottom:2px solid var(--purple2);color:var(--purple3);cursor:pointer">SCORED SIGNALS</button>
-          <button id="sig-tab-raw" onclick="sigTab('raw')" style="font-family:var(--nav);font-size:.6rem;letter-spacing:.12em;padding:.6rem 1.25rem;background:transparent;border:none;border-bottom:2px solid transparent;color:var(--muted);cursor:pointer">RAW HEADLINES <span id="sig-raw-count" style="color:var(--gold)"></span></button>
-        </div>
-
-        <!-- Scored signals view -->
-        <div id="sig-view-scored">
-          <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:1rem;align-items:center">
-            <select id="sig-min-score" class="field-input" style="width:auto;font-size:.8rem" onchange="loadSignalIntel()">
-              <option value="4">Score 4+</option>
-              <option value="5">Score 5+</option>
-              <option value="6">Score 6+</option>
-              <option value="7">Score 7+</option>
-            </select>
-            <select id="sig-reviewed" class="field-input" style="width:auto;font-size:.8rem" onchange="loadSignalIntel()">
-              <option value="">All signals</option>
-              <option value="false">Unreviewed</option>
-              <option value="true">Reviewed</option>
-            </select>
-            <button class="btn-sm btn-purple" onclick="analyzeSignals()">🧠 Find Patterns</button>
-            <button class="btn-sm btn-outline" onclick="loadSignalIntel()">↻ Refresh</button>
-            <span id="sig-count" style="font-family:var(--mono);font-size:.7rem;color:var(--muted);margin-left:auto"></span>
-          </div>
-          <div id="sig-analysis" style="display:none;background:rgba(124,58,237,.1);border:1px solid rgba(124,58,237,.3);border-radius:8px;padding:1rem;margin-bottom:1rem;font-size:.95rem;line-height:1.6;color:var(--text)"></div>
-          <div id="signal-intel-list" style="display:flex;flex-direction:column;gap:.5rem"></div>
-        </div>
-
-        <!-- Raw headlines view -->
-        <div id="sig-view-raw" style="display:none">
-          <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:.75rem;align-items:center">
-            <input id="hl-search" class="field-input" placeholder="Search headlines..." style="flex:1;min-width:180px;font-size:.82rem" oninput="filterRawHeadlines()"/>
-            <select id="hl-src-filter" class="field-input" style="width:auto;font-size:.8rem" onchange="filterRawHeadlines()">
-              <option value="">All sources</option>
-            </select>
-            <button class="btn-sm btn-purple" onclick="loadRawHeadlines()">↻ Refresh</button>
-            <button class="btn-sm btn-purple" onclick="rawScanNow()" id="raw-scan-btn" style="background:rgba(212,168,67,.15);border-color:var(--gold);color:var(--gold)">📡 Scan RSS</button>
-            <button class="btn-sm btn-red" onclick="if(confirm('Clear all headlines?'))api('/admin/headlines/clear','POST').then(function(){loadRawHeadlines();toast('Cleared')})">Clear all</button>
-          </div>
-          <div style="display:flex;gap:.5rem;align-items:center;margin-bottom:.5rem;flex-wrap:wrap">
-            <span style="font-family:var(--mono);font-size:.62rem;color:var(--muted)">Strangeness weight:</span>
-            <button onclick="setHlWeight('all',this)" class="btn-sm btn-purple" style="font-size:.6rem;padding:.2rem .6rem">All</button>
-            <button onclick="setHlWeight('high',this)" class="btn-sm btn-outline" style="font-size:.6rem;padding:.2rem .6rem">🔴 High</button>
-            <button onclick="setHlWeight('medium',this)" class="btn-sm btn-outline" style="font-size:.6rem;padding:.2rem .6rem">🟡 Medium</button>
-            <button onclick="setHlWeight('low',this)" class="btn-sm btn-outline" style="font-size:.6rem;padding:.2rem .6rem">🟢 Low</button>
-          </div>
-          <div id="hl-raw-stats" style="font-family:var(--mono);font-size:.68rem;color:var(--muted);margin-bottom:.75rem"></div>
-          <div id="hl-raw-list" style="max-height:600px;overflow-y:auto;display:flex;flex-direction:column;gap:0">
-            <div style="color:var(--muted);padding:1rem;font-size:.88rem">Click Refresh to load headlines.</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- MEMBERS PANEL -->
-      <div class="panel" id="panel-members">
-        <div class="panel-header">
-          <div class="panel-title">Members</div>
-          <div class="panel-sub">All member accounts, plans, and activity.</div>
-        </div>
-        <div class="admin-section">
-          <div class="btn-row" style="margin-bottom:1rem">
-            <button class="btn-sm btn-outline" onclick="loadMembers()">↻ Refresh</button>
-            <span id="member-total" style="font-family:var(--mono);font-size:.7rem;color:var(--muted);margin-left:auto"></span>
-          </div>
-          <div id="members-list">
-            <div style="color:var(--muted);font-size:.88rem;padding:1rem;text-align:center">Loading...</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- BELIEVER AGENT PANEL -->
-      <div class="panel" id="panel-believer-agent">
-        <div class="panel-header">
-          <div class="panel-title">🤝 Believer Agent</div>
-          <div class="panel-sub">Live Oracle interface for investigator calls. Saves intelligence directly to member profiles.</div>
-        </div>
-
-        <div class="admin-section" style="border-bottom:1px solid rgba(124,58,237,.1);margin-bottom:1.25rem;padding-bottom:1.25rem">
-          <div style="font-family:var(--mono);font-size:.6rem;letter-spacing:.12em;color:var(--purple3);margin-bottom:.75rem">STEP 1 — IDENTIFY CALLER</div>
-          <div class="field-row">
-            <label class="field-label">Member email or name</label>
-            <div style="display:flex;gap:.5rem">
-              <input class="field-input" type="text" id="ba-member-search" placeholder="Search by email or name..." style="flex:1" onkeydown="if(event.key===String.fromCharCode(13))lookupMember()"/>
-              <button class="btn-sm btn-purple" onclick="lookupMember()">Look up</button>
-            </div>
-          </div>
-          <div id="ba-member-result" style="display:none;background:rgba(124,58,237,.08);border:1px solid rgba(124,58,237,.2);border-radius:6px;padding:.85rem;margin-top:.5rem">
-            <div style="font-family:var(--mono);font-size:.6rem;color:var(--muted);margin-bottom:.25rem" id="ba-member-case"></div>
-            <div style="font-size:.9rem;color:var(--text);font-weight:500" id="ba-member-name"></div>
-            <div style="font-family:var(--mono);font-size:.62rem;color:var(--muted)" id="ba-member-plan"></div>
-            <div style="font-family:var(--mono);font-size:.6rem;color:var(--gold);margin-top:.35rem" id="ba-member-history"></div>
-          </div>
-          <div id="ba-no-member" style="display:none;font-size:.82rem;color:var(--muted);margin-top:.5rem;font-style:italic">No member found — session saves as anonymous.</div>
-        </div>
-
-        <div class="admin-section" style="border-bottom:1px solid rgba(124,58,237,.1);margin-bottom:1.25rem;padding-bottom:1.25rem">
-          <div style="font-family:var(--mono);font-size:.6rem;letter-spacing:.12em;color:var(--purple3);margin-bottom:.75rem">STEP 2 — ORACLE INTERFACE</div>
-          <div id="ba-chat-log" style="background:#07070f;border:1px solid rgba(124,58,237,.15);border-radius:6px;padding:.85rem;min-height:200px;max-height:350px;overflow-y:auto;font-size:.88rem;line-height:1.75;color:var(--muted);margin-bottom:.75rem">
-            <div style="font-style:italic;color:rgba(144,128,176,.5)">Oracle standing by...</div>
-          </div>
-          <div style="display:flex;gap:.5rem">
-            <textarea class="field-input" id="ba-oracle-input" rows="2" placeholder="Describe the caller account or ask Oracle... (Enter to send, Shift+Enter for newline)" style="flex:1;resize:none" onkeydown="if(event.key===String.fromCharCode(13)&&!event.shiftKey){event.preventDefault();sendToOracle();}"></textarea>
-            <div style="display:flex;flex-direction:column;gap:.35rem">
-              <button class="btn-sm btn-purple" onclick="sendToOracle()" id="ba-send-btn" style="white-space:nowrap">Ask Oracle</button>
-              <button class="btn-sm btn-outline" onclick="clearOracleChat()" style="font-size:.58rem">Clear</button>
-            </div>
-          </div>
-          <div id="ba-oracle-thinking" style="display:none;font-family:var(--mono);font-size:.62rem;color:var(--muted);margin-top:.35rem">Oracle analyzing...</div>
-        </div>
-
-        <div class="admin-section">
-          <div style="font-family:var(--mono);font-size:.6rem;letter-spacing:.12em;color:var(--purple3);margin-bottom:.75rem">STEP 3 — SAVE TO MEMBER PROFILE</div>
-          <div class="field-row">
-            <label class="field-label">Investigation notes</label>
-            <textarea class="field-input" id="ba-save-notes" rows="4" placeholder="Key details from the call — location, phenomenon, dates, physical evidence, Oracle findings..."></textarea>
-          </div>
-          <div class="field-row">
-            <label class="field-label">Classification</label>
-            <select class="field-input" id="ba-classification" style="max-width:280px">
-              <option value="Delta">Delta — Initiate</option>
-              <option value="Gamma">Gamma — Sensitive</option>
-              <option value="Beta" selected>Beta — Observer</option>
-              <option value="Alpha">Alpha — Witness</option>
-              <option value="Omega">Omega — Experiencer</option>
-            </select>
-          </div>
-          <div class="field-row">
-            <label class="field-label">Primary phenomenon</label>
-            <select class="field-input" id="ba-category" style="max-width:280px">
-              <option value="ufo">🛸 UFO / UAP / NHI</option>
-              <option value="aliens">👽 Aliens &amp; Entities</option>
-              <option value="cryptids">🦶 Cryptid &amp; Creature</option>
-              <option value="paranormal">👻 Paranormal</option>
-              <option value="government">🏛️ Government Disclosure</option>
-              <option value="consciousness">🧠 Consciousness / Psychic</option>
-              <option value="phenomena">🌀 Unexplained Phenomena</option>
-              <option value="other">❓ Other</option>
-            </select>
-          </div>
-          <div class="field-row">
-            <label class="field-label">Follow-up action</label>
-            <select class="field-input" id="ba-followup" style="max-width:280px">
-              <option value="">No follow-up needed</option>
-              <option value="callback">Schedule callback</option>
-              <option value="field_investigation">Flag for field investigation</option>
-              <option value="upgrade_offer">Offer plan upgrade</option>
-              <option value="report_link">Send relevant report link</option>
-            </select>
-          </div>
-          <div class="btn-row" style="margin-top:1rem">
-            <button class="btn-sm btn-purple" onclick="saveToMemberProfile()" id="ba-save-btn">Save to Member Profile + Log Call</button>
-            <button class="btn-sm btn-outline" onclick="resetBelieverAgent()">Reset Session</button>
-          </div>
-          <div id="ba-save-status" style="font-family:var(--mono);font-size:.72rem;color:var(--green);margin-top:.6rem;display:none"></div>
-        </div>
-      </div>
-
-            <div class="panel" id="panel-stripe">
+      <div class="panel" id="panel-stripe">
         <div class="panel-header">
           <div class="panel-title">Stripe Payments</div>
           <div class="panel-sub">Accept Oracle, Investigator, and Chronicler subscriptions.</div>
@@ -1716,6 +1622,7 @@ function showPanel(id, btn) {
     members:              loadMembers,
     headlines:            loadHeadlines,
     'signal-intel':       loadSignalIntel,
+    'investigator-hub':   function() { loadCallLog(); },
     'quick-generate':     function() {},
     'calls':              loadCallLog,
     'admin-team':         loadTeam,
@@ -3393,6 +3300,58 @@ document.addEventListener('DOMContentLoaded', function() {
     setTimeout(checkAllPanelStatuses, 800);
   }
 });
+
+// ── Investigator Hub — tab switcher ──────────────────────────────────────────
+function hubTab(tab) {
+  var live    = document.getElementById('hub-view-live');
+  var history = document.getElementById('hub-view-history');
+  var tLive   = document.getElementById('hub-tab-live');
+  var tHist   = document.getElementById('hub-tab-history');
+  if (live)    live.style.display    = tab === 'live'    ? 'block' : 'none';
+  if (history) history.style.display = tab === 'history' ? 'block' : 'none';
+  if (tLive) {
+    tLive.style.background       = tab==='live' ? 'rgba(34,197,94,.12)' : 'transparent';
+    tLive.style.borderBottomColor = tab==='live' ? '#4ade80' : 'transparent';
+    tLive.style.color             = tab==='live' ? '#4ade80' : 'var(--muted)';
+  }
+  if (tHist) {
+    tHist.style.background        = tab==='history' ? 'rgba(124,58,237,.12)' : 'transparent';
+    tHist.style.borderBottomColor = tab==='history' ? 'var(--purple2)' : 'transparent';
+    tHist.style.color             = tab==='history' ? 'var(--purple3)' : 'var(--muted)';
+  }
+  if (tab === 'history') loadCallLog();
+}
+
+// Auto-lookup member by email as typed
+var _autoLookupTimer = null;
+var _baCurrentMember = null;
+
+function autoLookupMember(email) {
+  clearTimeout(_autoLookupTimer);
+  if (!email || email.length < 5 || !email.includes('@')) {
+    document.getElementById('hub-member-badge').style.display = 'none';
+    _baCurrentMember = null;
+    return;
+  }
+  _autoLookupTimer = setTimeout(async function() {
+    try {
+      var data    = await api('/admin/members');
+      var members = data.members || [];
+      var found   = members.find(function(m) {
+        return (m.email||'').toLowerCase() === email.toLowerCase();
+      });
+      var badge = document.getElementById('hub-member-badge');
+      if (found && badge) {
+        _baCurrentMember = found;
+        badge.style.display = 'flex';
+        badge.textContent   = found.name + ' · ' + (found.plan||'free').toUpperCase();
+      } else {
+        _baCurrentMember = null;
+        if (badge) badge.style.display = 'none';
+      }
+    } catch(e) {}
+  }, 600);
+}
 
 // ── Call Log + Live Call Timer ────────────────────────────────────────────────
 var _liveCallStart   = null;
