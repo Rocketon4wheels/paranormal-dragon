@@ -4048,6 +4048,38 @@ async function lookupMember() {
   } catch(e) { toast('Lookup failed: '+e.message,'error'); }
 }
 
+function formatOracleResponse(text) {
+  // Escape HTML first
+  var t = text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+
+  // Section headers → styled blocks
+  var sections = [
+    { key: 'CASE ASSESSMENT',      color: '#f59e0b', icon: '⬡' },
+    { key: 'KEY QUESTIONS',        color: '#a78bfa', icon: '?' },
+    { key: 'CROSS-REFERENCES',     color: '#38bdf8', icon: '⊕' },
+    { key: 'INVESTIGATIVE NOTES',  color: '#4ade80', icon: '▸' },
+  ];
+
+  sections.forEach(function(s) {
+    // Match "SECTION NAME —" or "SECTION NAME:" at start of line or inline
+    var re = new RegExp('(' + s.key + '[\s\u2014:-]+)', 'g');
+    t = t.replace(re,
+      '<span style="display:inline-block;margin-top:.6rem;margin-bottom:.2rem;font-family:var(--mono);font-size:.6rem;letter-spacing:.12em;color:' + s.color + ';border-bottom:1px solid ' + s.color + '44;padding-bottom:1px">' + s.icon + ' ' + s.key + '</span><br>');
+  });
+
+  // Numbered list items → formatted lines
+  t = t.replace(/(\d+)\.\s+/g, '<br><span style="color:var(--purple3);font-family:var(--mono);font-size:.65rem">$1.</span> ');
+
+  // Line breaks
+  t = t.replace(/\n\n/g, '<br><br>');
+
+
+  t = t.replace(/\n/g, '<br>');
+
+
+  return '<span style="font-size:.88rem;line-height:1.75;color:var(--text)">' + t + '</span>';
+}
+
 async function sendToOracle() {
   var inputEl = document.getElementById('ba-oracle-input');
   var chatLog = document.getElementById('ba-chat-log');
@@ -4073,7 +4105,7 @@ async function sendToOracle() {
     if (notesEl) notesEl.value = notesEl.value ? notesEl.value+'\n\n[Oracle] '+reply : '[Oracle] '+reply;
     var oDiv = document.createElement('div');
     oDiv.style.cssText = 'margin-bottom:.75rem;padding:.5rem .75rem;background:rgba(212,168,67,.06);border-radius:4px;border-left:2px solid var(--gold)';
-    oDiv.innerHTML = '<span style="font-family:var(--mono);font-size:.58rem;color:var(--gold)">ORACLE</span><br>' + reply.replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    oDiv.innerHTML = '<span style="font-family:var(--mono);font-size:.58rem;color:var(--gold);letter-spacing:.1em">ORACLE</span><br>' + formatOracleResponse(reply);
     chatLog.appendChild(oDiv);
     chatLog.scrollTop = chatLog.scrollHeight;
   } catch(e) { toast('Oracle error: '+e.message,'error'); }
