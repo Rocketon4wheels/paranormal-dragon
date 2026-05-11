@@ -42,9 +42,40 @@
     .admin-badge { font-family:var(--mono); font-size:.82rem; color:var(--green); border:1px solid rgba(34,197,94,.3); padding:3px 10px; border-radius:20px; }
     .logout-btn { font-family:var(--nav); font-size:.76rem; letter-spacing:.12em; color:var(--muted); background:none; border:1px solid rgba(255,255,255,.1); padding:5px 14px; border-radius:4px; cursor:pointer; }
     .logout-btn:hover { color:var(--text); }
-    .admin-body { display:grid; grid-template-columns:230px 1fr; min-height:calc(100vh - 55px); }
-    .admin-sidebar { background:var(--surface); border-right:1px solid rgba(124,58,237,.15); padding:1.5rem 0; overflow-y:auto; }
-    .sidebar-section { padding:0 1rem 1.5rem; }
+    /* ── Admin layout ── */
+    .admin-body {
+      display: grid;
+      grid-template-columns: 240px 1fr;
+      height: calc(100vh - 55px);
+      overflow: hidden;
+    }
+    .admin-sidebar {
+      background: var(--surface);
+      border-right: 1px solid rgba(124,58,237,.15);
+      padding: 1rem 0 2rem;
+      overflow-y: auto;        /* scrollable sidebar */
+      overflow-x: hidden;
+      height: 100%;
+      /* Custom scrollbar */
+      scrollbar-width: thin;
+      scrollbar-color: rgba(124,58,237,.3) transparent;
+    }
+    .admin-sidebar::-webkit-scrollbar { width: 4px; }
+    .admin-sidebar::-webkit-scrollbar-track { background: transparent; }
+    .admin-sidebar::-webkit-scrollbar-thumb { background: rgba(124,58,237,.3); border-radius: 2px; }
+    .admin-main {
+      overflow-y: auto;
+      overflow-x: hidden;
+      height: 100%;
+      padding: 2rem;
+      /* Custom scrollbar */
+      scrollbar-width: thin;
+      scrollbar-color: rgba(124,58,237,.2) transparent;
+    }
+    .admin-main::-webkit-scrollbar { width: 4px; }
+    .admin-main::-webkit-scrollbar-track { background: transparent; }
+    .admin-main::-webkit-scrollbar-thumb { background: rgba(124,58,237,.2); border-radius: 2px; }
+    .sidebar-section { padding: 0 .75rem 1rem; }
     .sidebar-label { font-family:var(--nav); font-size:.75rem; letter-spacing:.22em; color:var(--muted); padding:0 .5rem .5rem; display:block; }
     .sidebar-item { display:block; padding:.65rem .8rem; border-radius:5px; font-family:var(--nav); font-size:.78rem; letter-spacing:.1em; color:var(--muted); cursor:pointer; border:none; background:none; width:100%; text-align:left; margin-bottom:2px; transition:all .2s; }
     .sidebar-item:hover,.sidebar-item.active { background:rgba(124,58,237,.12); color:var(--purple3); }
@@ -186,23 +217,65 @@
     }
     .sidebar-overlay.open { display: block; }
 
-    @media (max-width: 900px) {
+    /* ── Mobile / Tablet ── */
+    @media (max-width: 960px) {
       .admin-hamburger { display: flex; }
-      .admin-body { grid-template-columns: 1fr; }
+      .admin-body { grid-template-columns: 1fr; height: calc(100vh - 55px); }
       .admin-sidebar {
         position: fixed;
-        top: 0; left: -260px;
-        width: 260px; height: 100vh;
-        z-index: 99;
-        transition: left .3s ease;
-        padding-top: 4rem;
+        top: 0; left: -270px;
+        width: 270px; height: 100vh;
+        z-index: 200;
+        transition: left .25s ease;
+        padding-top: 3.5rem;
+        overflow-y: auto;
+        overflow-x: hidden;
+        box-shadow: none;
+      }
+      .admin-sidebar.open { left: 0; box-shadow: 6px 0 40px rgba(0,0,0,.6); }
+      .admin-main { overflow-y: auto; height: 100%; padding: 1rem; }
+      .panel { padding: 0; }
+      .admin-section { padding: .75rem; }
+
+      /* Make panels stack nicely on mobile */
+      .field-row { margin-bottom: .75rem; }
+      .field-input { font-size: 16px !important; } /* prevent iOS zoom */
+      .btn-row { flex-wrap: wrap; gap: .4rem; }
+      .btn-sm { font-size: .65rem !important; padding: .45rem .9rem !important; }
+
+      /* Report review modal full screen on mobile */
+      #report-review-modal > div {
+        max-width: 100% !important;
+        margin: 0;
+        border-radius: 0 !important;
+        height: 100vh;
         overflow-y: auto;
       }
-      .admin-sidebar.open { left: 0; box-shadow: 4px 0 30px rgba(0,0,0,.5); }
-      .admin-main { overflow-y: auto; }
+
+      /* Investigator hub mobile */
+      #hub-view-live .admin-section { padding: .65rem; }
+      #lc-timer-display { font-size: 1.8rem !important; }
+      #ba-chat-log { min-height: 120px; max-height: 220px; }
+
+      /* Quick generate compact */
+      #qg-result-headline { font-size: .9rem !important; }
+
+      /* Signal intel full width */
+      #hl-raw-list { max-height: 400px; }
     }
 
-    @media(max-width:768px){.admin-main{padding:1rem}}
+    @media (max-width: 480px) {
+      .admin-navbar { padding: .6rem 1rem; }
+      .admin-title { font-size: .65rem; }
+      .admin-main { padding: .6rem; }
+      .panel-title { font-size: .9rem; }
+      .admin-section { padding: .6rem; margin-bottom: .75rem; }
+      /* Single column grids on small phones */
+      [style*="grid-template-columns:1fr 1fr"],
+      [style*="grid-template-columns: 1fr 1fr"] { grid-template-columns: 1fr !important; }
+      [style*="grid-template-columns:1fr 1fr 1fr"],
+      [style*="grid-template-columns: 1fr 1fr 1fr"] { grid-template-columns: 1fr !important; }
+    }
   </style>
 </head>
 <body>
@@ -264,6 +337,7 @@
     <span class="admin-logo">Strangeness <span>IS</span> — Control Room</span>
     <div style="display:flex;align-items:center;gap:1rem">
       <span class="admin-badge">● Authenticated</span>
+      <a href="tel:8333325436" style="font-family:var(--mono);font-size:.58rem;color:var(--gold);text-decoration:none;display:none" class="admin-phone-link">(833) 33-ALIEN · 833-332-5436</a>
       <button class="logout-btn" onclick="logout()">Log out</button>
     </div>
   </nav>

@@ -55,7 +55,7 @@ STRIPE_WEBHOOK_SECRET = os.getenv('STRIPE_WEBHOOK_SECRET', '')
 GA_MEASUREMENT_ID     = os.getenv('GA_MEASUREMENT_ID', '')
 GA_API_SECRET         = os.getenv('GA_API_SECRET', '')
 SITE_URL              = os.getenv('SITE_URL', 'https://strangenessis.com')
-PHONE_NUMBER          = os.getenv('PHONE_NUMBER', '(833) 33-ALIEN')  # 833-332-5436
+PHONE_NUMBER          = os.getenv('PHONE_NUMBER', '(833) 33-ALIEN · 833-332-5436')  # 833-332-5436
 
 if not ADMIN_KEY:
     raise RuntimeError('ADMIN_KEY environment variable must be set. Do not use a hardcoded default.')

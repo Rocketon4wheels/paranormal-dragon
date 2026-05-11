@@ -51,6 +51,17 @@
     .cta-box p { font-size:.95rem; color:var(--muted); margin-bottom:1.25rem; }
     .cta-btn { font-family:var(--nav); font-size:.6rem; letter-spacing:.12em; padding:.65rem 1.75rem; background:var(--purple); color:#fff; border:none; border-radius:4px; cursor:pointer; display:inline-block; transition:background .2s; }
     .cta-btn:hover { background:var(--purple2); color:#fff; }
+  
+    /* ── Mobile responsive ── */
+    @media (max-width: 768px) {
+      .navbar { padding: .6rem 1rem; gap: .5rem; }
+      .nav-links { display: none; } /* hide nav links on mobile, show logo + phone */
+      .nav-logo { font-size: .8rem; }
+    }
+    @media (max-width: 599px) {
+      body { font-size: 16px; }
+      .navbar { flex-wrap: nowrap; }
+    }
   </style>
 </head>
 <body>
@@ -64,7 +75,7 @@
       <a href="map.html">Strangeness Map</a></li><li><a href="submit.html">Submit Sighting</a>
       <a href="member.html">Portal</a>
     </div>
-    <a href="tel:8333325436" style="font-family:'Cinzel',serif;font-size:.6rem;letter-spacing:.1em;color:var(--gold,#d4a843);border:1px solid rgba(212,168,67,.35);padding:.35rem .85rem;border-radius:4px;text-decoration:none;white-space:nowrap">(833) 33-ALIEN</a>
+    <a href="tel:8333325436" style="font-family:'Cinzel',serif;font-size:.6rem;letter-spacing:.1em;color:var(--gold,#d4a843);border:1px solid rgba(212,168,67,.35);padding:.35rem .85rem;border-radius:4px;text-decoration:none;white-space:nowrap">(833) 33-ALIEN · 833-332-5436</a>
   </nav>
 
   <div class="page">
