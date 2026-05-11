@@ -62,9 +62,13 @@ class StrangeMeter {
     try {
       const res  = await fetch(`${BACKEND_URL}/reports/latest`);
       const data = await res.json();
-      if (data.report) {
-        this.animate(data.report.strangeness_index || 5.0);
-        if (this.dateEl) this.dateEl.textContent = data.report.date_label || '';
+      // Use daily planetary strangeness index (weighted avg of all reports)
+      // falls back to latest report's index if not available
+      const idx = data.daily_strangeness_index || (data.report ? data.report.strangeness_index : null) || 6.6;
+      this.animate(idx);
+      if (this.dateEl) {
+        const now = new Date();
+        this.dateEl.textContent = now.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric',timeZone:'America/Denver'}) + ' MST';
       }
     } catch(e) { this.animate(6.6); }
   }
@@ -163,16 +167,16 @@ const DIAG_TREE = {
     sub: 'Select the closest match — be honest with yourself.',
     type: 'phenomenon',
     options: [
-      { label: 'UFO / UAP / Unidentified Craft', value: 'uap_sighting', next: 'proximity' },
-      { label: 'Alien or Non-Human Entity Contact', value: 'entity_contact', next: 'entity_depth' },
-      { label: 'Alien Abduction or Missing Time', value: 'alien_abduction', next: 'proximity' },
-      { label: 'Cryptid or Unknown Creature', value: 'cryptid', next: 'proximity' },
-      { label: 'Government / Classified Knowledge', value: 'government_conspiracy', next: 'gov_depth' },
-      { label: 'Paranormal / Ghost / Haunting', value: 'paranormal_ghost', next: 'proximity' },
-      { label: 'Consciousness / Psychic / Remote Viewing', value: 'psychic_minor', next: 'psychic_depth' },
-      { label: 'Time Slip / Teleportation / Dimension', value: 'dimension_consciousness', next: 'advanced_depth' },
-      { label: 'Near-Death or Afterlife Experience', value: 'nde', next: 'proximity' },
-      { label: 'Something I cannot categorize', value: 'unexplained', next: 'proximity' },
+      { label: '🛸  UFO / UAP / Unidentified Craft', value: 'uap_sighting', next: 'proximity' },
+      { label: '👽  Alien or Non-Human Entity Contact', value: 'entity_contact', next: 'entity_depth' },
+      { label: '⏳  Alien Abduction or Missing Time', value: 'alien_abduction', next: 'proximity' },
+      { label: '🦶  Cryptid or Unknown Creature', value: 'cryptid', next: 'proximity' },
+      { label: '🏛️  Government / Classified Knowledge', value: 'government_conspiracy', next: 'gov_depth' },
+      { label: '👻  Paranormal / Ghost / Haunting', value: 'paranormal_ghost', next: 'proximity' },
+      { label: '🧠  Consciousness / Psychic / Remote Viewing', value: 'psychic_minor', next: 'psychic_depth' },
+      { label: '🌀  Time Slip / Teleportation / Dimension', value: 'dimension_consciousness', next: 'advanced_depth' },
+      { label: '✨  Near-Death or Afterlife Experience', value: 'nde', next: 'proximity' },
+      { label: '❓  Something I cannot categorize', value: 'unexplained', next: 'proximity' },
     ],
   },
 
@@ -507,12 +511,17 @@ function showDiagResult() {
         <a href="chatbot.html" class="diag-btn-primary" onclick="closeDiagnosis();if(window.siTrack)siTrack('diag_oracle_click',{cls:'${cls.code}',score:${score}})">
           Consult The Oracle — ${cls.cta}
         </a>
+        ${score >= 7 ? `
+        <a href="tel:8333325436" class="diag-btn-secondary" style="background:rgba(212,168,67,.12);border-color:rgba(212,168,67,.4);color:#d4a843" onclick="closeDiagnosis();if(window.siTrack)siTrack('diag_call_click',{cls:'${cls.code}',score:${score}})">
+          📞 Speak with a Believer Agent — (833) 33-ALIEN
+        </a>
+        ` : ''}
         <a href="submit.html" class="diag-btn-secondary" onclick="closeDiagnosis();if(window.siTrack)siTrack('diag_report_click',{cls:'${cls.code}'})">
-          File your official strangeness report
+          File your official case report
         </a>
         ${!isMember ? `
         <button class="diag-btn-secondary" onclick="closeDiagnosis();setTimeout(()=>{ if(window.openPricingModal)openPricingModal('oracle');else window.location.href='member.html?plan=oracle'; },300)" style="opacity:.85">
-          Join The Network — see your full case file
+          Join The Network — $19/mo includes 1 live session
         </button>
         ` : ''}
         <button class="diag-btn-secondary" onclick="closeDiagnosis()" style="opacity:.45;font-size:.75rem;padding:.4rem">Close</button>

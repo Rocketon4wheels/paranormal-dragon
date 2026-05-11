@@ -55,7 +55,7 @@ STRIPE_WEBHOOK_SECRET = os.getenv('STRIPE_WEBHOOK_SECRET', '')
 GA_MEASUREMENT_ID     = os.getenv('GA_MEASUREMENT_ID', '')
 GA_API_SECRET         = os.getenv('GA_API_SECRET', '')
 SITE_URL              = os.getenv('SITE_URL', 'https://strangenessis.com')
-PHONE_NUMBER          = os.getenv('PHONE_NUMBER', '1-800-STRANGE')
+PHONE_NUMBER          = os.getenv('PHONE_NUMBER', '(833) 33-ALIEN')  # 833-332-5436
 
 if not ADMIN_KEY:
     raise RuntimeError('ADMIN_KEY environment variable must be set. Do not use a hardcoded default.')
@@ -2142,49 +2142,113 @@ def member_forgot_password():
 # ═════════════════════════════════════════════════════════════
 
 PLANS = {
-    'oracle':       {'name': 'The Oracle',       'price': 9,  'interval': 'month'},
-    'investigator': {'name': 'The Investigator', 'price': 19, 'interval': 'month'},
-    'chronicler':   {'name': 'The Chronicler',   'price': 89, 'interval': 'year'},
+    'oracle':       {'name': 'The Oracle',       'price': 19,   'interval': 'month'},
+    'investigator': {'name': 'The Investigator', 'price': 49,   'interval': 'month'},
+    'chronicler':   {'name': 'The Chronicler',   'price': 149,  'interval': 'month'},
+    'chronicler_annual': {'name': 'The Chronicler Annual', 'price': 1499, 'interval': 'year'},
+}
+# Walk-in call packages (one-time purchases, no membership required)
+CALL_PACKAGES = {
+    'call_1':   {'name': '1 Believer Agent Session',  'sessions': 1,  'price': 75},
+    'call_3':   {'name': '3 Believer Agent Sessions', 'sessions': 3,  'price': 210},
+    'call_6':   {'name': '6 Believer Agent Sessions', 'sessions': 6,  'price': 360},
+}
+# Member discount call rates (per session, billed separately)
+MEMBER_CALL_RATES = {
+    'oracle':       50,   # $50/session for Oracle members
+    'investigator': 45,   # $45/session for Investigator members
+    'chronicler':   40,   # $40/session for Chronicler members
 }
 
 PLAN_LIMITS = {
     'free': {
-        'oracle_messages':  3,
-        'report_access':    3,
+        'oracle_messages':  3,          # 3 free questions per session
+        'report_access':    3,          # last 3 reports only
+        'report_days':      0,          # no archive access
         'signal_intel':     False,
-        'live_sessions':    0,
+        'live_sessions':    0,          # no included sessions
+        'session_rate':     75,         # retail walk-in rate
         'digest_emails':    False,
-        'early_access':     False,
         'download_reports': False,
     },
     'oracle': {
-        'oracle_messages':  -1,
+        'oracle_messages':  -1,         # unlimited Oracle
         'report_access':    -1,
+        'report_days':      30,         # last 30 days of reports
         'signal_intel':     False,
-        'live_sessions':    0,
+        'live_sessions':    1,          # 1 session included/month ($75 retail value)
+        'session_rate':     50,         # member rate per additional session
         'digest_emails':    True,
-        'early_access':     False,
         'download_reports': True,
     },
     'investigator': {
         'oracle_messages':  -1,
         'report_access':    -1,
-        'signal_intel':     True,
-        'live_sessions':    2,
+        'report_days':      90,         # last 90 days
+        'signal_intel':     False,      # signal intel is admin-only
+        'live_sessions':    2,          # 2 sessions included/month
+        'session_rate':     45,         # member rate per additional session
         'digest_emails':    True,
-        'early_access':     False,
         'download_reports': True,
     },
     'chronicler': {
         'oracle_messages':  -1,
         'report_access':    -1,
-        'signal_intel':     True,
+        'report_days':      180,        # last 180 days — NOT unlimited
+        'signal_intel':     False,      # gets weekly email digest instead
+        'signal_alerts':    True,       # weekly high-weight headline digest
+        'live_sessions':    4,          # 4 sessions included/month
+        'session_rate':     40,         # member rate per additional session
+        'dedicated_agent':  True,       # same agent every call
+        'digest_emails':    True,
         'live_sessions':    -1,
         'digest_emails':    True,
         'early_access':     True,
         'download_reports': True,
     },
 }
+
+@app.route('/subscribe/call-package', methods=['POST'])
+def create_call_package_checkout():
+    """One-time Believer Agent session bundle — no membership required."""
+    data    = request.get_json(silent=True) or {}
+    package = data.get('package', 'call_1')
+    email   = data.get('email', '').strip().lower()
+    if package not in CALL_PACKAGES:
+        return jsonify({'error': 'Invalid package'}), 400
+    if not STRIPE_SECRET_KEY:
+        return jsonify({'error': 'Payments not configured'}), 503
+    pkg = CALL_PACKAGES[package]
+    try:
+        stripe.api_key = STRIPE_SECRET_KEY
+        price_id = os.getenv(f'STRIPE_PRICE_{package.upper()}', '')
+        if price_id:
+            line_items = [{'price': price_id, 'quantity': 1}]
+        else:
+            line_items = [{
+                'price_data': {
+                    'currency': 'usd',
+                    'unit_amount': pkg['price'] * 100,
+                    'product_data': {
+                        'name': pkg['name'],
+                        'description': f"{pkg['sessions']} x 30-min Believer Agent session{'s' if pkg['sessions']>1 else ''}",
+                    },
+                },
+                'quantity': 1,
+            }]
+        sess = stripe.checkout.Session.create(
+            mode='payment',
+            customer_email=email or None,
+            line_items=line_items,
+            metadata={'package': package, 'sessions': str(pkg['sessions']),
+                      'email': email, 'type': 'call_package'},
+            success_url=f"{SITE_URL}/member.html?checkout=success&type=calls&pkg={package}",
+            cancel_url=f"{SITE_URL}/member.html?checkout=cancelled",
+        )
+        return jsonify({'url': sess.url})
+    except Exception as e:
+        app.logger.error(f'Call package checkout error: {e}')
+        return jsonify({'error': str(e)}), 500
 
 @app.route('/subscribe', methods=['POST'])
 def create_checkout():

@@ -429,6 +429,7 @@
       <li><a href="map.html">Strangeness Map</a></li><li><a href="submit.html" style="color:var(--gold,#d4a843)">Submit a Sighting</a></li>
           <li><a href="member.html">My Portal</a></li>
     </ul>
+    <a href="tel:8333325436" style="font-family:'Cinzel',serif;font-size:.6rem;letter-spacing:.1em;color:var(--gold,#d4a843);border:1px solid rgba(212,168,67,.35);padding:.35rem .85rem;border-radius:4px;text-decoration:none;white-space:nowrap">(833) 33-ALIEN</a>
   </nav>
 
   <!-- -- HERO -- -->
@@ -622,60 +623,91 @@
     <div class="pricing-inner">
       <p class="section-eyebrow" style="text-align:center">Access levels</p>
       <h2 class="section-title" style="text-align:center">Choose your level of strangeness</h2>
-      <p class="section-body" style="margin:0 auto;text-align:center">All plans include daily Strange Report access. Cancel anytime.</p>
+      <p class="section-body" style="margin:0 auto;text-align:center;max-width:560px">Every plan includes The Oracle AI and daily Strange Reports. Believer Agent sessions are live 30-minute calls with a human investigator. Cancel anytime.</p>
+
       <div class="pricing-grid">
 
         <div class="price-card">
           <div class="price-tier">Oracle Access — Monthly</div>
           <div class="price-name">The Oracle</div>
-          <div class="price-amount">$9 <span>/ month</span></div>
-          <div class="price-desc">Unlimited access to The Oracle — trained on paranormal intelligence from thousands of real accounts. Answers no other AI can give.</div>
+          <div class="price-amount">$19 <span>/ month</span></div>
+          <div class="price-desc">Your entry into the network. Unlimited Oracle AI, 30 days of reports, and 1 live Believer Agent session included every month.</div>
           <hr class="price-divider"/>
           <div class="price-feature">Unlimited Oracle conversations</div>
-          <div class="price-feature">Daily Strange Report — full archive</div>
+          <div class="price-feature">Strange Report archive — last 30 days</div>
+          <div class="price-feature"><strong>1 Believer Agent session included</strong> <span style="color:var(--muted);font-size:.8em">($75 retail value)</span></div>
+          <div class="price-feature">Member call rate: $50/session</div>
           <div class="price-feature">Strange Diagnosis — full classification</div>
-          <div class="price-feature">Submit sightings to our network</div>
           <div class="price-feature">Daily digest email briefings</div>
           <div class="price-feature">Download and share reports</div>
-          <div class="price-feature dim">No Signal Intelligence access</div>
-          <div class="price-feature dim">No live investigator sessions</div>
           <button class="price-btn" onclick="openPricingModal('oracle')">Access The Oracle</button>
         </div>
 
         <div class="price-card featured">
           <div class="feat-badge">Most popular</div>
-          <div class="price-tier">Live Investigator — Monthly</div>
+          <div class="price-tier">Active Investigator — Monthly</div>
           <div class="price-name">The Investigator</div>
-          <div class="price-amount">$19 <span>/ month</span></div>
-          <div class="price-desc">Everything in The Oracle plus Signal Intelligence access and live investigator sessions to go deeper on your experience.</div>
+          <div class="price-amount">$49 <span>/ month</span></div>
+          <div class="price-desc">For those on an active investigation. 2 Believer Agent sessions per month, priority callbacks, and 90 days of report archive.</div>
           <hr class="price-divider"/>
           <div class="price-feature">Everything in The Oracle</div>
-          <div class="price-feature">Signal Intelligence panel — mainstream anomaly scanner</div>
-          <div class="price-feature">2 live investigator sessions / mo</div>
-          <div class="price-feature">Cross-reference your account with network data</div>
-          <div class="price-feature">Vote on next report topic</div>
-          <div class="price-feature">Priority case file — flagged for pattern analysis</div>
+          <div class="price-feature">Strange Report archive — last 90 days</div>
+          <div class="price-feature"><strong>2 Believer Agent sessions included</strong> <span style="color:var(--muted);font-size:.8em">($150 retail value)</span></div>
+          <div class="price-feature">Member call rate: $45/session</div>
+          <div class="price-feature">Priority callback within 24 hours</div>
+          <div class="price-feature">Persistent case file — all sessions logged</div>
           <button class="price-btn primary" onclick="openPricingModal('investigator')">Become an Investigator</button>
         </div>
 
         <div class="price-card">
-          <div class="price-tier">The Chronicler — Annual</div>
+          <div class="price-tier">The Chronicler — Monthly</div>
           <div class="price-name">The Chronicler</div>
-          <div class="price-amount">$89 <span>/ year</span></div>
-          <div class="price-desc">The complete Strangeness IS network — unlimited access to every feature, unlimited investigator sessions, and early access to new tools.</div>
+          <div class="price-amount">$149 <span>/ month</span></div>
+          <div class="price-desc">The deepest level of the network. 4 sessions per month, dedicated investigator, 180-day archive, and weekly Signal Intelligence digest.</div>
           <hr class="price-divider"/>
-          <div class="price-feature">Everything in Investigator — annual rate</div>
-          <div class="price-feature">Unlimited live investigator sessions</div>
-          <div class="price-feature">Signal Intelligence — full access</div>
-          <div class="price-feature">Early access to new features</div>
+          <div class="price-feature">Everything in The Investigator</div>
+          <div class="price-feature">Strange Report archive — last 180 days</div>
+          <div class="price-feature"><strong>4 Believer Agent sessions included</strong> <span style="color:var(--muted);font-size:.8em">($300 retail value)</span></div>
+          <div class="price-feature">Member call rate: $40/session</div>
+          <div class="price-feature">Dedicated investigator — same agent every call</div>
+          <div class="price-feature">Weekly Signal Intelligence email digest</div>
           <div class="price-feature">Verified pin on Strangeness Map</div>
-          <div class="price-feature">Monthly exclusive deep-dive report</div>
           <button class="price-btn" onclick="openPricingModal('chronicler')">Become a Chronicler</button>
         </div>
 
       </div>
 
-      <p class="pricing-note">Payments via Stripe. No contracts. Cancel or pause anytime.</p>
+      <!-- Walk-in call packages -->
+      <div style="margin-top:3rem;padding-top:2rem;border-top:1px solid rgba(124,58,237,.12)">
+        <p class="section-eyebrow" style="text-align:center;margin-bottom:.5rem">No membership? No problem.</p>
+        <h3 style="font-family:'Cinzel',serif;font-size:1.1rem;font-weight:400;color:var(--text);text-align:center;margin-bottom:.5rem">Believer Agent Call Packages</h3>
+        <p style="text-align:center;color:var(--muted);font-size:.9rem;margin-bottom:1.5rem">Purchase sessions without a membership. Members always get a better per-session rate.</p>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;max-width:680px;margin:0 auto">
+          <div style="background:rgba(124,58,237,.06);border:1px solid rgba(124,58,237,.2);border-radius:8px;padding:1.25rem;text-align:center">
+            <div style="font-family:'Cinzel',serif;font-size:.6rem;letter-spacing:.12em;color:var(--muted);margin-bottom:.3rem">SINGLE SESSION</div>
+            <div style="font-family:'Cinzel',serif;font-size:1.6rem;color:var(--text)">$75</div>
+            <div style="color:var(--muted);font-size:.82rem;margin:.3rem 0 .85rem">1 × 30-min call</div>
+            <button onclick="buyCallPackage('call_1')" style="font-family:'Cinzel',serif;font-size:.58rem;letter-spacing:.1em;padding:.45rem 1rem;background:transparent;border:1px solid rgba(124,58,237,.4);color:var(--purple3);border-radius:4px;cursor:pointer;width:100%">Book Session</button>
+          </div>
+          <div style="background:rgba(124,58,237,.06);border:1px solid rgba(212,168,67,.3);border-radius:8px;padding:1.25rem;text-align:center">
+            <div style="font-family:'Cinzel',serif;font-size:.6rem;letter-spacing:.12em;color:var(--gold);margin-bottom:.3rem">3 SESSIONS</div>
+            <div style="font-family:'Cinzel',serif;font-size:1.6rem;color:var(--text)">$210</div>
+            <div style="color:var(--muted);font-size:.82rem;margin:.3rem 0 .85rem">$70 each — save $15</div>
+            <button onclick="buyCallPackage('call_3')" style="font-family:'Cinzel',serif;font-size:.58rem;letter-spacing:.1em;padding:.45rem 1rem;background:rgba(212,168,67,.1);border:1px solid rgba(212,168,67,.4);color:var(--gold);border-radius:4px;cursor:pointer;width:100%">Book 3 Sessions</button>
+          </div>
+          <div style="background:rgba(124,58,237,.06);border:1px solid rgba(124,58,237,.2);border-radius:8px;padding:1.25rem;text-align:center">
+            <div style="font-family:'Cinzel',serif;font-size:.6rem;letter-spacing:.12em;color:var(--muted);margin-bottom:.3rem">6 SESSIONS</div>
+            <div style="font-family:'Cinzel',serif;font-size:1.6rem;color:var(--text)">$360</div>
+            <div style="color:var(--muted);font-size:.82rem;margin:.3rem 0 .85rem">$60 each — save $90</div>
+            <button onclick="buyCallPackage('call_6')" style="font-family:'Cinzel',serif;font-size:.58rem;letter-spacing:.1em;padding:.45rem 1rem;background:transparent;border:1px solid rgba(124,58,237,.4);color:var(--purple3);border-radius:4px;cursor:pointer;width:100%">Book 6 Sessions</button>
+          </div>
+        </div>
+        <p style="text-align:center;color:var(--muted);font-size:.78rem;margin-top:1rem">
+          Become a member and your per-session rate drops to $50, $45, or $40. <a href="#pricing" style="color:var(--purple3)">Compare plans →</a>
+        </p>
+      </div>
+
+      <p class="pricing-note">Payments via Stripe. Secure checkout. No contracts. Cancel anytime. Call (833) 33-ALIEN with questions.</p>
     </div>
   </div>
 
@@ -807,6 +839,26 @@
       investigator: {name:'The Investigator', price:'$19 / month', features:['Everything in The Oracle','2 live investigator sessions per month','Priority Believer Portal access','Vote on next report topic','Conversation summaries archived']},
       chronicler:   {name:'The Chronicler',   price:'$89 / year',  features:['Everything in The Oracle, full year','Full historical report archive','Monthly exclusive deep-dive report','Verified pin on Strangeness Map','Save $139 vs monthly']},
     };
+
+    async function buyCallPackage(pkg) {
+      var email = prompt('Enter your email to receive booking confirmation (optional):') || '';
+      try {
+        var res  = await fetch('https://api.strangenessis.com/subscribe/call-package', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({package: pkg, email: email}),
+        });
+        var data = await res.json();
+        if (data.url) {
+          window.location.href = data.url;
+        } else {
+          alert('Booking unavailable right now. Please call (833) 33-ALIEN to book directly.');
+        }
+      } catch(e) {
+        // Fallback to phone
+        alert('To book a Believer Agent session, call (833) 33-ALIEN or email us at darladonatucci@gmail.com');
+      }
+    }
 
     function openPricingModal(plan) {
       _currentPlan = plan || 'oracle';
