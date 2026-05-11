@@ -511,12 +511,17 @@ function showDiagResult() {
         <a href="chatbot.html" class="diag-btn-primary" onclick="closeDiagnosis();if(window.siTrack)siTrack('diag_oracle_click',{cls:'${cls.code}',score:${score}})">
           Consult The Oracle — ${cls.cta}
         </a>
+        ${score >= 7 ? `
+        <a href="tel:8333325436" class="diag-btn-secondary" style="background:rgba(212,168,67,.12);border-color:rgba(212,168,67,.4);color:#d4a843" onclick="closeDiagnosis();if(window.siTrack)siTrack('diag_call_click',{cls:'${cls.code}',score:${score}})">
+          📞 Speak with a Believer Agent — (833) 33-ALIEN
+        </a>
+        ` : ''}
         <a href="submit.html" class="diag-btn-secondary" onclick="closeDiagnosis();if(window.siTrack)siTrack('diag_report_click',{cls:'${cls.code}'})">
-          File your official strange report
+          File your official case report
         </a>
         ${!isMember ? `
         <button class="diag-btn-secondary" onclick="closeDiagnosis();setTimeout(()=>{ if(window.openPricingModal)openPricingModal('oracle');else window.location.href='member.html?plan=oracle'; },300)" style="opacity:.85">
-          Join The Network — see your full case file
+          Join The Network — $19/mo includes 1 live session
         </button>
         ` : ''}
         <button class="diag-btn-secondary" onclick="closeDiagnosis()" style="opacity:.45;font-size:.75rem;padding:.4rem">Close</button>
